@@ -39,6 +39,35 @@ class AbstractDaoTest extends \PHPUnit_Framework_TestCase
       $dao->getDaoChanges()
     );
   }
+
+  public function testPropertyGetSet()
+  {
+    $dao = new MockAbstractDao();
+    $this->assertEquals('nobody@example.com', $dao->getDaoProperty('email'));
+    $dao->setDaoProperty('email', 'john@example.com');
+    $this->assertEquals('john@example.com', $dao->getDaoProperty('email'));
+  }
+
+  public function testHydrate()
+  {
+    $dao = new MockAbstractDao();
+    $dao->hydrateDao(['name' => 'John Smith']);
+    $this->assertEquals(
+      ['name' => 'John Smith', 'email' => 'nobody@example.com'],
+      $dao->getDaoPropertyData()
+    );
+  }
+
+  public function testOverHydrate()
+  {
+    $dao = new MockAbstractDao();
+    $dao->hydrateDao(['name' => 'John Smith', 'nondao' => 'miss']);
+    $this->assertEquals(
+      ['name' => 'John Smith', 'email' => 'nobody@example.com'],
+      $dao->getDaoPropertyData()
+    );
+    $this->assertFalse(isset($dao->nodao));
+  }
 }
 
 class MockAbstractDao extends AbstractDao

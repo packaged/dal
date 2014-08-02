@@ -51,7 +51,7 @@ abstract class AbstractDao implements IDao
    */
   public function getDaoChanges()
   {
-    $current    = (array)$this->getDaoPropertyData();
+    $current = (array)$this->getDaoPropertyData();
     $changeKeys = array_keys(array_diff($this->_savedData, $current));
 
     $changes = [];
@@ -101,8 +101,41 @@ abstract class AbstractDao implements IDao
    */
   public function hydrateDao(array $data)
   {
-    $hydratable = array_intersect_key($data, $this->getDaoProperties());
-    return $hydratable;
+    $hydratable = array_intersect_key(
+      $data,
+      array_flip($this->getDaoProperties())
+    );
+    foreach($hydratable as $key => $value)
+    {
+      $this->setDaoProperty($key, $value);
+    }
+    return $this;
+  }
+
+  /**
+   * Set the value of a property
+   *
+   * @param $key
+   * @param $value
+   *
+   * @return static
+   */
+  public function setDaoProperty($key, $value)
+  {
+    $this->$key = $value;
+    return $this;
+  }
+
+  /**
+   * Retrieve the value of a property
+   *
+   * @param $key
+   *
+   * @return mixed
+   */
+  public function getDaoProperty($key)
+  {
+    return $this->$key;
   }
 
   /**
@@ -117,7 +150,7 @@ abstract class AbstractDao implements IDao
   }
 
   /**
-   * Setup the mapper
+   * Setup the dao
    */
   final protected function _startup()
   {

@@ -40,7 +40,7 @@ interface IDataStore
    *
    * @param IDao $dao
    *
-   * @return mixed
+   * @return IDao
    *
    * @throws DataStoreException
    */

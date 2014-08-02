@@ -34,6 +34,16 @@ abstract class AbstractDao implements IDao
    */
   public function __construct()
   {
+    $this->daoConstruct();
+  }
+
+  /**
+   * Construct the class with daoConstruct
+   *
+   * This should always be called at the first line of your __construct
+   */
+  final public function daoConstruct()
+  {
     //Calculate public properties
     $this->_startup();
 
@@ -51,7 +61,7 @@ abstract class AbstractDao implements IDao
    */
   public function getDaoChanges()
   {
-    $current = (array)$this->getDaoPropertyData();
+    $current    = (array)$this->getDaoPropertyData();
     $changeKeys = array_keys(array_diff($this->_savedData, $current));
 
     $changes = [];
@@ -97,7 +107,7 @@ abstract class AbstractDao implements IDao
    *
    * @param array $data
    *
-   * @return static
+   * @return self
    */
   public function hydrateDao(array $data)
   {
@@ -118,7 +128,7 @@ abstract class AbstractDao implements IDao
    * @param $key
    * @param $value
    *
-   * @return static
+   * @return self
    */
   public function setDaoProperty($key, $value)
   {
@@ -141,7 +151,7 @@ abstract class AbstractDao implements IDao
   /**
    * Set the current dataset to be that of the data store values
    *
-   * @return static
+   * @return self
    */
   public function markDaoDatasetAsSaved()
   {

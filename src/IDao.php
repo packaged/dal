@@ -38,7 +38,7 @@ interface IDao
    *
    * @param array $data
    *
-   * @return mixed
+   * @return self
    */
   public function hydrateDao(array $data);
 
@@ -48,7 +48,7 @@ interface IDao
    * @param $key
    * @param $value
    *
-   * @return static
+   * @return self
    */
   public function setDaoProperty($key, $value);
 

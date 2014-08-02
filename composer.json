@@ -1,0 +1,23 @@
+{
+  "name":        "packaged/dal",
+  "description": "Data Access Layer",
+  "license":     "MIT",
+  "authors":     [
+    {
+      "name":  "Brooke Bryan",
+      "email": "brooke@bajb.net"
+    }
+  ],
+  "require":     {
+    "php":             ">=5.4.0",
+    "packaged/config": "*"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "4.1"
+  },
+  "autoload":    {
+    "psr-4": {
+      "Packaged\\Dal\\": "src"
+    }
+  }
+}

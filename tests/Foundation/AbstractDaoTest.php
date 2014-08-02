@@ -68,6 +68,11 @@ class AbstractDaoTest extends \PHPUnit_Framework_TestCase
     );
     $this->assertFalse(isset($dao->nodao));
   }
+
+  public function testGetIDProperties()
+  {
+    $this->assertEquals(['id'], (new MockAbstractDao())->getDaoIDProperties());
+  }
 }
 
 class MockAbstractDao extends AbstractDao

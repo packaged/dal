@@ -208,4 +208,14 @@ abstract class AbstractDao implements IDao
   protected function _configure()
   {
   }
+
+  /**
+   * Retrieve an array of ID fields used for the primary key
+   *
+   * @return array
+   */
+  public function getDaoIDProperties()
+  {
+    return ['id'];
+  }
 }

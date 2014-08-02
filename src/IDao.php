@@ -60,4 +60,11 @@ interface IDao
    * @return mixed
    */
   public function getDaoProperty($key);
+
+  /**
+   * Retrieve an array of ID fields used for the primary key
+   *
+   * @return array
+   */
+  public function getDaoIDProperties();
 }

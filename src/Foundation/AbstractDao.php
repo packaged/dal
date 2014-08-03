@@ -30,6 +30,13 @@ abstract class AbstractDao implements IDao
   protected $_calledClass;
 
   /**
+   * Check to see if the DAO has been loaded
+   *
+   * @var bool
+   */
+  protected $_isLoaded;
+
+  /**
    * Create a new instance of your DAO
    */
   public function __construct()
@@ -217,5 +224,28 @@ abstract class AbstractDao implements IDao
   public function getDaoIDProperties()
   {
     return ['id'];
+  }
+
+  /**
+   * Check to see if the DAO has been loaded
+   *
+   * @return bool
+   */
+  public function isDaoLoaded()
+  {
+    return (bool)$this->_isLoaded;
+  }
+
+  /**
+   * Set the DAO as loaded
+   *
+   * @param bool $isLoaded
+   *
+   * @returns self
+   */
+  public function markDaoAsLoaded($isLoaded = true)
+  {
+    $this->_isLoaded = $isLoaded;
+    return $this;
   }
 }

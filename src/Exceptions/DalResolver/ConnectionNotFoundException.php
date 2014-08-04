@@ -1,5 +1,5 @@
 <?php
-namespace Packaged\Dal\Exceptions\ConnectionResolver;
+namespace Packaged\Dal\Exceptions\DalResolver;
 
 class ConnectionNotFoundException extends ConnectionResolverException
 {

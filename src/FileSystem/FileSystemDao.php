@@ -2,9 +2,17 @@
 namespace Packaged\Dal\FileSystem;
 
 use Packaged\Dal\Foundation\AbstractDao;
+use Packaged\Dal\Traits\Dao\LSDTrait;
 
+/**
+ * @method FileSystemDao load Load the file from disk
+ * @method FileSystemDao save Save the file to disk
+ * @method FileSystemDao delete Delete file from disk
+ */
 class FileSystemDao extends AbstractDao
 {
+  use LSDTrait;
+
   public $filepath;
   public $filesize;
   public $content;
@@ -15,6 +23,7 @@ class FileSystemDao extends AbstractDao
   public function __construct($filepath = null)
   {
     $this->daoConstruct();
+    $this->_setDataStoreName('filesystem');
     $this->filepath = $filepath;
   }
 
@@ -103,36 +112,5 @@ class FileSystemDao extends AbstractDao
   public function getContent()
   {
     return $this->content;
-  }
-
-  /**
-   * Load the file from disk
-   *
-   * @return FileSystemDao
-   * @throws \Packaged\Dal\Exceptions\DataStore\DaoNotFoundException
-   */
-  public function load()
-  {
-    return (new FileSystemDataStore())->load($this);
-  }
-
-  /**
-   * Save the file
-   *
-   * @return array
-   */
-  public function save()
-  {
-    return (new FileSystemDataStore())->save($this);
-  }
-
-  /**
-   * Delete this file
-   *
-   * @return FileSystemDao
-   */
-  public function delete()
-  {
-    return (new FileSystemDataStore())->delete($this);
   }
 }

@@ -3,19 +3,31 @@ namespace Packaged\Dal;
 
 use Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException;
 use Packaged\Dal\Exceptions\DalResolver\DataStoreNotFoundException;
+use Packaged\Dal\FileSystem\FileSystemDataStore;
 
 /**
  * Standard Packaged Connection Resolver
  */
 class DalResolver implements IConnectionResolver
 {
+  public function __construct()
+  {
+    $this->addDataStoreCallable(
+      'filesystem',
+      function ()
+      {
+        return new FileSystemDataStore();
+      }
+    );
+  }
+
   /**
-   * @var IDataConnection[]
+   * @var IDataConnection[]|callable[]
    */
   protected $_connections;
 
   /**
-   * @var IDataStore[]
+   * @var IDataStore[]|callable[]
    */
   protected $_datastores;
 
@@ -32,7 +44,15 @@ class DalResolver implements IConnectionResolver
   {
     if(isset($this->_connections[$name]))
     {
-      return $this->_connections[$name];
+      if(is_callable($this->_connections[$name]))
+      {
+        $this->_connections[$name] = $this->_connections[$name]();
+      }
+
+      if($this->_connections[$name] instanceof IDataConnection)
+      {
+        return $this->_connections[$name];
+      }
     }
 
     throw new ConnectionNotFoundException(
@@ -55,6 +75,20 @@ class DalResolver implements IConnectionResolver
   }
 
   /**
+   * Add a connection to the resolver
+   *
+   * @param string   $name name for the connection
+   * @param callable $connection
+   *
+   * @return $this
+   */
+  public function addConnectionCallable($name, callable $connection)
+  {
+    $this->_connections[$name] = $connection;
+    return $this;
+  }
+
+  /**
    * Retrieve a data store from the resolver by name
    *
    * @param $name
@@ -67,7 +101,15 @@ class DalResolver implements IConnectionResolver
   {
     if(isset($this->_datastores[$name]))
     {
-      return $this->_datastores[$name];
+      if(is_callable($this->_datastores[$name]))
+      {
+        $this->_datastores[$name] = $this->_datastores[$name]();
+      }
+
+      if($this->_datastores[$name] instanceof IDataStore)
+      {
+        return $this->_datastores[$name];
+      }
     }
 
     throw new DataStoreNotFoundException(
@@ -78,12 +120,26 @@ class DalResolver implements IConnectionResolver
   /**
    * Add a data store to the resolver
    *
-   * @param string     $name name for the connection
+   * @param string     $name name for the datastore
    * @param IDataStore $dataStore
    *
    * @return $this
    */
   public function addDataStore($name, IDataStore $dataStore)
+  {
+    $this->_datastores[$name] = $dataStore;
+    return $this;
+  }
+
+  /**
+   * Add a data store to the resolver
+   *
+   * @param string   $name name for the datastore
+   * @param callable $dataStore
+   *
+   * @return $this
+   */
+  public function addDataStoreCallable($name, callable $dataStore)
   {
     $this->_datastores[$name] = $dataStore;
     return $this;

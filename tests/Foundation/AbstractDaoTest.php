@@ -1,6 +1,7 @@
 <?php
 namespace Foundation;
 
+use Packaged\Dal\DalResolver;
 use Packaged\Dal\Foundation\AbstractDao;
 
 class AbstractDaoTest extends \PHPUnit_Framework_TestCase
@@ -73,10 +74,28 @@ class AbstractDaoTest extends \PHPUnit_Framework_TestCase
   {
     $this->assertEquals(['id'], (new MockAbstractDao())->getDaoIDProperties());
   }
+
+  public function testDalResolver()
+  {
+    $resolver = new DalResolver();
+    $resolver->addDataStore('test', $this->getMock('\Packaged\Dal\IDataStore'));
+    AbstractDao::setDalResolver($resolver);
+    $mock = new MockAbstractDao();
+    $mock->init();
+    $this->assertInstanceOf('\Packaged\Dal\IDataStore', $mock->getDataStore());
+    $this->assertSame($resolver, $mock->getDalResolver());
+    AbstractDao::unsetDalResolver();
+    $this->assertNull($mock->getDalResolver());
+  }
 }
 
 class MockAbstractDao extends AbstractDao
 {
   public $name;
   public $email = 'nobody@example.com';
+
+  public function init()
+  {
+    $this->_setDataStoreName('test');
+  }
 }

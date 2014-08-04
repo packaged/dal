@@ -1,13 +1,23 @@
 <?php
 namespace Packaged\Dal\Foundation;
 
+use Packaged\Dal\DalResolver;
 use Packaged\Dal\IDao;
+use Packaged\Dal\IDataStore;
 
 /**
  * Foundation for all DAOs
  */
 abstract class AbstractDao implements IDao
 {
+  /**
+   * @var DalResolver
+   */
+  protected static $_resolver;
+  /**
+   * @var string name/alias for the datastore
+   */
+  protected $_dataStoreName;
   /**
    * A copy of the data that is known to be held in the datastore
    *
@@ -247,5 +257,56 @@ abstract class AbstractDao implements IDao
   {
     $this->_isLoaded = $isLoaded;
     return $this;
+  }
+
+  /**
+   * Set the DAL resolver
+   *
+   * @param DalResolver $resolver
+   */
+  public static function setDalResolver(DalResolver $resolver)
+  {
+    static::$_resolver = $resolver;
+  }
+
+  /**
+   * unset the DAL resolver
+   */
+  public static function unsetDalResolver()
+  {
+    static::$_resolver = null;
+  }
+
+  /**
+   * Get the current DAL resolver
+   *
+   * @return DalResolver
+   */
+  public static function getDalResolver()
+  {
+    return static::$_resolver;
+  }
+
+  /**
+   * Set the data store name for this dao to use
+   *
+   * @param $name
+   *
+   * @return $this
+   */
+  protected function _setDataStoreName($name)
+  {
+    $this->_dataStoreName = $name;
+    return $this;
+  }
+
+  /**
+   * Get the data store for this dao
+   *
+   * @return IDataStore
+   */
+  public function getDataStore()
+  {
+    return static::$_resolver->getDataStore($this->_dataStoreName);
   }
 }

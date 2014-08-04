@@ -1,6 +1,7 @@
 <?php
 namespace FileSystem;
 
+use Packaged\Dal\DalResolver;
 use Packaged\Dal\FileSystem\FileSystemDao;
 use Packaged\Dal\FileSystem\FileSystemDataStore;
 
@@ -9,6 +10,16 @@ class FileSystemDataStoreTest extends \PHPUnit_Framework_TestCase
   protected function _getResourceLocation($filename)
   {
     return build_path(dirname(__DIR__), 'resources', 'FileSystem', $filename);
+  }
+
+  protected function setUp()
+  {
+    FileSystemDao::setDalResolver(new DalResolver());
+  }
+
+  protected function tearDown()
+  {
+    FileSystemDao::unsetDalResolver();
   }
 
   public function testLoad()

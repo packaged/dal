@@ -3,6 +3,10 @@ namespace Packaged\Dal\Foundation;
 
 abstract class AbstractSanitizableDao extends AbstractDao
 {
+  const SERIALIZATION_NONE = 'none';
+  const SERIALIZATION_JSON = 'json';
+  const SERIALIZATION_PHP = 'php';
+
   /**
    * @var callable[]
    */
@@ -68,7 +72,13 @@ abstract class AbstractSanitizableDao extends AbstractDao
       {
         try
         {
-          $validator($value);
+          $result = $validator($value);
+          if($result === false)
+          {
+            throw new \Exception(
+              "An unknown error occurred when validating $key"
+            );
+          }
         }
         catch(\Exception $e)
         {
@@ -139,13 +149,244 @@ abstract class AbstractSanitizableDao extends AbstractDao
     return $isValid;
   }
 
-  public function getPropertySerialized($property)
+  /**
+   * Serialize a value based on the rules of a property
+   *
+   * @param $property
+   * @param $value
+   *
+   * @return string
+   */
+  public function getPropertySerialized($property, $value)
   {
-    return json_encode($this->getDaoProperty($property));
+    if(isset($this->_sanetizers['serializers'][$property]))
+    {
+      foreach($this->_sanetizers['serializers'][$property] as $type)
+      {
+        switch($type)
+        {
+          case self::SERIALIZATION_JSON:
+            $value = json_encode($value);
+            break;
+          case self::SERIALIZATION_PHP:
+            $value = serialize($value);
+            break;
+          case is_array($type) && isset($type['serializer']):
+            $value = $type['serializer']($value);
+        }
+      }
+    }
+    return $value;
   }
 
-  public function getPropertyUnserialized($property)
+  /**
+   * Unserialize a value based on the rules of a property
+   *
+   * @param $property
+   * @param $value
+   *
+   * @return mixed
+   */
+  public function getPropertyUnserialized($property, $value)
   {
-    return json_decode($this->getDaoProperty($property));
+    if(isset($this->_sanetizers['serializers'][$property]))
+    {
+      $reversed = $this->_sanetizers['serializers'][$property];
+      foreach(array_reverse($reversed) as $type)
+      {
+        switch($type)
+        {
+          case self::SERIALIZATION_JSON:
+            $value = json_decode($value);
+            break;
+          case self::SERIALIZATION_PHP:
+            $value = unserialize($value);
+            break;
+          case is_array($type) && isset($type['unserializer']):
+            $value = $type['unserializer']($value);
+        }
+      }
+    }
+    return $value;
+  }
+
+  /**
+   * Hydrate the DAO with raw data
+   *
+   * @param array $data
+   * @param bool  $raw Is being hydrated with datastore values
+   *
+   * @return self
+   */
+  public function hydrateDao(array $data, $raw = false)
+  {
+    $hydratable = array_intersect_key(
+      $data,
+      array_flip($this->getDaoProperties())
+    );
+    foreach($hydratable as $key => $value)
+    {
+      if($raw)
+      {
+        $value = $this->getPropertyUnserialized($key, $value);
+      }
+      $this->setDaoProperty($key, $value);
+    }
+    return $this;
+  }
+
+  /**
+   * Add a serializer to a property
+   *
+   * @param        $property
+   * @param null   $alias
+   * @param string $serializer
+   *
+   * @return $this
+   */
+  protected function _addSerializer(
+    $property, $alias = null, $serializer = self::SERIALIZATION_JSON
+  )
+  {
+    if($alias === null)
+    {
+      $alias = $serializer;
+    }
+
+    $this->_sanetizers['serializers'][$property][$alias] = $serializer;
+    return $this;
+  }
+
+  /**
+   * Add a custom serializer to a property, these are callbacks to serialize
+   * and unserialize
+   *
+   * @param          $property
+   * @param          $alias
+   * @param callable $serializer
+   * @param callable $unserializer
+   *
+   * @return $this
+   */
+  protected function _addCustomSerializer(
+    $property, $alias, callable $serializer, callable $unserializer
+  )
+  {
+    $this->_sanetizers['serializers'][$property][$alias] = [
+      'serializer'   => $serializer,
+      'unserializer' => $unserializer
+    ];
+    return $this;
+  }
+
+  /**
+   * Remove a serializer for a property by its alias
+   *
+   * @param $property
+   * @param $alias
+   *
+   * @return $this
+   */
+  protected function _removeSerializer($property, $alias)
+  {
+    unset($this->_sanetizers['serializers'][$property][$alias]);
+    return $this;
+  }
+
+  /**
+   * Remove all serializers on a property
+   *
+   * @param $property
+   *
+   * @return $this
+   */
+  protected function _clearSerializers($property)
+  {
+    $this->_sanetizers['serializers'][$property] = [];
+    return $this;
+  }
+
+  /**
+   * Add a filter callback to a property
+   *
+   * @param          $property
+   * @param          $alias
+   * @param callable $filter
+   *
+   * @return $this
+   */
+  protected function _addFilter($property, $alias, callable $filter)
+  {
+    $this->_sanetizers['filters'][$property][$alias] = $filter;
+    return $this;
+  }
+
+  /**
+   * Remove a filter by its alias from a property
+   *
+   * @param $property
+   * @param $alias
+   *
+   * @return $this
+   */
+  protected function _removeFilter($property, $alias)
+  {
+    unset($this->_sanetizers['filters'][$property][$alias]);
+    return $this;
+  }
+
+  /**
+   * Clear all filters for a property
+   *
+   * @param $property
+   *
+   * @return $this
+   */
+  protected function _clearFilters($property)
+  {
+    $this->_sanetizers['filters'][$property] = [];
+    return $this;
+  }
+
+  /**
+   * Add a validator to a property, should return true, or throw Exception
+   *
+   * @param          $property
+   * @param          $alias
+   * @param callable $filter
+   *
+   * @return $this
+   */
+  protected function _addValidator($property, $alias, callable $filter)
+  {
+    $this->_sanetizers['validators'][$property][$alias] = $filter;
+    return $this;
+  }
+
+  /**
+   * Remove a validator from a property by its alias
+   *
+   * @param $property
+   * @param $alias
+   *
+   * @return $this
+   */
+  protected function _removeValidator($property, $alias)
+  {
+    unset($this->_sanetizers['validators'][$property][$alias]);
+    return $this;
+  }
+
+  /**
+   * Clear all validators for a property
+   *
+   * @param $property
+   *
+   * @return $this
+   */
+  protected function _clearValidators($property)
+  {
+    $this->_sanetizers['validators'][$property] = [];
+    return $this;
   }
 }

@@ -22,6 +22,12 @@ class FileSystemDataStoreTest extends \PHPUnit_Framework_TestCase
     FileSystemDao::unsetDalResolver();
   }
 
+  public function testIdProperty()
+  {
+    $mock = new FileSystemDao();
+    $this->assertEquals(['filepath'], $mock->getDaoIDProperties());
+  }
+
   public function testLoad()
   {
     $file = new FileSystemDao($this->_getResourceLocation('fs.test'));

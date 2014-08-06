@@ -67,4 +67,11 @@ interface IDao
    * @return array
    */
   public function getDaoIDProperties();
+
+  /**
+   * Retrieve the ID
+   *
+   * @return mixed
+   */
+  public function getId();
 }

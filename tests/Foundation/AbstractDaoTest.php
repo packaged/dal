@@ -12,6 +12,23 @@ class AbstractDaoTest extends \PHPUnit_Framework_TestCase
     $this->assertEquals(['name', 'email'], $dao->getDaoProperties());
   }
 
+  public function testGetId()
+  {
+    $dao        = new MockAbstractDao();
+    $dao->email = 'test@example.com';
+    $this->assertEquals($dao->email, $dao->getId());
+    $this->assertEquals(['email'], $dao->getDaoIDProperties());
+
+    $dao         = new MockMultiIdAbstractDao();
+    $dao->status = 'disabled';
+    $dao->email  = 'test@example.com';
+    $this->assertEquals([$dao->status, $dao->email], $dao->getId());
+    $this->assertEquals(['status', 'email'], $dao->getDaoIDProperties());
+
+    $dao = new MockAbstractBaseDao();
+    $this->assertEquals(['id'], $dao->getDaoIDProperties());
+  }
+
   public function testGetPropertyData()
   {
     $dao = new MockAbstractDao();
@@ -70,11 +87,6 @@ class AbstractDaoTest extends \PHPUnit_Framework_TestCase
     $this->assertFalse(isset($dao->nodao));
   }
 
-  public function testGetIDProperties()
-  {
-    $this->assertEquals(['id'], (new MockAbstractDao())->getDaoIDProperties());
-  }
-
   public function testDalResolver()
   {
     $resolver = new DalResolver();
@@ -89,6 +101,10 @@ class AbstractDaoTest extends \PHPUnit_Framework_TestCase
   }
 }
 
+class MockAbstractBaseDao extends AbstractDao
+{
+}
+
 class MockAbstractDao extends AbstractDao
 {
   public $name;
@@ -97,5 +113,28 @@ class MockAbstractDao extends AbstractDao
   public function init()
   {
     $this->_setDataStoreName('test');
+  }
+
+  public function getDaoIDProperties()
+  {
+    return ['email'];
+  }
+}
+
+
+class MockMultiIdAbstractDao extends AbstractDao
+{
+  public $name;
+  public $status = 'active';
+  public $email = 'nobody@example.com';
+
+  public function init()
+  {
+    $this->_setDataStoreName('test');
+  }
+
+  public function getDaoIDProperties()
+  {
+    return ['status', 'email'];
   }
 }

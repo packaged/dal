@@ -113,4 +113,14 @@ class FileSystemDao extends AbstractSanitizableDao
   {
     return $this->content;
   }
+
+  /**
+   * Retrieve an array of ID fields used for the primary key
+   *
+   * @return array
+   */
+  public function getDaoIDProperties()
+  {
+    return ['filepath'];
+  }
 }

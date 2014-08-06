@@ -309,4 +309,24 @@ abstract class AbstractDao implements IDao
   {
     return static::$_resolver->getDataStore($this->_dataStoreName);
   }
+
+  /**
+   * Retrieve the ID for this DAO, if multiple properties make up the ID,
+   * they will be returned in an array
+   *
+   * @return array|mixed
+   */
+  public function getId()
+  {
+    $id = [];
+    foreach($this->getDaoIDProperties() as $property)
+    {
+      $id[] = $this->getDaoProperty($property);
+    }
+    if(count($id) === 1)
+    {
+      return reset($id);
+    }
+    return $id;
+  }
 }

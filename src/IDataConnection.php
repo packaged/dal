@@ -14,15 +14,6 @@ use Packaged\Dal\Exceptions\Connection\ConnectionException;
 interface IDataConnection
 {
   /**
-   * Configure the data connection
-   *
-   * @param ConfigSectionInterface $configuration
-   *
-   * @return static
-   */
-  public function configure(ConfigSectionInterface $configuration);
-
-  /**
    * Open the connection
    *
    * @return static

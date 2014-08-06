@@ -69,9 +69,12 @@ interface IDao
   public function getDaoIDProperties();
 
   /**
-   * Retrieve the ID
+   * Retrieve the ID for a DAO, if multiple properties make up the ID,
+   * they will be returned in an array
    *
-   * @return mixed
+   * @param bool $forceArray Force an array return, even with single property
+   *
+   * @return array|mixed
    */
-  public function getId();
+  public function getId($forceArray = false);
 }

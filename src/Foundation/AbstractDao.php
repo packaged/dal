@@ -314,16 +314,18 @@ abstract class AbstractDao implements IDao
    * Retrieve the ID for this DAO, if multiple properties make up the ID,
    * they will be returned in an array
    *
+   * @param bool $forceArray Force an array return, even with single property
+   *
    * @return array|mixed
    */
-  public function getId()
+  public function getId($forceArray = false)
   {
     $id = [];
     foreach($this->getDaoIDProperties() as $property)
     {
       $id[$property] = $this->getDaoProperty($property);
     }
-    if(count($id) === 1)
+    if(!$forceArray && count($id) === 1)
     {
       return reset($id);
     }

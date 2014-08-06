@@ -2,10 +2,10 @@
 namespace Packaged\Dal;
 
 use Packaged\Config\ConfigProviderInterface;
+use Packaged\Config\Provider\ConfigSection;
 use Packaged\Config\Provider\Test\TestConfigProvider;
 use Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException;
 use Packaged\Dal\Exceptions\DalResolver\DataStoreNotFoundException;
-use Packaged\Dal\FileSystem\FileSystemDataStore;
 
 /**
  * Standard Packaged Connection Resolver
@@ -43,14 +43,15 @@ class DalResolver implements IConnectionResolver
 
     $this->_confed = ['connection' => [], 'datastore' => []];
 
-    //Filesystem always standard
-    $this->addDataStoreCallable(
-      'filesystem',
-      function ()
-      {
-        return new FileSystemDataStore();
-      }
-    );
+    if(!$this->_config['datastore']->sectionExists('filesystem'))
+    {
+      $this->_config['datastore']->addSection(
+        new ConfigSection(
+          'filesystem',
+          ['construct_class' => '\Packaged\Dal\FileSystem\FileSystemDataStore']
+        )
+      );
+    }
   }
 
   /**
@@ -74,6 +75,14 @@ class DalResolver implements IConnectionResolver
    */
   public function getConnection($name)
   {
+    if(!isset($this->_connections[$name]))
+    {
+      $this->_connections[$name] = $this->_fromConfiguration(
+        'connection',
+        $name
+      );
+    }
+
     if(isset($this->_connections[$name]))
     {
       if(is_callable($this->_connections[$name]))
@@ -137,6 +146,11 @@ class DalResolver implements IConnectionResolver
    */
   public function getDataStore($name)
   {
+    if(!isset($this->_datastores[$name]))
+    {
+      $this->_datastores[$name] = $this->_fromConfiguration('datastore', $name);
+    }
+
     if(isset($this->_datastores[$name]))
     {
       if(is_callable($this->_datastores[$name]))
@@ -216,5 +230,38 @@ class DalResolver implements IConnectionResolver
   protected function _unsetConfigured($type, $name)
   {
     unset($this->_confed[$type][$name]);
+  }
+
+  /**
+   * Attempt to create an item from the configuration
+   *
+   * @param $type
+   * @param $name
+   *
+   * @return IDataConnection|IDataStore|null|mixed
+   */
+  protected function _fromConfiguration($type, $name)
+  {
+    if($this->_config[$type]->sectionExists($name))
+    {
+      $section = $this->_config[$type]->getSection($name);
+
+      $class = $section->getItem('construct_class');
+      if($class)
+      {
+        return new $class;
+      }
+
+      $callable = $section->getItem('construct_callable');
+      if(is_scalar($callable) && stristr($callable, '::'))
+      {
+        $callable = explode('::', $callable);
+      }
+      if($callable && is_callable($callable))
+      {
+        return $callable();
+      }
+    }
+    return null;
   }
 }

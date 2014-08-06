@@ -120,7 +120,6 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
       $datastoreConfig
     );
 
-    $resolver->addConnection('con1', new ConfigurableConnection());
     $connection = $resolver->getConnection('con1');
     /**
      * @var $connection ConfigurableConnection
@@ -129,6 +128,11 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
       'Connection Test',
       $connection->getConfig()->getItem('name')
     );
+
+    $this->setExpectedException(
+      '\Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException'
+    );
+    $resolver->getConnection('con2');
   }
 }
 
@@ -136,6 +140,11 @@ class ConfigurableConnection
   implements \Packaged\Dal\IDataConnection, \Packaged\Dal\IConfigurable
 {
   use \Packaged\Dal\Traits\ConfigurableTrait;
+
+  public static function create()
+  {
+    return new static;
+  }
 
   public function getConfig()
   {

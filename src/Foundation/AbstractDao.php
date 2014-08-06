@@ -260,24 +260,6 @@ abstract class AbstractDao implements IDao
   }
 
   /**
-   * Set the DAL resolver
-   *
-   * @param DalResolver $resolver
-   */
-  public static function setDalResolver(DalResolver $resolver)
-  {
-    static::$_resolver = $resolver;
-  }
-
-  /**
-   * unset the DAL resolver
-   */
-  public static function unsetDalResolver()
-  {
-    static::$_resolver = null;
-  }
-
-  /**
    * Get the current DAL resolver
    *
    * @return DalResolver

@@ -6,6 +6,8 @@ use Packaged\Config\Provider\ConfigSection;
 use Packaged\Config\Provider\Test\TestConfigProvider;
 use Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException;
 use Packaged\Dal\Exceptions\DalResolver\DataStoreNotFoundException;
+use Packaged\Dal\Foundation\AbstractDao;
+use Packaged\Dal\Foundation\Dao;
 
 /**
  * Standard Packaged Connection Resolver
@@ -52,6 +54,14 @@ class DalResolver implements IConnectionResolver
         )
       );
     }
+  }
+
+  /**
+   * Set this DalResolver to be the resolver on all DAOs
+   */
+  public function boot()
+  {
+    Dao::setDalResolver($this);
   }
 
   /**

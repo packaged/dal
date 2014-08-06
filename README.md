@@ -3,10 +3,17 @@ Data Access Layer
 
 [![Latest Stable Version](https://poser.pugx.org/packaged/dal/version.png)](https://packagist.org/packages/packaged/dal) [![Total Downloads](https://poser.pugx.org/packaged/dal/d/total.png)](https://packagist.org/packages/packaged/dal) [![Build Status](https://travis-ci.org/packaged/dal.png)](https://travis-ci.org/packaged/dal) [![Dependency Status](https://www.versioneye.com/php/packaged:dal/badge.png)](https://www.versioneye.com/php/packaged:dal)
 
+Getting Started
+===
+
+    $resolver = new DalResolver($connectionConfigs,$datastoreConfigs);
+    $resolver->boot();
+
+FYI
+===
 DAO = Data Access Object
 
-
-SQL Example
+SQL Translation
 ====
 
 **IDao** A Single Row within the database

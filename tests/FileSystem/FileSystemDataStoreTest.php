@@ -4,6 +4,7 @@ namespace FileSystem;
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\FileSystem\FileSystemDao;
 use Packaged\Dal\FileSystem\FileSystemDataStore;
+use Packaged\Dal\Foundation\Dao;
 
 class FileSystemDataStoreTest extends \PHPUnit_Framework_TestCase
 {
@@ -14,12 +15,13 @@ class FileSystemDataStoreTest extends \PHPUnit_Framework_TestCase
 
   protected function setUp()
   {
-    FileSystemDao::setDalResolver(new DalResolver());
+    $resolver = new DalResolver();
+    $resolver->boot();
   }
 
   protected function tearDown()
   {
-    FileSystemDao::unsetDalResolver();
+    Dao::unsetDalResolver();
   }
 
   public function testIdProperty()

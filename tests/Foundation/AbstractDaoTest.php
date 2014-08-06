@@ -3,6 +3,7 @@ namespace Foundation;
 
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Foundation\AbstractDao;
+use Packaged\Dal\Foundation\Dao;
 
 class AbstractDaoTest extends \PHPUnit_Framework_TestCase
 {
@@ -93,13 +94,13 @@ class AbstractDaoTest extends \PHPUnit_Framework_TestCase
   public function testDalResolver()
   {
     $resolver = new DalResolver();
+    $resolver->boot();
     $resolver->addDataStore('test', $this->getMock('\Packaged\Dal\IDataStore'));
-    AbstractDao::setDalResolver($resolver);
     $mock = new MockAbstractDao();
     $mock->init();
     $this->assertInstanceOf('\Packaged\Dal\IDataStore', $mock->getDataStore());
     $this->assertSame($resolver, $mock->getDalResolver());
-    AbstractDao::unsetDalResolver();
+    Dao::unsetDalResolver();
     $this->assertNull($mock->getDalResolver());
   }
 }

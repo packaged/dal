@@ -22,7 +22,10 @@ class AbstractDaoTest extends \PHPUnit_Framework_TestCase
     $dao         = new MockMultiIdAbstractDao();
     $dao->status = 'disabled';
     $dao->email  = 'test@example.com';
-    $this->assertEquals([$dao->status, $dao->email], $dao->getId());
+    $this->assertEquals(
+      ['status' => $dao->status, 'email' => $dao->email],
+      $dao->getId()
+    );
     $this->assertEquals(['status', 'email'], $dao->getDaoIDProperties());
 
     $dao = new MockAbstractBaseDao();

@@ -321,7 +321,7 @@ abstract class AbstractDao implements IDao
     $id = [];
     foreach($this->getDaoIDProperties() as $property)
     {
-      $id[] = $this->getDaoProperty($property);
+      $id[$property] = $this->getDaoProperty($property);
     }
     if(count($id) === 1)
     {

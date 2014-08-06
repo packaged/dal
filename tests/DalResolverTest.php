@@ -106,4 +106,73 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
     );
     $resolver->getDataStore('test');
   }
+
+  public function testConfigurations()
+  {
+    $connectionConfig = new \Packaged\Config\Provider\Ini\IniConfigProvider(
+      build_path(__DIR__, 'resources', 'connections.ini')
+    );
+    $datastoreConfig  = new \Packaged\Config\Provider\Ini\IniConfigProvider(
+      build_path(__DIR__, 'resources', 'datastores.ini')
+    );
+    $resolver         = new \Packaged\Dal\DalResolver(
+      $connectionConfig,
+      $datastoreConfig
+    );
+
+    $resolver->addConnection('con1', new ConfigurableConnection());
+    $connection = $resolver->getConnection('con1');
+    /**
+     * @var $connection ConfigurableConnection
+     */
+    $this->assertEquals(
+      'Connection Test',
+      $connection->getConfig()->getItem('name')
+    );
+  }
+}
+
+class ConfigurableConnection
+  implements \Packaged\Dal\IDataConnection, \Packaged\Dal\IConfigurable
+{
+  use \Packaged\Dal\Traits\ConfigurableTrait;
+
+  public function getConfig()
+  {
+    return $this->_config();
+  }
+
+  /**
+   * Open the connection
+   *
+   * @return static
+   *
+   * @throws \Packaged\Dal\Exceptions\Connection\ConnectionException
+   */
+  public function connect()
+  {
+    return $this;
+  }
+
+  /**
+   * Check to see if the connection is already open
+   *
+   * @return bool
+   */
+  public function isConnected()
+  {
+    return true;
+  }
+
+  /**
+   * Disconnect the open connection
+   *
+   * @return static
+   *
+   * @throws \Packaged\Dal\Exceptions\Connection\ConnectionException
+   */
+  public function disconnect()
+  {
+    return $this;
+  }
 }

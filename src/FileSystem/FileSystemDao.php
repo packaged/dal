@@ -1,7 +1,7 @@
 <?php
 namespace Packaged\Dal\FileSystem;
 
-use Packaged\Dal\Foundation\AbstractDao;
+use Packaged\Dal\Foundation\AbstractSanitizableDao;
 use Packaged\Dal\Traits\Dao\LSDTrait;
 
 /**
@@ -9,7 +9,7 @@ use Packaged\Dal\Traits\Dao\LSDTrait;
  * @method FileSystemDao save Save the file to disk
  * @method FileSystemDao delete Delete file from disk
  */
-class FileSystemDao extends AbstractDao
+class FileSystemDao extends AbstractSanitizableDao
 {
   use LSDTrait;
 

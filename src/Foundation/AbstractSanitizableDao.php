@@ -389,4 +389,17 @@ abstract class AbstractSanitizableDao extends AbstractDao
     $this->_sanetizers['validators'][$property] = [];
     return $this;
   }
+
+  public function getDaoPropertyData($serialized = true)
+  {
+    $data = [];
+    foreach($this->getDaoProperties() as $property)
+    {
+      $data[$property] = $this->getPropertySerialized(
+        $property,
+        $this->getDaoProperty($property)
+      );
+    }
+    return $data;
+  }
 }

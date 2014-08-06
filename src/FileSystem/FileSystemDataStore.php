@@ -20,7 +20,10 @@ class FileSystemDataStore implements IDataStore
   public function save(IDao $dao)
   {
     $dao = $this->_verifyDao($dao);
-    file_put_contents($dao->filepath, $dao->content);
+    file_put_contents(
+      $dao->filepath,
+      $dao->getPropertySerialized('content', $dao->content)
+    );
     $changes = $dao->getDaoChanges();
     $dao->markDaoDatasetAsSaved();
     $dao->markDaoAsLoaded();
@@ -41,8 +44,14 @@ class FileSystemDataStore implements IDataStore
     $dao = $this->_verifyDao($dao);
     if(file_exists($dao->filepath))
     {
-      $dao->content  = file_get_contents($dao->filepath);
-      $dao->filesize = mb_strlen($dao->content);
+      $dao->content = file_get_contents($dao->filepath);
+      $dao->hydrateDao(
+        [
+          'content' => $dao->content,
+          'filesize' => mb_strlen($dao->content)
+        ],
+        true
+      );
     }
     else
     {
@@ -103,7 +112,7 @@ class FileSystemDataStore implements IDataStore
     $dao = $this->_verifyDao($dao);
     if(file_exists($dao->filepath))
     {
-      $dao->filesize = filesize($dao->filepath);
+      $dao->hydrateDao(['filesize' => filesize($dao->filepath)]);
     }
     else
     {

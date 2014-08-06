@@ -1,7 +1,10 @@
 <?php
 namespace Packaged\Dal\Foundation;
 
+use Packaged\Dal\ISanitizableDao;
+
 abstract class AbstractSanitizableDao extends AbstractDao
+  implements ISanitizableDao
 {
   const SERIALIZATION_NONE = 'none';
   const SERIALIZATION_JSON = 'json';
@@ -390,8 +393,20 @@ abstract class AbstractSanitizableDao extends AbstractDao
     return $this;
   }
 
+  /**
+   * Get the current properties on the dao
+   *
+   * @param bool $serialized Return the values serialized
+   *
+   * @return ISanitizableDao
+   */
   public function getDaoPropertyData($serialized = true)
   {
+    if(!$serialized)
+    {
+      return parent::getDaoPropertyData();
+    }
+
     $data = [];
     foreach($this->getDaoProperties() as $property)
     {

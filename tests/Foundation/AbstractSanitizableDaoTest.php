@@ -212,6 +212,20 @@ class AbstractSanitizableDaoTest extends \PHPUnit_Framework_TestCase
     $this->setExpectedException('\Exception', 'Not a lower case string');
     $mock->isValid(null, true);
   }
+
+  public function testGetPropertyData()
+  {
+    $mock = new MockSanitizableDao();
+    $mock->addSerializer('json');
+    $mock->json       = new \stdClass();
+    $mock->json->name = 'test';
+
+    $this->assertEquals($mock->json, $mock->getDaoPropertyData(false)['json']);
+    $this->assertEquals(
+      '{"name":"test"}',
+      $mock->getDaoPropertyData(true)['json']
+    );
+  }
 }
 
 /**

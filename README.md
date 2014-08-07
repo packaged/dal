@@ -6,6 +6,7 @@ Data Access Layer
 [![Build Status](https://travis-ci.org/packaged/dal.png)](https://travis-ci.org/packaged/dal)
 [![Dependency Status](https://www.versioneye.com/php/packaged:dal/badge.png)](https://www.versioneye.com/php/packaged:dal)
 [![HHVM Status](http://hhvm.h4cc.de/badge/packaged/dal.png)](http://hhvm.h4cc.de/package/packaged/dal)
+[![Coverage Status](https://coveralls.io/repos/packaged/dal/badge.png)](https://coveralls.io/r/packaged/dal)
 
 Getting Started
 ===

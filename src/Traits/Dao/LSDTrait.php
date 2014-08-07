@@ -19,7 +19,7 @@ trait LSDTrait
   }
 
   /**
-   * Save the file
+   * Save this object
    *
    * @return array
    */
@@ -29,9 +29,9 @@ trait LSDTrait
   }
 
   /**
-   * Delete this file
+   * Delete this object
    *
-   * @return FileSystemDao
+   * @return IDao
    */
   public function delete()
   {

@@ -66,8 +66,9 @@ class QlDataStore implements IDataStore
     $this->_query = "UPDATE ";
     $this->_query .= $this->escapeTableName($dao->getTableName());
     $this->_query .= " SET ";
-
     $this->_subUpdate($dao);
+    $this->_query .= " WHERE ";
+    $this->_appendIdWhere($dao);
   }
 
   protected function _subUpdate(QlDao $dao, $includeIds = true)
@@ -84,8 +85,6 @@ class QlDataStore implements IDataStore
     }
 
     $this->_query .= implode(', ', $updates);
-    $this->_query .= " WHERE ";
-    $this->_appendIdWhere($dao);
   }
 
   protected function _saveInsert(QlDao $dao)

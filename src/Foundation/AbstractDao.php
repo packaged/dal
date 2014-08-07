@@ -69,6 +69,8 @@ abstract class AbstractDao implements IDao
 
     //Set the current dataset with the defaults from public properties
     $this->hydrateDao(static::$_properties[$this->_calledClass]);
+
+    $this->markDaoDatasetAsSaved();
   }
 
   /**
@@ -79,7 +81,7 @@ abstract class AbstractDao implements IDao
   public function getDaoChanges()
   {
     $current    = (array)$this->getDaoPropertyData();
-    $changeKeys = array_keys(array_diff($this->_savedData, $current));
+    $changeKeys = array_keys(array_diff_assoc($current, $this->_savedData));
 
     $changes = [];
 

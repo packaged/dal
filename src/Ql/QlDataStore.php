@@ -120,7 +120,7 @@ class QlDataStore implements IDataStore
   {
     $this->_clearQuery();
     $dao          = $this->_verifyDao($dao);
-    $this->_query = "SELECT FROM * ";
+    $this->_query = "SELECT * FROM ";
     $this->_query .= $this->escapeTableName($dao->getTableName());
     $this->_query .= " WHERE ";
     $this->_appendIdWhere($dao);

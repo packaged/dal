@@ -27,7 +27,7 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     $dao->id = 3;
     $datastore->load($dao);
     $this->assertEquals(
-      'SELECT FROM * `mock_ql_daos` WHERE `id` = "3" LIMIT 2',
+      'SELECT * FROM `mock_ql_daos` WHERE `id` = "3" LIMIT 2',
       $connection->getExecutedQuery()
     );
 
@@ -38,7 +38,7 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     $this->assertEquals('x', $dao->username);
     $this->assertEquals('y', $dao->display);
     $this->assertEquals(
-      'SELECT FROM * `mock_multi_key_ql_daos` '
+      'SELECT * FROM `mock_multi_key_ql_daos` '
       . 'WHERE `id` = "2" AND `username` = "test@example.com" LIMIT 2',
       $connection->getExecutedQuery()
     );

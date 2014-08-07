@@ -125,6 +125,10 @@ class QlDataStore implements IDataStore
     $this->_query .= $this->escapeTableName($dao->getTableName());
     $this->_query .= " WHERE ";
     $this->_appendIdWhere($dao);
+
+    //Limit the result set to 2, for validation against multiple results
+    $this->_query .= " LIMIT 2";
+
     $results = $this->getConnection()->fetchQueryResults(
       $this->_query,
       $this->_queryValues

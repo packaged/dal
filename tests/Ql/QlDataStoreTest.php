@@ -30,7 +30,7 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     $dao->id = 3;
     $datastore->load($dao);
     $this->assertEquals(
-      'SELECT FROM * `mock` WHERE `id` = "3"',
+      'SELECT FROM * `mock_ql_daos` WHERE `id` = "3" LIMIT 2',
       $connection->getExecutedQuery()
     );
 
@@ -41,7 +41,8 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     $this->assertEquals('x', $dao->username);
     $this->assertEquals('y', $dao->display);
     $this->assertEquals(
-      'SELECT FROM * `mock` WHERE `id` = "2" AND `username` = "test@example.com"',
+      'SELECT FROM * `mock_multi_key_ql_daos` '
+      . 'WHERE `id` = "2" AND `username` = "test@example.com" LIMIT 2',
       $connection->getExecutedQuery()
     );
   }
@@ -90,7 +91,7 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     $dao->id = 3;
     $datastore->delete($dao);
     $this->assertEquals(
-      'DELETE FROM `mock` WHERE `id` = "3"',
+      'DELETE FROM `mock_ql_daos` WHERE `id` = "3"',
       $connection->getExecutedQuery()
     );
 
@@ -99,7 +100,8 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     $dao->username = 'test@example.com';
     $datastore->delete($dao);
     $this->assertEquals(
-      'DELETE FROM `mock` WHERE `id` = "2" AND `username` = "test@example.com"',
+      'DELETE FROM `mock_multi_key_ql_daos` '
+      . 'WHERE `id` = "2" AND `username` = "test@example.com"',
       $connection->getExecutedQuery()
     );
   }
@@ -120,7 +122,7 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     $dao->id = 3;
     $datastore->delete($dao);
     $this->assertEquals(
-      'DELETE FROM `mock` WHERE `id` = "3"',
+      'DELETE FROM `mock_ql_daos` WHERE `id` = "3"',
       $connection->getExecutedQuery()
     );
   }
@@ -141,7 +143,7 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     $dao->id = 3;
     $datastore->delete($dao);
     $this->assertEquals(
-      'DELETE FROM `mock` WHERE `id` = "3"',
+      'DELETE FROM `mock_ql_daos` WHERE `id` = "3"',
       $connection->getExecutedQuery()
     );
   }
@@ -158,7 +160,7 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     $dao->display  = 'John Smith';
     $datastore->save($dao);
     $this->assertEquals(
-      'INSERT INTO `mock` (`id`, `username`, `display`) '
+      'INSERT INTO `mock_ql_daos` (`id`, `username`, `display`) '
       . 'VALUES(NULL, "username", "John Smith")',
       $connection->getExecutedQuery()
     );
@@ -170,7 +172,7 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     $dao->username = 'usernamde';
     $datastore->save($dao);
     $this->assertEquals(
-      'UPDATE `mock` SET `username` = "usernamde" WHERE `id` = "3"',
+      'UPDATE `mock_ql_daos` SET `username` = "usernamde" WHERE `id` = "3"',
       $connection->getExecutedQuery()
     );
 
@@ -180,7 +182,7 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     $dao->display = 'John Smith';
     $datastore->save($dao);
     $this->assertEquals(
-      'INSERT INTO `mock` (`id`, `username`, `display`) '
+      'INSERT INTO `mock_ql_daos` (`id`, `username`, `display`) '
       . 'VALUES("3", NULL, "John Smith") '
       . 'ON DUPLICATE KEY UPDATE `display` = "John Smith" WHERE `id` = "3"',
       $connection->getExecutedQuery()

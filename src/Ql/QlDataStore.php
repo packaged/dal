@@ -49,7 +49,17 @@ class QlDataStore implements IDataStore
       $this->_saveInsertDuplicate($dao);
     }
 
-    $this->getConnection()->runQuery($this->_query, $this->_queryValues);
+    $connection = $this->getConnection();
+    $connection->runQuery($this->_query, $this->_queryValues);
+
+    if(!$hasIds && $connection instanceof ILastInsertId)
+    {
+      $id = $connection->getLastInsertId();
+      foreach($dao->getDaoIDProperties(true) as $property)
+      {
+        $dao->setDaoProperty($property, $id);
+      }
+    }
   }
 
   protected function _saveInsertDuplicate(QlDao $dao)
@@ -166,6 +176,7 @@ class QlDataStore implements IDataStore
     $this->_query .= " WHERE ";
     $this->_appendIdWhere($dao);
     $del = $this->getConnection()->runQuery($this->_query, $this->_queryValues);
+
     if($del === 1)
     {
       return $dao;

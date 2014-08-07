@@ -2,6 +2,7 @@
 namespace Packaged\Dal\Traits;
 
 use Packaged\Config\ConfigSectionInterface;
+use Packaged\Config\Provider\ConfigSection;
 
 trait ConfigurableTrait
 {
@@ -29,6 +30,10 @@ trait ConfigurableTrait
    */
   protected function _config()
   {
+    if($this->_configuration === null)
+    {
+      return new ConfigSection();
+    }
     return $this->_configuration;
   }
 }

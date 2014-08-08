@@ -42,6 +42,25 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
     $this->assertFalse($connection->isConnected());
   }
 
+  public function testAutoConnect()
+  {
+    $datastore  = new MockQlDataStore();
+    $connection = new PdoConnection();
+    $connection->configure(new ConfigSection());
+    $datastore->setConnection($connection);
+
+    $dao           = new MockQlDao();
+    $dao->username = time() . 'user';
+    $dao->display  = 'User ' . date("Y-m-d");
+    $datastore->save($dao);
+    $datastore->getConnection()->disconnect();
+    $new     = new MockQlDao();
+    $new->id = $dao->id;
+    $datastore->load($new);
+    $this->assertEquals($dao->username, $new->username);
+    $datastore->delete($new);
+  }
+
   public function testLsd()
   {
     $datastore  = new MockQlDataStore();

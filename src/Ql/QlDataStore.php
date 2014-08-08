@@ -55,7 +55,7 @@ class QlDataStore implements IDataStore, IConfigurable
       $this->_saveInsertDuplicate($dao);
     }
 
-    $connection = $this->getConnection();
+    $connection = $this->_connectedConnection();
     $connection->runQuery($this->_query, $this->_queryValues);
 
     if(!$hasIds && $connection instanceof ILastInsertId)
@@ -144,7 +144,7 @@ class QlDataStore implements IDataStore, IConfigurable
     //Limit the result set to 2, for validation against multiple results
     $this->_query .= " LIMIT 2";
 
-    $results = $this->getConnection()->fetchQueryResults(
+    $results = $this->_connectedConnection()->fetchQueryResults(
       $this->_query,
       $this->_queryValues
     );
@@ -181,7 +181,8 @@ class QlDataStore implements IDataStore, IConfigurable
     $this->_query .= $this->escapeTableName($dao->getTableName());
     $this->_query .= " WHERE ";
     $this->_appendIdWhere($dao);
-    $del = $this->getConnection()->runQuery($this->_query, $this->_queryValues);
+    $del = $this->_connectedConnection()
+      ->runQuery($this->_query, $this->_queryValues);
 
     if($del === 1)
     {
@@ -241,6 +242,21 @@ class QlDataStore implements IDataStore, IConfigurable
   public function escapeColumn($column)
   {
     return "`$column`";
+  }
+
+  /**
+   * Get the connection, and connect if not connected
+   *
+   * @return IQlDataConnection
+   * @throws \Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException
+   */
+  protected function _connectedConnection()
+  {
+    if(!$this->getConnection()->isConnected())
+    {
+      $this->getConnection()->connect();
+    }
+    return $this->getConnection();
   }
 
   /**

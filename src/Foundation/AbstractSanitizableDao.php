@@ -402,7 +402,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
    */
   public function getDaoPropertyData($serialized = true)
   {
-    if(!$serialized)
+    if(!$serialized || empty($this->_sanetizers['serializers']))
     {
       return parent::getDaoPropertyData();
     }

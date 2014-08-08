@@ -11,7 +11,7 @@ before_script:
   - composer install --no-interaction --prefer-source
   - composer require satooshi/php-coveralls:dev-master --dev --no-progress --prefer-source
   - mysql -e 'create database packaged_dal;'
-  - mysql -e 'CREATE TABLE `mock_ql_daos` (
+  - mysql -e 'CREATE TABLE `packaged_dal`.`mock_ql_daos` (
                 `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
                 `username` varchar(50) DEFAULT NULL,
                 `display` varchar(50) DEFAULT NULL,

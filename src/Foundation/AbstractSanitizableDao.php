@@ -223,6 +223,11 @@ abstract class AbstractSanitizableDao extends AbstractDao
    */
   public function hydrateDao(array $data, $raw = false)
   {
+    if(empty($this->_sanetizers['serializers']))
+    {
+      return parent::hydrateDao($data);
+    }
+
     $hydratable = array_intersect_key(
       $data,
       array_flip($this->getDaoProperties())

@@ -1,6 +1,12 @@
 <?php
 namespace Ql;
 
+use Packaged\Config\Provider\ConfigSection;
+use Packaged\Dal\DalResolver;
+use Packaged\Dal\Foundation\Dao;
+use Packaged\Dal\Ql\PdoConnection;
+use Packaged\Dal\Ql\QlDataStore;
+
 require_once 'supporting.php';
 
 class QlDataStoreTest extends \PHPUnit_Framework_TestCase
@@ -15,6 +21,39 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     );
     $fs  = new MockQlDataStore();
     $fs->load($dao);
+  }
+
+  public function testGetConnection()
+  {
+    $resolver = new DalResolver();
+    $conn     = new PdoConnection();
+    $resolver->addConnection('pdo', $conn);
+    $resolver->boot();
+    $datastore = new QlDataStore();
+    $datastore->configure(
+      new ConfigSection('qldatastore', ['connection' => 'pdo'])
+    );
+    $this->assertSame($conn, $datastore->getConnection());
+
+    $datastore = new QlDataStore();
+    $datastore->configure(
+      new ConfigSection('qldatastore', ['connection' => 'mizzing'])
+    );
+    $this->setExpectedException(
+      '\Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException'
+    );
+    $datastore->getConnection();
+
+    Dao::unsetDalResolver();
+  }
+
+  public function testUnconfiguredGetConnection()
+  {
+    $datastore = new QlDataStore();
+    $this->setExpectedException(
+      '\Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException'
+    );
+    $datastore->getConnection();
   }
 
   public function testLoad()

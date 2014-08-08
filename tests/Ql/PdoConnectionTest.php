@@ -2,7 +2,7 @@
 namespace Ql;
 
 use Packaged\Config\Provider\ConfigSection;
-use Packaged\Dal\Ql\MySql\PdoConnection;
+use Packaged\Dal\Ql\PdoConnection;
 
 require_once 'supporting.php';
 

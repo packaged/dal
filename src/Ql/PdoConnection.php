@@ -1,10 +1,8 @@
 <?php
-namespace Packaged\Dal\Ql\MySql;
+namespace Packaged\Dal\Ql;
 
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
 use Packaged\Dal\IConfigurable;
-use Packaged\Dal\Ql\ILastInsertId;
-use Packaged\Dal\Ql\IQLDataConnection;
 use Packaged\Dal\Traits\ConfigurableTrait;
 use Packaged\Helpers\ValueAs;
 

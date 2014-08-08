@@ -225,7 +225,14 @@ class DalResolver implements IConnectionResolver
     //Do not configure items multiple times
     if(!isset($this->_confed[$type][$name]) && $item instanceof IConfigurable)
     {
-      $item->configure($this->_config[$type]->getSection($name));
+      if($this->_config[$type]->sectionExists($name))
+      {
+        $item->configure($this->_config[$type]->getSection($name));
+      }
+      else
+      {
+        $item->configure(new ConfigSection($name));
+      }
       $this->_confed[$type][$name] = true;
     }
     return $item;

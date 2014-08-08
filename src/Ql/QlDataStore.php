@@ -1,13 +1,19 @@
 <?php
 namespace Packaged\Dal\Ql;
 
+use Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException;
 use Packaged\Dal\Exceptions\DataStore\DaoNotFoundException;
 use Packaged\Dal\Exceptions\DataStore\DataStoreException;
+use Packaged\Dal\Foundation\Dao;
+use Packaged\Dal\IConfigurable;
 use Packaged\Dal\IDao;
 use Packaged\Dal\IDataStore;
+use Packaged\Dal\Traits\ConfigurableTrait;
 
-class QlDataStore implements IDataStore
+class QlDataStore implements IDataStore, IConfigurable
 {
+  use ConfigurableTrait;
+
   protected $_connection;
   protected $_query;
   protected $_queryValues;
@@ -238,11 +244,24 @@ class QlDataStore implements IDataStore
   }
 
   /**
+   * Retrieve the connection for this data store
+   *
    * @return IQlDataConnection
-   * @throws \Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException
+   * @throws ConnectionNotFoundException
    */
   public function getConnection()
   {
+    if($this->_connection === null)
+    {
+      $conn = $this->_config()->getItem('connection');
+      if($conn === null)
+      {
+        throw new ConnectionNotFoundException(
+          "No connection has been configured on this datastore"
+        );
+      }
+      $this->_connection = Dao::getDalResolver()->getConnection($conn);
+    }
     return $this->_connection;
   }
 }

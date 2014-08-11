@@ -28,9 +28,17 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     );
   }
 
+  protected function _configureConnection(CqlConnection $conn)
+  {
+    $conn->setReceiveTimeout(5000);
+    $conn->setSendTimeout(5000);
+    $conn->setConfig('connect_timeout', 1000);
+  }
+
   public function testConnection()
   {
     $connection = new CqlConnection();
+    $this->_configureConnection($connection);
     $this->assertFalse($connection->isConnected());
     $connection->connect();
     $this->assertTrue($connection->isConnected());
@@ -55,7 +63,7 @@ class CqlTest extends \PHPUnit_Framework_TestCase
   {
     $datastore  = new MockCqlDataStore();
     $connection = new CqlConnection();
-    $connection->configure(new ConfigSection());
+    $this->_configureConnection($connection);
     $datastore->setConnection($connection);
     $connection->connect();
 
@@ -77,6 +85,7 @@ class CqlTest extends \PHPUnit_Framework_TestCase
   public function testConnectionConfig()
   {
     $connection = new MockCqlConnection();
+    $this->_configureConnection($connection);
     $connection->connect();
     $connection->setReceiveTimeout(123);
     $this->assertEquals(123, $connection->getConfig('receive_timeout'));
@@ -90,6 +99,7 @@ class CqlTest extends \PHPUnit_Framework_TestCase
   public function testPrepareException()
   {
     $connection = new MockCqlConnection();
+    $this->_configureConnection($connection);
     $connection->connect();
     $this->setExpectedException(
       '\Packaged\Dal\Exceptions\Connection\CqlException'
@@ -100,6 +110,7 @@ class CqlTest extends \PHPUnit_Framework_TestCase
   public function testExecuteException()
   {
     $connection = new MockCqlConnection();
+    $this->_configureConnection($connection);
     $connection->connect();
     $this->setExpectedException(
       '\Packaged\Dal\Exceptions\Connection\CqlException'

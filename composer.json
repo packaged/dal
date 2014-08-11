@@ -9,10 +9,11 @@
     }
   ],
   "require":     {
-    "php":                ">=5.4.0",
-    "packaged/helpers":   "*",
-    "doctrine/inflector": "*",
-    "packaged/config":    "*"
+    "php":                      ">=5.4.0",
+    "packaged/helpers":         "*",
+    "doctrine/inflector":       "*",
+    "packaged/config":          "*",
+    "packaged/cassandrathrift": "*"
   },
   "require-dev": {
     "phpunit/phpunit": "4.1"

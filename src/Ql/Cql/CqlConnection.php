@@ -9,6 +9,7 @@ use cassandra\CqlPreparedResult;
 use cassandra\CqlResult;
 use cassandra\CqlResultType;
 use cassandra\CqlRow;
+use cassandra\InvalidRequestException;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
 use Packaged\Dal\Exceptions\Connection\CqlException;
 use Packaged\Dal\IConfigurable;
@@ -89,9 +90,16 @@ class CqlConnection implements IQLDataConnection, IConfigurable
           (int)$this->_config()->getItem('send_timeout', 1000)
         );
 
-        $this->_client->set_keyspace(
-          $this->_config()->getItem('keyspace', 'packaged_dal')
-        );
+        try
+        {
+          $this->_client->set_keyspace(
+            $this->_config()->getItem('keyspace', 'packaged_dal')
+          );
+        }
+        catch(InvalidRequestException $e)
+        {
+          //Allow connection with no keyspace, for keyspace creation
+        }
       }
       catch(TException $e)
       {
@@ -142,7 +150,7 @@ class CqlConnection implements IQLDataConnection, IConfigurable
    *
    * @return int number of affected rows
    */
-  public function runQuery($query, array $values = null)
+  public function runQuery($query, array $values = [])
   {
     $prep = $this->prepare($query);
     $this->execute(
@@ -161,7 +169,7 @@ class CqlConnection implements IQLDataConnection, IConfigurable
    *
    * @return array
    */
-  public function fetchQueryResults($query, array $values = null)
+  public function fetchQueryResults($query, array $values = [])
   {
     $prep    = $this->prepare($query);
     $results = $this->execute(

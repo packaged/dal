@@ -11,6 +11,23 @@ require_once 'supporting.php';
 
 class CqlTest extends \PHPUnit_Framework_TestCase
 {
+  public function setup()
+  {
+    $connection = new CqlConnection();
+    $connection->connect();
+    $connection->runQuery(
+      "CREATE KEYSPACE IF NOT EXISTS packaged_dal WITH REPLICATION = "
+      . "{'class' : 'SimpleStrategy','replication_factor' : 1};"
+    );
+    $connection->runQuery(
+      "CREATE TABLE IF NOT EXISTS packaged_dal.mock_ql_daos ("
+      . "id varchar PRIMARY KEY,"
+      . "username varchar,"
+      . "display varchar"
+      . ");"
+    );
+  }
+
   public function testConnection()
   {
     $connection = new CqlConnection();

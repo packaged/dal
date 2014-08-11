@@ -32,7 +32,7 @@ trait ConfigurableTrait
   {
     if($this->_configuration === null)
     {
-      return new ConfigSection();
+      $this->_configuration = new ConfigSection();
     }
     return $this->_configuration;
   }

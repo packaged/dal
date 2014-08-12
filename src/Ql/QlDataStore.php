@@ -161,6 +161,7 @@ class QlDataStore implements IDataStore, IConfigurable
       default:
         throw new DataStoreException("Too many results located");
     }
+    return $dao;
   }
 
   /**

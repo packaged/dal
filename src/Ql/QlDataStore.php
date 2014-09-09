@@ -1,16 +1,16 @@
 <?php
 namespace Packaged\Dal\Ql;
 
+use Packaged\Config\ConfigurableInterface;
 use Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException;
 use Packaged\Dal\Exceptions\DataStore\DaoNotFoundException;
 use Packaged\Dal\Exceptions\DataStore\DataStoreException;
 use Packaged\Dal\Foundation\Dao;
-use Packaged\Dal\IConfigurable;
 use Packaged\Dal\IDao;
 use Packaged\Dal\IDataStore;
-use Packaged\Dal\Traits\ConfigurableTrait;
+use Packaged\Config\ConfigurableTrait;
 
-class QlDataStore implements IDataStore, IConfigurable
+class QlDataStore implements IDataStore, ConfigurableInterface
 {
   use ConfigurableTrait;
 

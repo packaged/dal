@@ -10,18 +10,18 @@ use cassandra\CqlResult;
 use cassandra\CqlResultType;
 use cassandra\CqlRow;
 use cassandra\InvalidRequestException;
+use Packaged\Config\ConfigurableInterface;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
 use Packaged\Dal\Exceptions\Connection\CqlException;
-use Packaged\Dal\IConfigurable;
 use Packaged\Dal\Ql\IQLDataConnection;
-use Packaged\Dal\Traits\ConfigurableTrait;
+use Packaged\Config\ConfigurableTrait;
 use Packaged\Helpers\ValueAs;
 use Thrift\Exception\TException;
 use Thrift\Protocol\TBinaryProtocolAccelerated;
 use Thrift\Transport\TFramedTransport;
 use Thrift\Transport\TSocketPool;
 
-class CqlConnection implements IQLDataConnection, IConfigurable
+class CqlConnection implements IQLDataConnection, ConfigurableInterface
 {
   use ConfigurableTrait;
 

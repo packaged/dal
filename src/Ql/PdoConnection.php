@@ -1,12 +1,13 @@
 <?php
 namespace Packaged\Dal\Ql;
 
+use Packaged\Config\ConfigurableInterface;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
-use Packaged\Dal\IConfigurable;
-use Packaged\Dal\Traits\ConfigurableTrait;
+use Packaged\Config\ConfigurableTrait;
 use Packaged\Helpers\ValueAs;
 
-class PdoConnection implements IQLDataConnection, IConfigurable, ILastInsertId
+class PdoConnection
+  implements IQLDataConnection, ConfigurableInterface, ILastInsertId
 {
   use ConfigurableTrait;
 

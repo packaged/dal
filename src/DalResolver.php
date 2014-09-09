@@ -2,6 +2,7 @@
 namespace Packaged\Dal;
 
 use Packaged\Config\ConfigProviderInterface;
+use Packaged\Config\ConfigurableInterface;
 use Packaged\Config\Provider\ConfigSection;
 use Packaged\Config\Provider\Test\TestConfigProvider;
 use Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException;
@@ -223,7 +224,7 @@ class DalResolver implements IConnectionResolver
   protected function _configureDSC($name, $item, $type = 'connection')
   {
     //Do not configure items multiple times
-    if(!isset($this->_confed[$type][$name]) && $item instanceof IConfigurable)
+    if(!isset($this->_confed[$type][$name]) && $item instanceof ConfigurableInterface)
     {
       if($this->_config[$type]->sectionExists($name))
       {

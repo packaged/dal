@@ -137,9 +137,10 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
 }
 
 class ConfigurableConnection
-  implements \Packaged\Dal\IDataConnection, \Packaged\Dal\IConfigurable
+  implements \Packaged\Dal\IDataConnection,
+             \Packaged\Config\ConfigurableInterface
 {
-  use \Packaged\Dal\Traits\ConfigurableTrait;
+  use \Packaged\Config\ConfigurableTrait;
 
   public static function create()
   {

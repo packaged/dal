@@ -3,9 +3,14 @@ namespace Packaged\Dal\Ql;
 
 use Doctrine\Common\Inflector\Inflector;
 use Packaged\Dal\Foundation\AbstractSanitizableDao;
+use Packaged\Dal\Foundation\DaoCollection;
+use Packaged\Dal\IDaoCollection;
 use Packaged\Dal\Traits\Dao\LSDTrait;
 use Packaged\Helpers\Strings;
 
+/**
+ * @method QLDataStore getDataStore
+ */
 abstract class QlDao extends AbstractSanitizableDao
 {
   use LSDTrait;
@@ -28,8 +33,7 @@ abstract class QlDao extends AbstractSanitizableDao
       {
         $ns = ltrim(string_from($ns, $dir), '\\');
       }
-
-      $this->_tableName = ltrim(
+      $this->_tableName = trim(
         Inflector::tableize(
           implode(
             '_',
@@ -39,10 +43,36 @@ abstract class QlDao extends AbstractSanitizableDao
             ]
           )
         ),
-        '_'
+        '_ '
       );
+      $this->_tableName = str_replace('__', '_', $this->_tableName);
     }
     return $this->_tableName;
+  }
+
+  /**
+   * @param $params
+   *
+   * @return static[]
+   */
+  public static function loadWhere(...$params)
+  {
+    return static::collection(...$params);
+  }
+
+  /**
+   * @param $params
+   *
+   * @return QlDaoCollection
+   */
+  public static function collection(...$params)
+  {
+    $collection = QlDaoCollection::create(get_called_class());
+    if(func_num_args() > 0)
+    {
+      $collection->loadWhere(...$params);
+    }
+    return $collection;
   }
 
   /**

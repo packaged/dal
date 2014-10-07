@@ -2,6 +2,7 @@
 namespace Ql;
 
 use Packaged\Config\Provider\ConfigSection;
+use Packaged\Dal\Exceptions\Connection\ConnectionException;
 use Packaged\Dal\Ql\PdoConnection;
 
 require_once 'supporting.php';
@@ -59,6 +60,15 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
     $datastore->load($new);
     $this->assertEquals($dao->username, $new->username);
     $datastore->delete($new);
+  }
+
+  public function testExceptions()
+  {
+    $connection = new PdoConnection();
+    $connection->configure(new ConfigSection());
+    $connection->connect();
+    $this->setExpectedException(ConnectionException::class);
+    $connection->runQuery("SELECT * FROM made_up_table_r43i", []);
   }
 
   public function testLsd()

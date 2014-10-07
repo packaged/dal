@@ -8,6 +8,8 @@ use Packaged\Dal\Ql\QlDataStore;
 
 class MockQlDao extends QlDao
 {
+  protected $_dataStoreName = 'mockql';
+
   public $id;
   public $username;
   public $display;

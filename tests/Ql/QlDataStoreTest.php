@@ -6,6 +6,7 @@ use Packaged\Dal\DalResolver;
 use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\Ql\PdoConnection;
 use Packaged\Dal\Ql\QlDataStore;
+use Packaged\QueryBuilder\Builder\QueryBuilder;
 
 require_once 'supporting.php';
 
@@ -221,6 +222,19 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
       'INSERT INTO `mock_ql_daos` (`id`, `username`, `display`) '
       . 'VALUES("3", NULL, "John Smith") '
       . 'ON DUPLICATE KEY UPDATE `display` = "John Smith"',
+      $connection->getExecutedQuery()
+    );
+  }
+
+  public function testGetData()
+  {
+    $dao        = new MockQlDao();
+    $datastore  = new MockQlDataStore();
+    $connection = new MockAbstractQlDataConnection();
+    $datastore->setConnection($connection);
+    $datastore->getData(QueryBuilder::select()->from($dao->getTableName()));
+    $this->assertEquals(
+      'SELECT * FROM mock_ql_daos',
       $connection->getExecutedQuery()
     );
   }

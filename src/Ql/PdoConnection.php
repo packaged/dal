@@ -119,11 +119,18 @@ class PdoConnection
    * @param array $values
    *
    * @return int number of affected rows
+   *
+   * @throws ConnectionException
    */
   public function runQuery($query, array $values = null)
   {
     $statement = $this->_connection->prepare($query);
     $statement->execute($values);
+    if($statement->errorCode() > 0)
+    {
+      $err = $statement->errorInfo();
+      throw new ConnectionException($err[2], $err[1]);
+    }
     return $statement->rowCount();
   }
 

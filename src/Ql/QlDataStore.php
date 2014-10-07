@@ -9,6 +9,7 @@ use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\IDao;
 use Packaged\Dal\IDataStore;
 use Packaged\Config\ConfigurableTrait;
+use Packaged\QueryBuilder\Statement\QueryStatement;
 
 class QlDataStore implements IDataStore, ConfigurableInterface
 {
@@ -233,6 +234,15 @@ class QlDataStore implements IDataStore, ConfigurableInterface
       $this->_queryValues[] = $value;
     }
     $this->_query .= implode(' AND ', $queryParts);
+  }
+
+  public function getData(QueryStatement $statement)
+  {
+    $results = $this->_connectedConnection()->fetchQueryResults(
+      $statement->assemble(),
+      []
+    );
+    return $results;
   }
 
   public function escapeTableName($table)

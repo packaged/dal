@@ -9,6 +9,7 @@ php:
 
 before_script:
   - composer self-update
+  - sleep 30
   - composer install --no-interaction --prefer-source
   - composer require satooshi/php-coveralls:dev-master --dev --no-progress --prefer-source
   - mysql -e 'create database packaged_dal;'

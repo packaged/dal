@@ -103,6 +103,16 @@ class AbstractDaoTest extends \PHPUnit_Framework_TestCase
     Dao::unsetDalResolver();
     $this->assertNull($mock->getDalResolver());
   }
+
+  public function testJsonSerialize()
+  {
+    $dao       = new MockAbstractDao();
+    $dao->name = "Brooke";
+    $this->assertEquals(
+      '{"name":"Brooke","email":"nobody@example.com"}',
+      json_encode($dao)
+    );
+  }
 }
 
 class MockAbstractBaseDao extends AbstractDao

@@ -10,7 +10,7 @@ namespace Packaged\Dal;
  *
  * @package Packaged\Dal
  */
-interface IDao
+interface IDao extends \JsonSerializable
 {
   /**
    * Get all changed properties since load

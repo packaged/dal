@@ -1,7 +1,7 @@
 <?php
 namespace Packaged\Dal;
 
-use Packaged\Dal\Exceptions\ConnectionResolver\ConnectionNotFoundException;
+use Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException;
 
 /**
  * Interface IConnectionResolver Connection Retrieval

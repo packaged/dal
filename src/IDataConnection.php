@@ -1,7 +1,6 @@
 <?php
 namespace Packaged\Dal;
 
-use Packaged\Config\ConfigSectionInterface;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
 
 /**

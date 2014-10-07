@@ -205,8 +205,9 @@ class CqlConnection implements IQLDataConnection, ConfigurableInterface
   }
 
   /**
-   * @param array $parameters
-   * @param int   $consistency
+   * @param CqlPreparedResult $statement
+   * @param array             $parameters
+   * @param int               $consistency
    *
    * @return array|mixed
    * @throws CqlException

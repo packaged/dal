@@ -1,6 +1,7 @@
 <?php
 namespace Packaged\Dal\Traits\Dao;
 
+use Packaged\Dal\Foundation\AbstractDao;
 use Packaged\Dal\IDao;
 use Packaged\Dal\IDataStore;
 
@@ -15,6 +16,9 @@ trait LSDTrait
    */
   public function load()
   {
+    /**
+     * @var $this AbstractDao
+     */
     return $this->getDataStore()->load($this);
   }
 
@@ -25,6 +29,9 @@ trait LSDTrait
    */
   public function save()
   {
+    /**
+     * @var $this AbstractDao
+     */
     return $this->getDataStore()->save($this);
   }
 
@@ -35,6 +42,9 @@ trait LSDTrait
    */
   public function delete()
   {
+    /**
+     * @var $this AbstractDao
+     */
     return $this->getDataStore()->delete($this);
   }
 }

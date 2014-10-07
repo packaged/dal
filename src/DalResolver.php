@@ -7,7 +7,6 @@ use Packaged\Config\Provider\ConfigSection;
 use Packaged\Config\Provider\Test\TestConfigProvider;
 use Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException;
 use Packaged\Dal\Exceptions\DalResolver\DataStoreNotFoundException;
-use Packaged\Dal\Foundation\AbstractDao;
 use Packaged\Dal\Foundation\Dao;
 
 /**

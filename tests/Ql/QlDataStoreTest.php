@@ -234,7 +234,7 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     $datastore->setConnection($connection);
     $datastore->getData(QueryBuilder::select()->from($dao->getTableName()));
     $this->assertEquals(
-      'SELECT * FROM mock_ql_daos',
+      'SELECT * FROM `mock_ql_daos`',
       $connection->getExecutedQuery()
     );
   }

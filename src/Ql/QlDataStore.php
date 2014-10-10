@@ -9,6 +9,7 @@ use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\IDao;
 use Packaged\Dal\IDataStore;
 use Packaged\Config\ConfigurableTrait;
+use Packaged\QueryBuilder\Assembler\MySQL\MySQLAssembler;
 use Packaged\QueryBuilder\Statement\QueryStatement;
 
 class QlDataStore implements IDataStore, ConfigurableInterface
@@ -239,7 +240,7 @@ class QlDataStore implements IDataStore, ConfigurableInterface
   public function getData(QueryStatement $statement)
   {
     $results = $this->_connectedConnection()->fetchQueryResults(
-      $statement->assemble(),
+      MySQLAssembler::stringify($statement),
       []
     );
     return $results;

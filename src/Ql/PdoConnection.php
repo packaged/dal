@@ -125,7 +125,15 @@ class PdoConnection
   public function runQuery($query, array $values = null)
   {
     $statement = $this->_connection->prepare($query);
-    $statement->execute($values);
+    try
+    {
+      $statement->execute($values);
+    }
+    catch(\Exception $e)
+    {
+      throw new ConnectionException($e->getMessage(), $e->getCode(), $e);
+    }
+
     if($statement->errorCode() > 0)
     {
       $err = $statement->errorInfo();

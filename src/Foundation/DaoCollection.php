@@ -131,7 +131,7 @@ class DaoCollection implements IDaoCollection
    */
   public function getIterator()
   {
-    return new \ArrayIterator($this->_daos);
+    return new \ArrayIterator((array)$this->_daos);
   }
 
   /**

@@ -10,9 +10,66 @@ Data Access Layer
 
 Getting Started
 ===
-
-    $resolver = new DalResolver($connectionConfigs,$datastoreConfigs);
+    
+    $connectionConfig = new \Packaged\Config\Provider\Ini\IniConfigProvider(
+      build_path('config', 'connections.ini')
+    );
+    $datastoreConfig  = new \Packaged\Config\Provider\Ini\IniConfigProvider(
+      build_path('config', 'datastores.ini')
+    );
+    
+    $resolver = new \Packaged\Dal\DalResolver($connectionConfig,$datastoreConfig);
     $resolver->boot();
+    
+    
+  connections.ini
+
+    [users]
+    construct_class = \Packaged\Dal\Ql\PdoConnection
+
+  datastores.ini
+  
+    [users]
+    construct_class = \Packaged\Dal\Ql\QlDataStore
+    connection = users
+    
+  users.php
+    
+    class User extends QlDao
+    {
+      protected $_dataStoreName = 'users';
+      public $id;
+      public $name;
+    }
+    
+  Basic Usage
+  
+    $user       = new User();
+    $user->name = 'Test';
+    $user->save();
+    
+    $user->name = 'Testing';
+    $user->save();
+    
+    $user->delete();
+    
+    $user     = new User();
+    $user->id = 4;
+    $user->load();
+    
+    $tbUsers = User::loadWhere(['name' => ['Test','Testing']]);
+    foreach($tbUsers as $user)
+    {
+    echo "Located $user->name\n";
+    }
+    
+    $users = User::collection();
+    var_dump($users->min('id'));
+    var_dump($users->max('id'));
+    var_dump($users->sum('id'));
+    var_dump($users->avg('id'));
+    
+    var_dump_json($users->distinct('name'));
 
 FYI
 ===

@@ -23,6 +23,27 @@ trait LSDTrait
   }
 
   /**
+   * Load a DAO by its ID(s)
+   *
+   * @param ...$id
+   *
+   * @return static
+   */
+  public static function loadById(...$id)
+  {
+    $dao = new static;
+    /**
+     * @var $dao AbstractDao
+     */
+    $dao->hydrateDao(array_combine($dao->getDaoIDProperties(), $id));
+    /**
+     * @var $dao LsdTrait
+     */
+    $dao->load();
+    return $dao;
+  }
+
+  /**
    * Save this object
    *
    * @return array

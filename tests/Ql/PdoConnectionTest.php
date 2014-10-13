@@ -2,7 +2,9 @@
 namespace Ql;
 
 use Packaged\Config\Provider\ConfigSection;
+use Packaged\Dal\DalResolver;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
+use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\Ql\PdoConnection;
 
 require_once 'supporting.php';
@@ -59,6 +61,7 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
     $new->id = $dao->id;
     $datastore->load($new);
     $this->assertEquals($dao->username, $new->username);
+
     $datastore->delete($new);
   }
 
@@ -68,7 +71,7 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
     $connection->configure(new ConfigSection());
     $connection->connect();
     $this->setExpectedException(ConnectionException::class);
-    $connection->runQuery("SELECT * FROM made_up_table_r43i", []);
+    $connection->runQuery("SELECT * FROM `made_up_table_r43i`", []);
   }
 
   public function testLsd()
@@ -78,6 +81,10 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
     $connection->configure(new ConfigSection());
     $datastore->setConnection($connection);
     $connection->connect();
+
+    $resolver = new DalResolver();
+    $resolver->addDataStore('mockql', $datastore);
+    $resolver->boot();
 
     $dao           = new MockQlDao();
     $dao->username = time() . 'user';
@@ -91,7 +98,13 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
     $this->assertEquals('test 1', $dao->username);
     $dao->display = 'Save 2';
     $datastore->save($dao);
+
+    $staticLoad = MockQlDao::loadById($dao->id);
+    $this->assertEquals($dao->username, $staticLoad->username);
+
     $datastore->delete($dao);
+
+    $resolver->shutdown();
   }
 }
 

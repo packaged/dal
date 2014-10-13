@@ -131,7 +131,7 @@ class PdoConnection
     }
     catch(\PDOException $e)
     {
-      throw new ConnectionException($e->getMessage(), $e->errorInfo[1], $e);
+      throw new ConnectionException($e->errorInfo[2], $e->errorInfo[1]);
     }
 
     return $statement->rowCount();

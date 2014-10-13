@@ -11,7 +11,7 @@
   "require": {
     "php": ">=5.6.0",
     "packaged/helpers": "*",
-    "packaged/querybuilder": "*",
+    "packaged/querybuilder": "dev-master",
     "doctrine/inflector": "*",
     "packaged/config": "*",
     "packaged/cassandrathrift": "*"

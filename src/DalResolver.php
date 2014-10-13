@@ -286,4 +286,49 @@ class DalResolver implements IConnectionResolver
     }
     return null;
   }
+
+  /**
+   * Check to see if a datastore is defined by name
+   *
+   * @param $name
+   *
+   * @return bool
+   */
+  public function hasDatastore($name)
+  {
+    if(!isset($this->_datastores[$name]))
+    {
+      $this->_datastores[$name] = $this->_fromConfiguration('datastore', $name);
+    }
+
+    if(isset($this->_datastores[$name]))
+    {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Check to see if a connection is defined by name
+   *
+   * @param $name
+   *
+   * @return bool
+   */
+  public function hasConnection($name)
+  {
+    if(!isset($this->_connections[$name]))
+    {
+      $this->_connections[$name] = $this->_fromConfiguration(
+        'connection',
+        $name
+      );
+    }
+
+    if(isset($this->_connections[$name]))
+    {
+      return true;
+    }
+    return false;
+  }
 }

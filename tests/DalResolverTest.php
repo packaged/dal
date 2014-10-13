@@ -120,6 +120,14 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
       $datastoreConfig
     );
 
+    $this->assertFalse($resolver->hasConnection('conX'));
+    $this->assertTrue($resolver->hasConnection('con1'));
+
+    $this->assertFalse($resolver->hasDatastore('ds2'));
+    $this->assertFalse($resolver->hasDatastore('ds1'));
+    $this->assertTrue($resolver->hasDatastore('qlds'));
+    $this->assertTrue($resolver->hasDatastore('filesystem'));
+
     $connection = $resolver->getConnection('con1');
     /**
      * @var $connection ConfigurableConnection

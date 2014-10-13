@@ -43,7 +43,7 @@ class PdoConnection
         $dsn,
         $this->_config()->getItem('username', 'root'),
         $this->_config()->getItem('password', ''),
-        array_merge(
+        array_replace(
           $this->_defaultOptions(),
           ValueAs::arr($this->_config()->getItem('options'))
         )
@@ -129,16 +129,11 @@ class PdoConnection
     {
       $statement->execute($values);
     }
-    catch(\Exception $e)
+    catch(\PDOException $e)
     {
-      throw new ConnectionException($e->getMessage(), $e->getCode(), $e);
+      throw new ConnectionException($e->getMessage(), $e->errorInfo[1], $e);
     }
 
-    if($statement->errorCode() > 0)
-    {
-      $err = $statement->errorInfo();
-      throw new ConnectionException($err[2], $err[1]);
-    }
     return $statement->rowCount();
   }
 

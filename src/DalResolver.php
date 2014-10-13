@@ -64,6 +64,11 @@ class DalResolver implements IConnectionResolver
     Dao::setDalResolver($this);
   }
 
+  public function shutdown()
+  {
+    Dao::unsetDalResolver();
+  }
+
   /**
    * @var IDataConnection[]|callable[]
    */

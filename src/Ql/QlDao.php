@@ -2,15 +2,12 @@
 namespace Packaged\Dal\Ql;
 
 use Doctrine\Common\Inflector\Inflector;
+use Packaged\Config\Provider\ConfigSection;
+use Packaged\Dal\Exceptions\DalResolver\DataStoreNotFoundException;
 use Packaged\Dal\Foundation\AbstractSanitizableDao;
-use Packaged\Dal\Foundation\DaoCollection;
-use Packaged\Dal\IDaoCollection;
 use Packaged\Dal\Traits\Dao\LSDTrait;
 use Packaged\Helpers\Strings;
 
-/**
- * @method QLDataStore getDataStore
- */
 abstract class QlDao extends AbstractSanitizableDao
 {
   use LSDTrait;
@@ -82,6 +79,37 @@ abstract class QlDao extends AbstractSanitizableDao
    */
   public function getTableNameExcludeDirs()
   {
-    return ['Mappers', 'Daos', 'Dal', 'Ql', 'Models', 'Database'];
+    return ['Mappers', 'Daos', 'Dal', 'Ql', 'Models', 'Database', 'Dao'];
+  }
+
+  /**
+   * Get the data store for this dao
+   *
+   * @return QlDataStore
+   *
+   * @throws DataStoreNotFoundException
+   */
+  public function getDataStore()
+  {
+    try
+    {
+      return static::$_resolver->getDataStore($this->_dataStoreName);
+    }
+    catch(DataStoreNotFoundException $e)
+    {
+      if(static::getDalResolver()->hasConnection($this->_dataStoreName))
+      {
+        $dataStore = new QlDataStore();
+        $dataStore->configure(
+          new ConfigSection('', ['connection' => $this->_dataStoreName])
+        );
+        static::getDalResolver()->addDataStore(
+          $this->_dataStoreName,
+          $dataStore
+        );
+        return $dataStore;
+      }
+      throw $e;
+    }
   }
 }

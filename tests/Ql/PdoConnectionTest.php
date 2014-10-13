@@ -65,13 +65,22 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
     $datastore->delete($new);
   }
 
-  public function testExceptions()
+  public function testRunQueryExceptions()
   {
     $connection = new PdoConnection();
     $connection->configure(new ConfigSection());
     $connection->connect();
     $this->setExpectedException(ConnectionException::class);
     $connection->runQuery("SELECT * FROM `made_up_table_r43i`", []);
+  }
+
+  public function testfetchQueryResultsExceptions()
+  {
+    $connection = new PdoConnection();
+    $connection->configure(new ConfigSection());
+    $connection->connect();
+    $this->setExpectedException(ConnectionException::class);
+    $connection->fetchQueryResults("SELECT * FROM `made_up_table_r43i`", []);
   }
 
   public function testLsd()

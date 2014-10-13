@@ -144,12 +144,21 @@ class PdoConnection
    * @param array $values
    *
    * @return array
+   *
+   * @throws ConnectionException
    */
   public function fetchQueryResults($query, array $values = null)
   {
-    $statement = $this->_connection->prepare($query);
-    $statement->execute($values);
-    $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
+    try
+    {
+      $statement = $this->_connection->prepare($query);
+      $statement->execute($values);
+      $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+    catch(\PDOException $e)
+    {
+      throw new ConnectionException($e->errorInfo[2], $e->errorInfo[1]);
+    }
     return (array)$results;
   }
 

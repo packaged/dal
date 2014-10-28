@@ -49,9 +49,16 @@ abstract class AbstractDao implements IDao
   /**
    * Create a new instance of your DAO
    */
-  public function __construct()
+  public function __construct(...$constructArgs)
   {
-    $this->daoConstruct();
+    $this->daoConstruct(...$constructArgs);
+  }
+
+  /**
+   * Hook into the construct event
+   */
+  protected function _construct()
+  {
   }
 
   /**
@@ -59,16 +66,19 @@ abstract class AbstractDao implements IDao
    *
    * This should always be called at the first line of your __construct
    */
-  final public function daoConstruct()
+  final public function daoConstruct(...$constructArgs)
   {
     //Calculate public properties
     $this->_startup();
 
-    //Configure the DAO
-    $this->_configure();
+    //Run any specific constructor
+    $this->_construct(...$constructArgs);
 
     //Set the current dataset with the defaults from public properties
     $this->hydrateDao(static::$_properties[$this->_calledClass]);
+
+    //Configure the DAO
+    $this->_configure();
 
     $this->markDaoDatasetAsSaved();
   }

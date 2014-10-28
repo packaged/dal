@@ -20,9 +20,8 @@ class FileSystemDao extends AbstractSanitizableDao
   /**
    * @param string $filepath Full path to the file
    */
-  public function __construct($filepath = null)
+  protected function _construct($filepath = null)
   {
-    $this->daoConstruct();
     $this->_setDataStoreName('filesystem');
     $this->filepath = $filepath;
   }

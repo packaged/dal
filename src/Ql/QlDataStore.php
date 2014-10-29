@@ -31,7 +31,6 @@ class QlDataStore implements IDataStore, ConfigurableInterface
    */
   public function save(IDao $dao)
   {
-    $dao = $this->_verifyDao($dao);
     $this->_clearQuery();
     $dao = $this->_verifyDao($dao);
 
@@ -177,7 +176,6 @@ class QlDataStore implements IDataStore, ConfigurableInterface
    */
   public function delete(IDao $dao)
   {
-    $dao = $this->_verifyDao($dao);
     $this->_clearQuery();
     $dao          = $this->_verifyDao($dao);
     $this->_query = "DELETE FROM ";

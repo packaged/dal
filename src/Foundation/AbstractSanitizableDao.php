@@ -403,7 +403,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
    *
    * @param bool $serialized Return the values serialized
    *
-   * @return ISanitizableDao
+   * @return array
    */
   public function getDaoPropertyData($serialized = true)
   {

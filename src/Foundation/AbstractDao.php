@@ -71,11 +71,11 @@ abstract class AbstractDao implements IDao
     //Calculate public properties
     $this->_startup();
 
-    //Run any specific constructor
-    $this->_construct(...$constructArgs);
-
     //Set the current dataset with the defaults from public properties
     $this->hydrateDao(static::$_properties[$this->_calledClass]);
+
+    //Run any specific constructor
+    $this->_construct(...$constructArgs);
 
     //Configure the DAO
     $this->_configure();

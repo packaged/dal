@@ -54,7 +54,7 @@ abstract class QlDao extends AbstractSanitizableDao
    */
   public static function loadWhere(...$params)
   {
-    return static::collection(...$params);
+    return static::collection(...$params)->getRawArray();
   }
 
   /**

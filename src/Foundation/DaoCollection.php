@@ -50,6 +50,11 @@ class DaoCollection implements IDaoCollection
     return $collection;
   }
 
+  public function getRawArray()
+  {
+    return (array)$this->_daos;
+  }
+
   /**
    * Execute a callback over each dao in the collection
    *

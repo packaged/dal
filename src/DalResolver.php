@@ -2,6 +2,7 @@
 namespace Packaged\Dal;
 
 use Packaged\Config\ConfigProviderInterface;
+use Packaged\Config\ConfigSectionInterface;
 use Packaged\Config\ConfigurableInterface;
 use Packaged\Config\Provider\ConfigSection;
 use Packaged\Config\Provider\Test\TestConfigProvider;
@@ -216,6 +217,16 @@ class DalResolver implements IConnectionResolver
     $this->_unsetConfigured('datastore', $name);
     $this->_datastores[$name] = $dataStore;
     return $this;
+  }
+
+  public function addConnectionConfig(ConfigSectionInterface $config)
+  {
+    $this->_config['connection']->addSection($config);
+  }
+
+  public function addDataStoreConfig(ConfigSectionInterface $config)
+  {
+    $this->_config['datastore']->addSection($config);
   }
 
   /**

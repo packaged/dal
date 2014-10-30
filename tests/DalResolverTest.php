@@ -142,6 +142,41 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
     );
     $resolver->getConnection('con2');
   }
+
+  public function testAddConnectionConfig()
+  {
+    $config = new \Packaged\Config\Provider\ConfigSection('connection_test');
+    $config->addItem('construct_class', ConfigurableConnection::class);
+    $config->addItem('host', '127.0.0.1');
+
+    $resolver = new \Packaged\Dal\DalResolver();
+    $resolver->addConnectionConfig($config);
+
+    /**
+     * @var $connection ConfigurableConnection
+     */
+    $connection = $resolver->getConnection('connection_test');
+    $this->assertInstanceOf(ConfigurableConnection::class, $connection);
+    $this->assertEquals('127.0.0.1', $connection->getConfig()->getItem('host'));
+  }
+
+  public function testAddDataStoreConfig()
+  {
+    $config = new \Packaged\Config\Provider\ConfigSection('datastore_test');
+    $config->addItem('construct_class', ConfigurableDataStore::class);
+    $unique = uniqid();
+    $config->addItem('unique', $unique);
+
+    $resolver = new \Packaged\Dal\DalResolver();
+    $resolver->addDataStoreConfig($config);
+
+    /**
+     * @var $dataStore ConfigurableDataStore
+     */
+    $dataStore = $resolver->getDataStore('datastore_test');
+    $this->assertInstanceOf(ConfigurableDataStore::class, $dataStore);
+    $this->assertEquals($unique, $dataStore->getConfig()->getItem('unique'));
+  }
 }
 
 class ConfigurableConnection
@@ -192,5 +227,55 @@ class ConfigurableConnection
   public function disconnect()
   {
     return $this;
+  }
+}
+
+class ConfigurableDataStore implements \Packaged\Dal\IDataStore,
+                                       \Packaged\Config\ConfigurableInterface
+{
+  use \Packaged\Config\ConfigurableTrait;
+
+  public function getConfig()
+  {
+    return $this->_config();
+  }
+
+  /**
+   * Save a DAO to the data store
+   *
+   * @param \Packaged\Dal\IDao $dao
+   *
+   * @return array of changed properties
+   *
+   * @throws \Packaged\Dal\Exceptions\DataStore\DataStoreException
+   */
+  public function save(\Packaged\Dal\IDao $dao)
+  {
+  }
+
+  /**
+   * Hydrate a DAO from the data store
+   *
+   * @param \Packaged\Dal\IDao $dao
+   *
+   * @return \Packaged\Dal\IDao Loaded DAO
+   *
+   * @throws \Packaged\Dal\Exceptions\DataStore\DaoNotFoundException
+   */
+  public function load(\Packaged\Dal\IDao $dao)
+  {
+  }
+
+  /**
+   * Delete the DAO from the data store
+   *
+   * @param \Packaged\Dal\IDao $dao
+   *
+   * @return \Packaged\Dal\IDao
+   *
+   * @throws \Packaged\Dal\Exceptions\DataStore\DataStoreException
+   */
+  public function delete(\Packaged\Dal\IDao $dao)
+  {
   }
 }

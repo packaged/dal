@@ -150,7 +150,14 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
     $config->addItem('host', '127.0.0.1');
 
     $resolver = new \Packaged\Dal\DalResolver();
+    $this->assertNull($resolver->getConnectionConfig('invalid_connection'));
+
     $resolver->addConnectionConfig($config);
+
+    $this->assertSame(
+      $config,
+      $resolver->getConnectionConfig('connection_test')
+    );
 
     /**
      * @var $connection ConfigurableConnection
@@ -168,7 +175,14 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
     $config->addItem('unique', $unique);
 
     $resolver = new \Packaged\Dal\DalResolver();
+    $this->assertNull($resolver->getDataStoreConfig('invalid_datastore'));
+
     $resolver->addDataStoreConfig($config);
+
+    $this->assertSame(
+      $config,
+      $resolver->getDataStoreConfig('datastore_test')
+    );
 
     /**
      * @var $dataStore ConfigurableDataStore

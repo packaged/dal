@@ -219,14 +219,56 @@ class DalResolver implements IConnectionResolver
     return $this;
   }
 
+  /**
+   * Add a config section to the resolver as a connection
+   *
+   * @param ConfigSectionInterface $config
+   */
   public function addConnectionConfig(ConfigSectionInterface $config)
   {
     $this->_config['connection']->addSection($config);
   }
 
+  /**
+   * Get a connection config
+   *
+   * @param $name
+   *
+   * @return ConfigSectionInterface
+   */
+  public function getConnectionConfig($name)
+  {
+    if($this->_config['connection']->sectionExists($name))
+    {
+      return $this->_config['connection']->getSection($name);
+    }
+    return null;
+  }
+
+  /**
+   * Add a config section to the resolver as a data store
+   *
+   * @param ConfigSectionInterface $config
+   */
   public function addDataStoreConfig(ConfigSectionInterface $config)
   {
     $this->_config['datastore']->addSection($config);
+  }
+
+  /**
+   * Get a data store config
+   *
+   * @param $name
+   *
+   * @return ConfigSectionInterface
+   */
+  public function getDataStoreConfig($name)
+  {
+    if($this->_config['datastore']->sectionExists($name))
+    {
+      return $this->_config['datastore']->getSection($name);
+    }
+    return null;
   }
 
   /**

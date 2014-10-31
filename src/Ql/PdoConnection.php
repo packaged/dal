@@ -2,8 +2,8 @@
 namespace Packaged\Dal\Ql;
 
 use Packaged\Config\ConfigurableInterface;
-use Packaged\Dal\Exceptions\Connection\ConnectionException;
 use Packaged\Config\ConfigurableTrait;
+use Packaged\Dal\Exceptions\Connection\ConnectionException;
 use Packaged\Helpers\ValueAs;
 
 class PdoConnection
@@ -39,15 +39,28 @@ class PdoConnection
 
     try
     {
+      $options = array_replace(
+        $this->_defaultOptions(),
+        ValueAs::arr($this->_config()->getItem('options'))
+      );
+
       $this->_connection = new \PDO(
         $dsn,
         $this->_config()->getItem('username', 'root'),
         $this->_config()->getItem('password', ''),
-        array_replace(
-          $this->_defaultOptions(),
-          ValueAs::arr($this->_config()->getItem('options'))
-        )
+        $options
       );
+
+      if(!isset($options[\PDO::ATTR_EMULATE_PREPARES]))
+      {
+        $serverVersion = $this->_connection->getAttribute(
+          \PDO::ATTR_SERVER_VERSION
+        );
+        $this->_connection->setAttribute(
+          \PDO::ATTR_EMULATE_PREPARES,
+          version_compare($serverVersion, '5.1.17', '<')
+        );
+      }
     }
     catch(\Exception $e)
     {
@@ -124,9 +137,9 @@ class PdoConnection
    */
   public function runQuery($query, array $values = null)
   {
-    $statement = $this->_connection->prepare($query);
     try
     {
+      $statement = $this->_connection->prepare($query);
       $statement->execute($values);
     }
     catch(\PDOException $e)

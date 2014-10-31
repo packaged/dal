@@ -148,8 +148,7 @@ class PdoConnection
       {
         throw new ConnectionException($e->errorInfo[2], $e->errorInfo[1]);
       }
-      var_dump($e);
-      throw $e;
+      throw new ConnectionException($e->getMessage(), $e->getCode());
     }
 
     return $statement->rowCount();

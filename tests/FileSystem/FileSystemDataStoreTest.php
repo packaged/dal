@@ -34,6 +34,7 @@ class FileSystemDataStoreTest extends \PHPUnit_Framework_TestCase
   {
     $file = new FileSystemDao($this->_getResourceLocation('fs.test'));
     $this->assertFalse($file->isDaoLoaded());
+    $this->assertTrue($file->exists());
     $file->load();
     $this->assertTrue($file->isDaoLoaded());
   }

@@ -65,6 +65,7 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
 
     $dao     = new MockQlDao();
     $dao->id = 3;
+    $this->assertTrue($datastore->exists($dao));
     $datastore->load($dao);
     $this->assertEquals(
       'SELECT * FROM `mock_ql_daos` WHERE `id` = "3" LIMIT 2',
@@ -93,6 +94,8 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
 
     $dao     = new MockQlDao();
     $dao->id = 3;
+
+    $this->assertFalse($datastore->exists($dao));
 
     $this->setExpectedException(
       'Packaged\Dal\Exceptions\DataStore\DaoNotFoundException',

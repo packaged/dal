@@ -45,4 +45,13 @@ interface IDataStore
    * @throws DataStoreException
    */
   public function delete(IDao $dao);
+
+  /**
+   * Does the object exist in the data store
+   *
+   * @param IDao $dao
+   *
+   * @return bool
+   */
+  public function exists(IDao $dao);
 }

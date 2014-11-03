@@ -81,6 +81,19 @@ class FileSystemDataStore implements IDataStore
   }
 
   /**
+   * Does the object exist in the data store
+   *
+   * @param IDao $dao
+   *
+   * @return bool
+   */
+  public function exists(IDao $dao)
+  {
+    $dao = $this->_verifyDao($dao);
+    return file_exists($dao->filepath);
+  }
+
+  /**
    * @param IDao $dao
    *
    * @return FileSystemDao

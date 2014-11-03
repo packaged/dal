@@ -68,4 +68,12 @@ trait LSDTrait
      */
     return $this->getDataStore()->delete($this);
   }
+
+  public function exists()
+  {
+    /**
+     * @var $this AbstractDao
+     */
+    return $this->getDataStore()->exists($this);
+  }
 }

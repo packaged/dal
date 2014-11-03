@@ -200,6 +200,27 @@ class QlDataStore implements IDataStore, ConfigurableInterface
   }
 
   /**
+   * Does the object exist in the data store
+   *
+   * @param IDao $dao
+   *
+   * @return bool
+   */
+  public function exists(IDao $dao)
+  {
+    $dao = $this->_verifyDao($dao);
+    try
+    {
+      $this->load($dao);
+      return $dao->isDaoLoaded();
+    }
+    catch(\Exception $e)
+    {
+    }
+    return false;
+  }
+
+  /**
    * @param IDao $dao
    *
    * @return QlDao

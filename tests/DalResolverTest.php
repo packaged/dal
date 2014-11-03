@@ -292,4 +292,15 @@ class ConfigurableDataStore implements \Packaged\Dal\IDataStore,
   public function delete(\Packaged\Dal\IDao $dao)
   {
   }
+
+  /**
+   * Does the object exist in the data store
+   *
+   * @param \Packaged\Dal\IDao $dao
+   *
+   * @return bool
+   */
+  public function exists(\Packaged\Dal\IDao $dao)
+  {
+  }
 }

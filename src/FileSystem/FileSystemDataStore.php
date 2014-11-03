@@ -47,7 +47,7 @@ class FileSystemDataStore implements IDataStore
       $dao->content = file_get_contents($dao->filepath);
       $dao->hydrateDao(
         [
-          'content' => $dao->content,
+          'content'  => $dao->content,
           'filesize' => mb_strlen($dao->content)
         ],
         true

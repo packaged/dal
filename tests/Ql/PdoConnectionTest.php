@@ -4,7 +4,6 @@ namespace Ql;
 use Packaged\Config\Provider\ConfigSection;
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
-use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\Ql\PdoConnection;
 
 require_once 'supporting.php';

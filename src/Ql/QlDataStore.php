@@ -2,13 +2,13 @@
 namespace Packaged\Dal\Ql;
 
 use Packaged\Config\ConfigurableInterface;
+use Packaged\Config\ConfigurableTrait;
 use Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException;
 use Packaged\Dal\Exceptions\DataStore\DaoNotFoundException;
 use Packaged\Dal\Exceptions\DataStore\DataStoreException;
 use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\IDao;
 use Packaged\Dal\IDataStore;
-use Packaged\Config\ConfigurableTrait;
 use Packaged\QueryBuilder\Assembler\MySQL\MySQLAssembler;
 use Packaged\QueryBuilder\Statement\QueryStatement;
 

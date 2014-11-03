@@ -3,6 +3,7 @@ namespace Ql;
 
 use Packaged\Dal\IDataConnection;
 use Packaged\Dal\Ql\IQLDataConnection;
+use Packaged\Dal\Ql\PdoConnection;
 use Packaged\Dal\Ql\QlDao;
 use Packaged\Dal\Ql\QlDataStore;
 
@@ -101,5 +102,33 @@ class MockAbstractQlDataConnection implements IQLDataConnection
   public function disconnect()
   {
     return $this;
+  }
+}
+
+class MockPdoConnection extends PdoConnection
+{
+  public function setConnection($connection)
+  {
+    $this->_connection = $connection;
+  }
+}
+
+class PrepareErrorPdoConnection extends \PDO
+{
+  private $_errorMessage;
+  private $_errorCode;
+
+  public function __construct($message, $code = 0)
+  {
+    $this->_errorMessage = $message;
+    $this->_errorCode    = $code;
+  }
+
+  function prepare($statement, $options = null)
+  {
+    $exception = new \PDOException($this->_errorMessage, $this->_errorCode);
+
+    $exception->errorInfo = ['SQLSTATE_CODE', $this->_errorMessage];
+    throw $exception;
   }
 }

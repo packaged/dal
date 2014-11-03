@@ -83,6 +83,32 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
     $connection->fetchQueryResults("SELECT * FROM `made_up_table_r43i`", []);
   }
 
+  public function testNativeErrorFormat_runQuery()
+  {
+    $pdo        = new PrepareErrorPdoConnection('My Exception Message', 1234);
+    $connection = new MockPdoConnection();
+    $connection->setConnection($pdo);
+    $this->setExpectedException(
+      ConnectionException::class,
+      'My Exception Message',
+      1234
+    );
+    $connection->runQuery("SELECT * FROM `made_up_table_r43i`", []);
+  }
+
+  public function testNativeErrorFormat_fetchQueryResults()
+  {
+    $pdo        = new PrepareErrorPdoConnection('My Exception Message', 1234);
+    $connection = new MockPdoConnection();
+    $connection->setConnection($pdo);
+    $this->setExpectedException(
+      ConnectionException::class,
+      'My Exception Message',
+      1234
+    );
+    $connection->fetchQueryResults("SELECT * FROM `made_up_table_r43i`", []);
+  }
+
   public function testLsd()
   {
     $datastore  = new MockQlDataStore();

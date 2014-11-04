@@ -34,6 +34,17 @@ class DaoCollectionTest extends \PHPUnit_Framework_TestCase
     );
   }
 
+  public function testFirst()
+  {
+    $collection = new MockDaoCollection();
+    $this->assertEquals('test', $collection->first('test'));
+    $collection->setDummyData();
+    $this->assertEquals(
+      ValueAs::obj(['name' => 'Test', 'id' => 1]),
+      $collection->first()
+    );
+  }
+
   public function testEmpty()
   {
     $collection = new MockDaoCollection();

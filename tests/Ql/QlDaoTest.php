@@ -34,6 +34,11 @@ class QlDaoTest extends \PHPUnit_Framework_TestCase
     $mocks = MockQlDao::collection(['username' => 'Test']);
     $this->assertCount(1, $mocks);
 
+    foreach(MockQlDao::each(['username' => 'Test']) as $usr)
+    {
+      $this->assertInstanceOf(MockQlDao::class, $usr);
+    }
+
     $preloaded = MockQlDao::loadWhere(['username' => 'Test']);
     $this->assertCount(1, $preloaded);
 

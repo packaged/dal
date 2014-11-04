@@ -121,6 +121,36 @@ class QlDaoCollection extends DaoCollection implements IAggregateDaoCollection
     return $this;
   }
 
+  /**
+   * Retrieve the first available dao
+   *
+   * @param mixed $default
+   *
+   * @return QlDao
+   */
+  public function first($default = null)
+  {
+    if(!$this->isEmpty())
+    {
+      return parent::first();
+    }
+    $limit = $this->_query->getClause('LIMIT');
+    $this->limitWithOffset(0, 1);
+    $this->load();
+    $this->_query->removeClause('LIMIT');
+    if($limit !== null)
+    {
+      $this->_query->addClause($limit);
+    }
+    if(!$this->isEmpty())
+    {
+      $dao = head($this->_daos);
+      $this->clear();
+      return $dao;
+    }
+    return $default;
+  }
+
   public function min($property = 'id')
   {
     if($this->isEmpty())

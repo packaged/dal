@@ -87,6 +87,23 @@ class DaoCollection implements IDaoCollection
   }
 
   /**
+   * Retrieve the first available dao
+   *
+   * @param mixed $default
+   *
+   * @return IDao
+   */
+  public function first($default = null)
+  {
+    $this->_prepareDaos();
+    if(empty($this->_daos))
+    {
+      return $default;
+    }
+    return head((array)$this->_daos);
+  }
+
+  /**
    * Execute a callback over each dao in the collection
    *
    * @param \Closure $callback

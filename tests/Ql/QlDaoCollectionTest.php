@@ -75,6 +75,21 @@ class QlDaoCollectionTest extends \PHPUnit_Framework_TestCase
     $collection = MockQlDao::collection(['username' => 'Test']);
     $this->assertCount(2, $collection->getRawArray());
 
+    $first = MockQlDao::collection(['username' => 'Test'])->first();
+    $this->assertInstanceOf(MockQlDao::class, $first);
+
+    $first = MockQlDao::collection(['username' => 'NotExisting'])->first('abc');
+    $this->assertEquals('abc', $first);
+
+    $col   = MockQlDao::collection(['username' => 'Test'])->limit(10);
+    $first = $col->first();
+    $this->assertInstanceOf(MockQlDao::class, $first);
+
+    $col = MockQlDao::collection(['username' => 'Test'])->load();
+    $this->assertCount(2, $collection);
+    $first = $col->first();
+    $this->assertInstanceOf(MockQlDao::class, $first);
+
     $datastore->getConnection()->runQuery("TRUNCATE " . $u->getTableName());
 
     Dao::unsetDalResolver();

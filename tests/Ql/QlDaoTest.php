@@ -20,7 +20,7 @@ class QlDaoTest extends \PHPUnit_Framework_TestCase
     $collection = MockQlDao::collection(['name' => 'Test']);
     $this->assertInstanceOf(MockQlDao::class, $collection->createNewDao());
     $this->assertEquals(
-      'SELECT * FROM mock_ql_daos WHERE name = "Test"',
+      'SELECT mock_ql_daos.* FROM mock_ql_daos WHERE name = "Test"',
       QueryAssembler::stringify($collection->getQuery())
     );
 

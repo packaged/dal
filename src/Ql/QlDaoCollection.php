@@ -10,6 +10,7 @@ use Packaged\QueryBuilder\Builder\Traits\OrderByTrait;
 use Packaged\QueryBuilder\Builder\Traits\WhereTrait;
 use Packaged\QueryBuilder\Clause\IClause;
 use Packaged\QueryBuilder\Clause\SelectClause;
+use Packaged\QueryBuilder\SelectExpression\AllSelectExpression;
 use Packaged\QueryBuilder\SelectExpression\AverageSelectExpression;
 use Packaged\QueryBuilder\SelectExpression\CountSelectExpression;
 use Packaged\QueryBuilder\SelectExpression\MaxSelectExpression;
@@ -51,7 +52,9 @@ class QlDaoCollection extends DaoCollection
   {
     $this->_query = new QueryStatement();
     $dao          = $this->createNewDao(false);
-    $this->_query->addClause(new SelectClause());
+    $select       = new SelectClause();
+    $select->addExpression(AllSelectExpression::create($dao->getTableName()));
+    $this->_query->addClause($select);
     $this->_query->from($dao->getTableName());
     return $this;
   }

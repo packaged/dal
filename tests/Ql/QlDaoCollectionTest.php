@@ -7,6 +7,7 @@ use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\Ql\PdoConnection;
 use Packaged\Dal\Ql\QlDaoCollection;
 use Packaged\Helpers\ValueAs;
+use Packaged\QueryBuilder\Assembler\QueryAssembler;
 
 class QlDaoCollectionTest extends \PHPUnit_Framework_TestCase
 {
@@ -14,6 +15,7 @@ class QlDaoCollectionTest extends \PHPUnit_Framework_TestCase
   {
     $collection = new MockQlDaoCollection();
     $collection->setDummyData();
+    $this->assertEquals(4, $collection->count());
     $this->assertEquals(1, $collection->min('id'));
     $this->assertEquals(8, $collection->max('id'));
     $this->assertEquals(4, $collection->avg('id'));
@@ -57,6 +59,7 @@ class QlDaoCollectionTest extends \PHPUnit_Framework_TestCase
     $u->id       = 8;
     $u->save();
 
+    $this->assertEquals(4, $collection->count());
     $this->assertEquals(1, $collection->min('id'));
     $this->assertEquals(8, $collection->max('id'));
     $this->assertEquals(4, $collection->avg('id'));
@@ -65,6 +68,12 @@ class QlDaoCollectionTest extends \PHPUnit_Framework_TestCase
       ["Test", "User", "Testing"],
       array_values($collection->distinct('username'))
     );
+
+    $collection->loadWhere(['username' => 'Test']);
+    $this->assertCount(2, $collection);
+
+    $collection = MockQlDao::collection(['username' => 'Test']);
+    $this->assertCount(2, $collection->getRawArray());
 
     $datastore->getConnection()->runQuery("TRUNCATE " . $u->getTableName());
 
@@ -88,16 +97,17 @@ class MockQlDaoCollection extends QlDaoCollection
 
   public function setDummyData()
   {
-    $this->_daos    = [];
-    $this->_daos[1] = ValueAs::obj(['name' => 'Test', 'id' => 1]);
-    $this->_daos[2] = ValueAs::obj(['name' => 'Test', 'id' => 2]);
-    $user           = new \stdClass();
-    $user->name     = 'User';
-    $user->id       = 5;
-    $this->_daos[5] = $user;
-    $mock           = new MockAbstractDao();
-    $mock->name     = 'Testing';
-    $mock->id       = 8;
-    $this->_daos[8] = $mock;
+    $this->_daos     = [];
+    $this->_daos[1]  = ValueAs::obj(['name' => 'Test', 'id' => 1]);
+    $this->_daos[2]  = ValueAs::obj(['name' => 'Test', 'id' => 2]);
+    $user            = new \stdClass();
+    $user->name      = 'User';
+    $user->id        = 5;
+    $this->_daos[5]  = $user;
+    $mock            = new MockAbstractDao();
+    $mock->name      = 'Testing';
+    $mock->id        = 8;
+    $this->_daos[8]  = $mock;
+    $this->_isLoaded = true;
   }
 }

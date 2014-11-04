@@ -23,6 +23,10 @@ class DaoCollection implements IDaoCollection
    */
   protected $_daoClass;
 
+  protected function _prepareDaos()
+  {
+  }
+
   /**
    * @param $fresh bool Create a new instance of the DAO Class
    *
@@ -78,6 +82,7 @@ class DaoCollection implements IDaoCollection
 
   public function getRawArray()
   {
+    $this->_prepareDaos();
     return (array)$this->_daos;
   }
 
@@ -90,6 +95,7 @@ class DaoCollection implements IDaoCollection
    */
   public function each(\Closure $callback)
   {
+    $this->_prepareDaos();
     array_map($callback, $this->_daos);
   }
 
@@ -112,6 +118,7 @@ class DaoCollection implements IDaoCollection
    */
   public function distinct($property)
   {
+    $this->_prepareDaos();
     return array_unique(ppull((array)$this->_daos, $property));
   }
 
@@ -126,6 +133,7 @@ class DaoCollection implements IDaoCollection
    */
   public function ppull($property, $keyProperty = null)
   {
+    $this->_prepareDaos();
     return ppull((array)$this->_daos, $property, $keyProperty);
   }
 
@@ -140,6 +148,7 @@ class DaoCollection implements IDaoCollection
    */
   public function apull(array $properties, $keyProperty = null)
   {
+    $this->_prepareDaos();
     $result = [];
     foreach((array)$this->_daos as $i => $dao)
     {
@@ -162,6 +171,7 @@ class DaoCollection implements IDaoCollection
    */
   public function getIterator()
   {
+    $this->_prepareDaos();
     return new \ArrayIterator((array)$this->_daos);
   }
 
@@ -181,6 +191,7 @@ class DaoCollection implements IDaoCollection
    */
   public function offsetExists($offset)
   {
+    $this->_prepareDaos();
     return isset($this->_daos[$offset]);
   }
 
@@ -197,6 +208,7 @@ class DaoCollection implements IDaoCollection
    */
   public function offsetGet($offset)
   {
+    $this->_prepareDaos();
     return isset($this->_daos[$offset]) ? $this->_daos[$offset] : null;
   }
 
@@ -216,6 +228,7 @@ class DaoCollection implements IDaoCollection
    */
   public function offsetSet($offset, $value)
   {
+    $this->_prepareDaos();
     if($offset === null)
     {
       $this->_daos[] = $value;
@@ -239,6 +252,7 @@ class DaoCollection implements IDaoCollection
    */
   public function offsetUnset($offset)
   {
+    $this->_prepareDaos();
     unset($this->_daos[$offset]);
   }
 
@@ -251,6 +265,7 @@ class DaoCollection implements IDaoCollection
    */
   public function jsonSerialize()
   {
+    $this->_prepareDaos();
     if($this->isEmpty())
     {
       return [];
@@ -277,6 +292,7 @@ class DaoCollection implements IDaoCollection
    */
   public function __toString()
   {
+    $this->_prepareDaos();
     return json_encode($this);
   }
 
@@ -291,6 +307,7 @@ class DaoCollection implements IDaoCollection
    */
   public function count()
   {
+    $this->_prepareDaos();
     return count($this->_daos);
   }
 }

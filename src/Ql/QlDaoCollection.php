@@ -27,6 +27,8 @@ class QlDaoCollection extends DaoCollection implements IAggregateDaoCollection
    */
   protected $_query;
 
+  protected $_isLoaded;
+
   use JoinTrait;
   use WhereTrait;
   use OrderByTrait;
@@ -76,11 +78,29 @@ class QlDaoCollection extends DaoCollection implements IAggregateDaoCollection
     return $this->createNewDao(false)->getDataStore();
   }
 
+  protected function _prepareDaos()
+  {
+    if(!$this->_isLoaded)
+    {
+      $this->load();
+    }
+    parent::_prepareDaos();
+  }
+
+  public function clear()
+  {
+    $this->_isLoaded = false;
+    parent::clear();
+  }
+
   /**
    * @return $this
    */
   public function loadWhere(...$params)
   {
+    $this->resetQuery();
+    $this->clear();
+
     if(func_num_args() > 0)
     {
       $this->_query->where(...$params);
@@ -97,6 +117,7 @@ class QlDaoCollection extends DaoCollection implements IAggregateDaoCollection
     {
       $this->_daos[] = $this->createNewDao()->hydrateDao($result, true);
     }
+    $this->_isLoaded = true;
     return $this;
   }
 
@@ -111,10 +132,7 @@ class QlDaoCollection extends DaoCollection implements IAggregateDaoCollection
       );
       return head(head($this->_getDataStore()->getData($this->_query)));
     }
-    else
-    {
-      return min(ppull($this->_daos, $property));
-    }
+    return min(ppull($this->_daos, $property));
   }
 
   public function max($property = 'id')
@@ -128,10 +146,7 @@ class QlDaoCollection extends DaoCollection implements IAggregateDaoCollection
       );
       return head(head($this->_getDataStore()->getData($this->_query)));
     }
-    else
-    {
-      return max(ppull($this->_daos, $property));
-    }
+    return max(ppull($this->_daos, $property));
   }
 
   public function avg($property = 'id')
@@ -145,11 +160,8 @@ class QlDaoCollection extends DaoCollection implements IAggregateDaoCollection
       );
       return head(head($this->_getDataStore()->getData($this->_query)));
     }
-    else
-    {
-      $values = ppull($this->_daos, $property);
-      return array_sum($values) / count($values);
-    }
+    $values = ppull($this->_daos, $property);
+    return array_sum($values) / count($values);
   }
 
   public function sum($property = 'id')
@@ -163,10 +175,7 @@ class QlDaoCollection extends DaoCollection implements IAggregateDaoCollection
       );
       return head(head($this->_getDataStore()->getData($this->_query)));
     }
-    else
-    {
-      return array_sum(ppull($this->_daos, $property));
-    }
+    return array_sum(ppull($this->_daos, $property));
   }
 
   public function count()
@@ -180,10 +189,7 @@ class QlDaoCollection extends DaoCollection implements IAggregateDaoCollection
       );
       return head(head($this->_getDataStore()->getData($this->_query)));
     }
-    else
-    {
-      return parent::count();
-    }
+    return parent::count();
   }
 
   /**
@@ -208,9 +214,6 @@ class QlDaoCollection extends DaoCollection implements IAggregateDaoCollection
       }
       return ipull($results, $property);
     }
-    else
-    {
-      return parent::distinct($property);
-    }
+    return parent::distinct($property);
   }
 }

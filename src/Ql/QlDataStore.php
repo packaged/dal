@@ -10,6 +10,7 @@ use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\IDao;
 use Packaged\Dal\IDataStore;
 use Packaged\QueryBuilder\Assembler\MySQL\MySQLAssembler;
+use Packaged\QueryBuilder\Statement\IStatement;
 use Packaged\QueryBuilder\Statement\QueryStatement;
 
 class QlDataStore implements IDataStore, ConfigurableInterface
@@ -256,7 +257,7 @@ class QlDataStore implements IDataStore, ConfigurableInterface
     $this->_query .= implode(' AND ', $queryParts);
   }
 
-  public function getData(QueryStatement $statement)
+  public function getData(IStatement $statement)
   {
     $results = $this->_connectedConnection()->fetchQueryResults(
       MySQLAssembler::stringify($statement),

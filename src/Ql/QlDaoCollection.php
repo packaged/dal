@@ -15,12 +15,15 @@ use Packaged\QueryBuilder\SelectExpression\CountSelectExpression;
 use Packaged\QueryBuilder\SelectExpression\MaxSelectExpression;
 use Packaged\QueryBuilder\SelectExpression\MinSelectExpression;
 use Packaged\QueryBuilder\SelectExpression\SumSelectExpression;
+use Packaged\QueryBuilder\Statement\IStatement;
+use Packaged\QueryBuilder\Statement\IStatementSegment;
 use Packaged\QueryBuilder\Statement\QueryStatement;
 
 /**
  * @method QlDao createNewDao
  */
-class QlDaoCollection extends DaoCollection implements IAggregateDaoCollection
+class QlDaoCollection extends DaoCollection
+  implements IAggregateDaoCollection, IStatement
 {
   /**
    * @var QueryStatement
@@ -68,6 +71,29 @@ class QlDaoCollection extends DaoCollection implements IAggregateDaoCollection
     return $this;
   }
 
+  public function getClause($action)
+  {
+    return $this->_query->getClause($action);
+  }
+
+  public function hasClause($action)
+  {
+    return $this->_query->hasClause($action);
+  }
+
+  public function removeClause($action)
+  {
+    return $this->_query->removeClause($action);
+  }
+
+  /**
+   * @return IStatementSegment[]
+   */
+  public function getSegments()
+  {
+    return $this->_query->getSegments();
+  }
+
   /**
    * @return QlDataStore
    * @throws \Exception
@@ -112,7 +138,7 @@ class QlDaoCollection extends DaoCollection implements IAggregateDaoCollection
   public function load()
   {
     $dao     = $this->createNewDao(false);
-    $results = $dao->getDataStore()->getData($this->_query);
+    $results = $dao->getDataStore()->getData($this);
     foreach($results as $result)
     {
       $this->_daos[] = $this->createNewDao()->hydrateDao($result, true);
@@ -134,10 +160,10 @@ class QlDaoCollection extends DaoCollection implements IAggregateDaoCollection
     {
       return parent::first();
     }
-    $limit = $this->_query->getClause('LIMIT');
+    $limit = $this->getClause('LIMIT');
     $this->limitWithOffset(0, 1);
     $this->load();
-    $this->_query->removeClause('LIMIT');
+    $this->removeClause('LIMIT');
     if($limit !== null)
     {
       $this->_query->addClause($limit);

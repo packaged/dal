@@ -8,6 +8,7 @@ use Packaged\Dal\Ql\PdoConnection;
 use Packaged\Dal\Ql\QlDaoCollection;
 use Packaged\Helpers\ValueAs;
 use Packaged\QueryBuilder\Assembler\QueryAssembler;
+use Packaged\QueryBuilder\Clause\LimitClause;
 
 class QlDaoCollectionTest extends \PHPUnit_Framework_TestCase
 {
@@ -83,6 +84,12 @@ class QlDaoCollectionTest extends \PHPUnit_Framework_TestCase
 
     $col   = MockQlDao::collection(['username' => 'Test'])->limit(10);
     $first = $col->first();
+    $this->assertTrue($col->hasClause('LIMIT'));
+    $limit = $col->getClause('LIMIT');
+    if($limit instanceof LimitClause)
+    {
+      $this->assertEquals(10, $limit->getLimit());
+    }
     $this->assertInstanceOf(MockQlDao::class, $first);
 
     $col = MockQlDao::collection(['username' => 'Test'])->load();

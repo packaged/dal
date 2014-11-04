@@ -11,6 +11,7 @@ use Packaged\QueryBuilder\Builder\Traits\WhereTrait;
 use Packaged\QueryBuilder\Clause\IClause;
 use Packaged\QueryBuilder\Clause\SelectClause;
 use Packaged\QueryBuilder\SelectExpression\AverageSelectExpression;
+use Packaged\QueryBuilder\SelectExpression\CountSelectExpression;
 use Packaged\QueryBuilder\SelectExpression\MaxSelectExpression;
 use Packaged\QueryBuilder\SelectExpression\MinSelectExpression;
 use Packaged\QueryBuilder\SelectExpression\SumSelectExpression;
@@ -165,6 +166,23 @@ class QlDaoCollection extends DaoCollection implements IAggregateDaoCollection
     else
     {
       return array_sum(ppull($this->_daos, $property));
+    }
+  }
+
+  public function count()
+  {
+    if($this->isEmpty())
+    {
+      $this->_query->addClause(
+        (new SelectClause())->addExpression(
+          new CountSelectExpression()
+        )
+      );
+      return head(head($this->_getDataStore()->getData($this->_query)));
+    }
+    else
+    {
+      return parent::count();
     }
   }
 

@@ -11,6 +11,11 @@ class DaoCollection implements IDaoCollection
    * @var IDao[]
    */
   protected $_daos;
+
+  /**
+   * @var IDao
+   */
+  protected $_dao;
   /**
    * Class for the DAOs contained
    *
@@ -19,21 +24,31 @@ class DaoCollection implements IDaoCollection
   protected $_daoClass;
 
   /**
+   * @param $fresh bool Create a new instance of the DAO Class
+   *
    * @return IDao
    */
-  public function createNewDao()
+  public function createNewDao($fresh = true)
   {
-    $class = newv($this->_daoClass, []);
-    if($class instanceof IDao)
+    if($fresh || $this->_dao === null)
     {
-      return $class;
+      $class = newv($this->_daoClass, []);
+      if($class instanceof IDao)
+      {
+        if(!$fresh)
+        {
+          $this->_dao = $class;
+        }
+        return $class;
+      }
+      else
+      {
+        throw new \RuntimeException(
+          "'$this->_daoClass' is not a valid DAO Class"
+        );
+      }
     }
-    else
-    {
-      throw new \RuntimeException(
-        "'$this->_daoClass' is not a valid DAO Class"
-      );
-    }
+    return $this->_dao;
   }
 
   /**
@@ -47,7 +62,18 @@ class DaoCollection implements IDaoCollection
   {
     $collection            = new static;
     $collection->_daoClass = $daoClass;
+    $collection->_init();
     return $collection;
+  }
+
+  protected function _init()
+  {
+  }
+
+  public function clear()
+  {
+    $this->_daos = [];
+    return $this;
   }
 
   public function getRawArray()

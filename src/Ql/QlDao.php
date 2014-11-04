@@ -54,7 +54,12 @@ abstract class QlDao extends AbstractSanitizableDao
    */
   public static function loadWhere(...$params)
   {
-    return static::collection(...$params)->getRawArray();
+    $collection = QlDaoCollection::create(get_called_class());
+    if(func_num_args() > 0)
+    {
+      $collection->loadWhere(...$params);
+    }
+    return $collection;
   }
 
   /**
@@ -67,7 +72,7 @@ abstract class QlDao extends AbstractSanitizableDao
     $collection = QlDaoCollection::create(get_called_class());
     if(func_num_args() > 0)
     {
-      $collection->loadWhere(...$params);
+      $collection->where(...$params);
     }
     return $collection;
   }

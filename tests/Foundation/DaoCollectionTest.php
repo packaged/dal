@@ -159,6 +159,13 @@ class DaoCollectionTest extends \PHPUnit_Framework_TestCase
       $collection->getIterator()
     );
   }
+
+  public function testGetRaw()
+  {
+    $collection = new MockDaoCollection();
+    $collection->setDummyData();
+    $this->assertEquals($collection->getDaos(), $collection->getRawArray());
+  }
 }
 
 class MockDaoCollection extends DaoCollection

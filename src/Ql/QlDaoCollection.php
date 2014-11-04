@@ -3,11 +3,18 @@ namespace Packaged\Dal\Ql;
 
 use Packaged\Dal\Collections\IAggregateDaoCollection;
 use Packaged\Dal\Foundation\DaoCollection;
-use Packaged\QueryBuilder\Builder\QueryBuilder;
+use Packaged\QueryBuilder\Builder\Traits\HavingTrait;
+use Packaged\QueryBuilder\Builder\Traits\JoinTrait;
+use Packaged\QueryBuilder\Builder\Traits\LimitTrait;
+use Packaged\QueryBuilder\Builder\Traits\OrderByTrait;
+use Packaged\QueryBuilder\Builder\Traits\WhereTrait;
+use Packaged\QueryBuilder\Clause\IClause;
+use Packaged\QueryBuilder\Clause\SelectClause;
 use Packaged\QueryBuilder\SelectExpression\AverageSelectExpression;
 use Packaged\QueryBuilder\SelectExpression\MaxSelectExpression;
 use Packaged\QueryBuilder\SelectExpression\MinSelectExpression;
 use Packaged\QueryBuilder\SelectExpression\SumSelectExpression;
+use Packaged\QueryBuilder\Statement\QueryStatement;
 
 /**
  * @method QlDao createNewDao
@@ -15,17 +22,76 @@ use Packaged\QueryBuilder\SelectExpression\SumSelectExpression;
 class QlDaoCollection extends DaoCollection implements IAggregateDaoCollection
 {
   /**
+   * @var QueryStatement
+   */
+  protected $_query;
+
+  use JoinTrait;
+  use WhereTrait;
+  use OrderByTrait;
+  use LimitTrait;
+  use HavingTrait;
+
+  protected function _init()
+  {
+    $this->resetQuery();
+  }
+
+  /**
+   * Reset the query to a single select * FROM table
+   * @return $this
+   */
+  public function resetQuery()
+  {
+    $this->_query = new QueryStatement();
+    $dao          = $this->createNewDao(false);
+    $this->_query->addClause(new SelectClause());
+    $this->_query->from($dao->getTableName());
+    return $this;
+  }
+
+  /**
+   * @return QueryStatement
+   */
+  public function getQuery()
+  {
+    return $this->_query;
+  }
+
+  public function addClause(IClause $clause)
+  {
+    $this->_query->addClause($clause);
+    $this->clear();
+    return $this;
+  }
+
+  /**
+   * @return QlDataStore
+   * @throws \Exception
+   * @throws \Packaged\Dal\Exceptions\DalResolver\DataStoreNotFoundException
+   */
+  protected function _getDataStore()
+  {
+    return $this->createNewDao(false)->getDataStore();
+  }
+
+  /**
    * @return $this
    */
   public function loadWhere(...$params)
   {
-    $dao   = $this->createNewDao();
-    $query = QueryBuilder::select()->from($dao->getTableName());
     if(func_num_args() > 0)
     {
-      $query->where(...$params);
+      $this->_query->where(...$params);
     }
-    $results = $dao->getDataStore()->getData($query);
+    $this->load();
+    return $this;
+  }
+
+  public function load()
+  {
+    $dao     = $this->createNewDao(false);
+    $results = $dao->getDataStore()->getData($this->_query);
     foreach($results as $result)
     {
       $this->_daos[] = $this->createNewDao()->hydrateDao($result, true);
@@ -37,11 +103,12 @@ class QlDaoCollection extends DaoCollection implements IAggregateDaoCollection
   {
     if($this->isEmpty())
     {
-      $dao       = $this->createNewDao();
-      $statement = QueryBuilder::select(MinSelectExpression::create($property))
-        ->from($dao->getTableName());
-      $results   = $dao->getDataStore()->getData($statement);
-      return head(head($results));
+      $this->_query->addClause(
+        (new SelectClause())->addExpression(
+          MinSelectExpression::create($property)
+        )
+      );
+      return head(head($this->_getDataStore()->getData($this->_query)));
     }
     else
     {
@@ -53,11 +120,12 @@ class QlDaoCollection extends DaoCollection implements IAggregateDaoCollection
   {
     if($this->isEmpty())
     {
-      $dao       = $this->createNewDao();
-      $statement = QueryBuilder::select(MaxSelectExpression::create($property))
-        ->from($dao->getTableName());
-      $results   = $dao->getDataStore()->getData($statement);
-      return head(head($results));
+      $this->_query->addClause(
+        (new SelectClause())->addExpression(
+          MaxSelectExpression::create($property)
+        )
+      );
+      return head(head($this->_getDataStore()->getData($this->_query)));
     }
     else
     {
@@ -69,13 +137,12 @@ class QlDaoCollection extends DaoCollection implements IAggregateDaoCollection
   {
     if($this->isEmpty())
     {
-      $dao       = $this->createNewDao();
-      $statement = QueryBuilder::select(
-        AverageSelectExpression::create($property)
-      )
-        ->from($dao->getTableName());
-      $results   = $dao->getDataStore()->getData($statement);
-      return head(head($results));
+      $this->_query->addClause(
+        (new SelectClause())->addExpression(
+          AverageSelectExpression::create($property)
+        )
+      );
+      return head(head($this->_getDataStore()->getData($this->_query)));
     }
     else
     {
@@ -88,13 +155,12 @@ class QlDaoCollection extends DaoCollection implements IAggregateDaoCollection
   {
     if($this->isEmpty())
     {
-      $dao       = $this->createNewDao();
-      $statement = QueryBuilder::select(
-        SumSelectExpression::create($property)
-      )
-        ->from($dao->getTableName());
-      $results   = $dao->getDataStore()->getData($statement);
-      return head(head($results));
+      $this->_query->addClause(
+        (new SelectClause())->addExpression(
+          SumSelectExpression::create($property)
+        )
+      );
+      return head(head($this->_getDataStore()->getData($this->_query)));
     }
     else
     {
@@ -113,10 +179,11 @@ class QlDaoCollection extends DaoCollection implements IAggregateDaoCollection
   {
     if($this->isEmpty())
     {
-      $dao       = $this->createNewDao();
-      $statement = QueryBuilder::selectDistinct($property)
-        ->from($dao->getTableName());
-      $results   = $dao->getDataStore()->getData($statement);
+      $select = new SelectClause();
+      $select->setDistinct(true);
+      $select->addField($property);
+      $this->_query->addClause($select);
+      $results = $this->_getDataStore()->getData($this->_query);
       if(empty($results))
       {
         return [];

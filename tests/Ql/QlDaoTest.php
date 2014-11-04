@@ -4,6 +4,7 @@ namespace Ql;
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\Ql\PdoConnection;
+use Packaged\QueryBuilder\Assembler\QueryAssembler;
 
 class QlDaoTest extends \PHPUnit_Framework_TestCase
 {
@@ -15,6 +16,13 @@ class QlDaoTest extends \PHPUnit_Framework_TestCase
 
     $collection = MockQlDao::collection();
     $this->assertInstanceOf(MockQlDao::class, $collection->createNewDao());
+
+    $collection = MockQlDao::collection(['name' => 'Test']);
+    $this->assertInstanceOf(MockQlDao::class, $collection->createNewDao());
+    $this->assertEquals(
+      'SELECT * FROM mock_ql_daos WHERE name = "Test"',
+      QueryAssembler::stringify($collection->getQuery())
+    );
 
     $resolver = new DalResolver();
     $resolver->boot();

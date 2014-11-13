@@ -4,6 +4,7 @@ namespace Ql;
 use cassandra\CqlPreparedResult;
 use Packaged\Config\Provider\ConfigSection;
 use Packaged\Dal\Ql\Cql\CqlConnection;
+use Packaged\Dal\Ql\Cql\CqlDao;
 use Packaged\Dal\Ql\Cql\CqlDataStore;
 use Packaged\Dal\Ql\IQLDataConnection;
 
@@ -25,19 +26,20 @@ class CqlTest extends \PHPUnit_Framework_TestCase
       . "{'class' : 'SimpleStrategy','replication_factor' : 1};"
     );
     self::$_connection->runQuery(
+      'DROP TABLE IF EXISTS packaged_dal.mock_ql_daos'
+    );
+    self::$_connection->runQuery(
       'CREATE TABLE packaged_dal.mock_ql_daos ('
       . '"id" varchar PRIMARY KEY,'
       . '"username" varchar,'
       . '"display" varchar,'
-      . '"intVal" int,'
-      . '"bigintVal" bigint'
+      . '"intVal" int'
       . ');'
     );
   }
 
   public static function tearDownAfterClass()
   {
-    self::$_connection->runQuery('DROP TABLE packaged_dal.mock_ql_daos');
   }
 
   public function testDataTypes()
@@ -48,10 +50,15 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $datastore->setConnection($connection);
     $connection->connect();
 
-    $dao            = new MockCQlDao();
-    $dao->intVal    = 12;
-    $dao->bigintVal = 12;
+    $dao         = new MockCQlDao();
+    $dao->id     = 'cqlid';
+    $dao->intVal = 12;
     $datastore->save($dao);
+
+    $daoLoad     = new MockCQlDao();
+    $daoLoad->id = 'cqlid';
+    $datastore->load($daoLoad);
+    $this->assertEquals(12, $daoLoad->intVal);
   }
 
   protected function _configureConnection(CqlConnection $conn)
@@ -130,7 +137,7 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $this->setExpectedException(
       '\Packaged\Dal\Exceptions\Connection\CqlException'
     );
-    $connection->prepare("INVALD");
+    $connection->prepare("INVALID");
   }
 
   public function testExecuteException()
@@ -162,10 +169,17 @@ class MockCqlDataStore extends CqlDataStore
   }
 }
 
-class MockCQlDao extends MockQlDao
+class MockCQlDao extends CqlDao
 {
+  protected $_dataStoreName = 'mockql';
+
+  public $id;
+  public $username;
+  public $display;
+  /**
+   * @int
+   */
   public $intVal;
-  public $bigintVal;
 
   public function getTableName()
   {

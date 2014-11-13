@@ -81,15 +81,6 @@ class AbstractDaoTest extends \PHPUnit_Framework_TestCase
     );
   }
 
-  public function testConfigGet()
-  {
-    $dao = new MockAbstractDao();
-    $this->assertInstanceOf(
-      ConfigProviderInterface::class,
-      $dao->getConfiguration()
-    );
-  }
-
   public function testOverHydrate()
   {
     $dao = new MockAbstractDao();

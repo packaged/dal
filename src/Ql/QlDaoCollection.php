@@ -251,8 +251,10 @@ class QlDaoCollection extends DaoCollection
       $select = new SelectClause();
       $select->setDistinct(true);
       $select->addField($property);
+      $originalClause = $this->_query->getClause('SELECT');
       $this->_query->addClause($select);
       $results = $this->_getDataStore()->getData($this->_query);
+      $this->_query->addClause($originalClause);
       if(empty($results))
       {
         return [];

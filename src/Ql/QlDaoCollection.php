@@ -142,9 +142,13 @@ class QlDaoCollection extends DaoCollection
   {
     $dao     = $this->createNewDao(false);
     $results = $dao->getDataStore()->getData($this);
-    foreach($results as $result)
+    $this->clear();
+    if(!empty($results))
     {
-      $this->_daos[] = $this->createNewDao()->hydrateDao($result, true);
+      foreach($results as $result)
+      {
+        $this->_daos[] = $this->createNewDao()->hydrateDao($result, true);
+      }
     }
     $this->_isLoaded = true;
     return $this;
@@ -161,7 +165,7 @@ class QlDaoCollection extends DaoCollection
   {
     if(!$this->isEmpty())
     {
-      return parent::first();
+      return parent::first($default);
     }
     $limit = $this->getClause('LIMIT');
     $this->limitWithOffset(0, 1);
@@ -239,14 +243,17 @@ class QlDaoCollection extends DaoCollection
 
   public function count()
   {
-    if($this->isEmpty())
+    if($this->isEmpty() && !$this->_isLoaded)
     {
+      $originalClause = $this->_query->getClause('SELECT');
       $this->_query->addClause(
         (new SelectClause())->addExpression(
           new CountSelectExpression()
         )
       );
-      return head(head($this->_getDataStore()->getData($this->_query)));
+      $count = head(head($this->_getDataStore()->getData($this->_query)));
+      $this->_query->addClause($originalClause);
+      return $count;
     }
     return parent::count();
   }

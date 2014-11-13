@@ -4,6 +4,7 @@ namespace Packaged\Dal\Ql;
 use Doctrine\Common\Inflector\Inflector;
 use Packaged\Config\Provider\ConfigSection;
 use Packaged\Dal\Exceptions\DalResolver\DataStoreNotFoundException;
+use Packaged\Dal\Exceptions\Dao\MultipleDaoException;
 use Packaged\Dal\Foundation\AbstractSanitizableDao;
 use Packaged\Dal\Traits\Dao\LSDTrait;
 use Packaged\Helpers\Strings;
@@ -75,6 +76,33 @@ abstract class QlDao extends AbstractSanitizableDao
       $collection->where(...$params);
     }
     return $collection;
+  }
+
+  /**
+   * @param $params
+   *
+   * @return static
+   *
+   * @throws MultipleDaoException
+   */
+  public static function loadOneWhere(...$params)
+  {
+    $collection = QlDaoCollection::create(get_called_class());
+
+    if(func_num_args() > 0)
+    {
+      $collection->where(...$params);
+    }
+    $collection->limit(2);
+    $collection->load();
+    if($collection->count() === 2)
+    {
+      throw new MultipleDaoException(
+        "Multiple Objects were located when trying to load one"
+      );
+    }
+
+    return $collection->first();
   }
 
   /**

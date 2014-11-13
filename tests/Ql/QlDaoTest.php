@@ -30,6 +30,7 @@ class QlDaoTest extends \PHPUnit_Framework_TestCase
 
     $u           = new MockQlDao();
     $u->username = 'Test';
+    $u->display  = 'Test One';
     $u->save();
     $mocks = MockQlDao::collection(['username' => 'Test']);
     $this->assertCount(1, $mocks);
@@ -42,7 +43,32 @@ class QlDaoTest extends \PHPUnit_Framework_TestCase
     $preloaded = MockQlDao::loadWhere(['username' => 'Test']);
     $this->assertCount(1, $preloaded);
 
+    $u2           = new MockQlDao();
+    $u2->username = 'Tester';
+    $u2->display  = 'Test One';
+    $u2->save();
+
+    try
+    {
+      $msg = null;
+      MockQlDao::loadOneWhere(['display' => 'Test One']);
+    }
+    catch(\Exception $e)
+    {
+      $msg = $e->getMessage();
+    }
+    $this->assertEquals(
+      "Multiple Objects were located when trying to load one",
+      $msg
+    );
+
+    $u2Test = MockQlDao::loadOneWhere(['username' => 'Tester']);
+    $this->assertEquals($u2->username, $u2Test->username);
+
+    $this->assertNull(MockQlDao::loadOneWhere(['username' => 'Missing']));
+
     $u->delete();
+    $u2->delete();
 
     $resolver->shutdown();
   }

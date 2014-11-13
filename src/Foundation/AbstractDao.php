@@ -1,6 +1,8 @@
 <?php
 namespace Packaged\Dal\Foundation;
 
+use Packaged\Config\ConfigProviderInterface;
+use Packaged\Config\Provider\ConfigProvider;
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\IDao;
 use Packaged\Dal\IDataStore;
@@ -336,5 +338,15 @@ abstract class AbstractDao implements IDao
   public function jsonSerialize()
   {
     return get_public_properties($this);
+  }
+
+  /**
+   * Get the configuration for this DAO
+   *
+   * @return ConfigProviderInterface
+   */
+  public function getConfiguration()
+  {
+    return new ConfigProvider();
   }
 }

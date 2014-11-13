@@ -1,6 +1,7 @@
 <?php
 namespace Foundation;
 
+use Packaged\Config\ConfigProviderInterface;
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Foundation\AbstractDao;
 use Packaged\Dal\Foundation\Dao;
@@ -77,6 +78,15 @@ class AbstractDaoTest extends \PHPUnit_Framework_TestCase
     $this->assertEquals(
       ['name' => 'John Smith', 'email' => 'nobody@example.com'],
       $dao->getDaoPropertyData()
+    );
+  }
+
+  public function testConfigGet()
+  {
+    $dao = new MockAbstractDao();
+    $this->assertInstanceOf(
+      ConfigProviderInterface::class,
+      $dao->getConfiguration()
     );
   }
 

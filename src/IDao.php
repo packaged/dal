@@ -1,6 +1,8 @@
 <?php
 namespace Packaged\Dal;
 
+use Packaged\Config\ConfigProviderInterface;
+
 /**
  * Interface IDao Data Access Object
  *
@@ -77,4 +79,11 @@ interface IDao extends \JsonSerializable
    * @return array|mixed
    */
   public function getId($forceArray = false);
+
+  /**
+   * Get the configuration for this DAO
+   *
+   * @return ConfigProviderInterface
+   */
+  public function getConfiguration();
 }

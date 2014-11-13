@@ -104,6 +104,15 @@ class DaoCollectionTest extends \PHPUnit_Framework_TestCase
     );
   }
 
+  public function testAggregates()
+  {
+    $collection = new MockDaoCollection();
+    $this->assertNull($collection->min('id'));
+    $this->assertNull($collection->max('id'));
+    $this->assertNull($collection->avg('id'));
+    $this->assertNull($collection->sum('id'));
+  }
+
   public function testCount()
   {
     $collection = new MockDaoCollection();

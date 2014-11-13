@@ -327,4 +327,45 @@ class DaoCollection implements IDaoCollection
     $this->_prepareDaos();
     return count($this->_daos);
   }
+
+  public function min($property = 'id')
+  {
+    $this->_prepareDaos();
+    if(empty($this->_daos))
+    {
+      return null;
+    }
+    return min(ppull($this->_daos, $property));
+  }
+
+  public function max($property = 'id')
+  {
+    $this->_prepareDaos();
+    if(empty($this->_daos))
+    {
+      return null;
+    }
+    return max(ppull($this->_daos, $property));
+  }
+
+  public function avg($property = 'id')
+  {
+    $this->_prepareDaos();
+    if(empty($this->_daos))
+    {
+      return null;
+    }
+    $values = ppull($this->_daos, $property);
+    return array_sum($values) / count($values);
+  }
+
+  public function sum($property = 'id')
+  {
+    $this->_prepareDaos();
+    if(empty($this->_daos))
+    {
+      return null;
+    }
+    return array_sum(ppull($this->_daos, $property));
+  }
 }

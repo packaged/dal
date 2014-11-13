@@ -13,6 +13,7 @@ use Packaged\QueryBuilder\Clause\SelectClause;
 use Packaged\QueryBuilder\SelectExpression\AllSelectExpression;
 use Packaged\QueryBuilder\SelectExpression\AverageSelectExpression;
 use Packaged\QueryBuilder\SelectExpression\CountSelectExpression;
+use Packaged\QueryBuilder\SelectExpression\ISelectExpression;
 use Packaged\QueryBuilder\SelectExpression\MaxSelectExpression;
 use Packaged\QueryBuilder\SelectExpression\MinSelectExpression;
 use Packaged\QueryBuilder\SelectExpression\SumSelectExpression;
@@ -186,76 +187,54 @@ class QlDaoCollection extends DaoCollection
 
   public function min($property = 'id')
   {
-    if($this->isEmpty())
-    {
-      $this->_query->addClause(
-        (new SelectClause())->addExpression(
-          MinSelectExpression::create($property)
-        )
-      );
-      return head(head($this->_getDataStore()->getData($this->_query)));
-    }
-    return min(ppull($this->_daos, $property));
+    return $this->_getAggregate(
+      __FUNCTION__,
+      MinSelectExpression::create($property)
+    );
   }
 
   public function max($property = 'id')
   {
-    if($this->isEmpty())
-    {
-      $this->_query->addClause(
-        (new SelectClause())->addExpression(
-          MaxSelectExpression::create($property)
-        )
-      );
-      return head(head($this->_getDataStore()->getData($this->_query)));
-    }
-    return max(ppull($this->_daos, $property));
+    return $this->_getAggregate(
+      __FUNCTION__,
+      MaxSelectExpression::create($property)
+    );
   }
 
   public function avg($property = 'id')
   {
-    if($this->isEmpty())
-    {
-      $this->_query->addClause(
-        (new SelectClause())->addExpression(
-          AverageSelectExpression::create($property)
-        )
-      );
-      return head(head($this->_getDataStore()->getData($this->_query)));
-    }
-    $values = ppull($this->_daos, $property);
-    return array_sum($values) / count($values);
+    return $this->_getAggregate(
+      __FUNCTION__,
+      AverageSelectExpression::create($property)
+    );
   }
 
   public function sum($property = 'id')
   {
-    if($this->isEmpty())
-    {
-      $this->_query->addClause(
-        (new SelectClause())->addExpression(
-          SumSelectExpression::create($property)
-        )
-      );
-      return head(head($this->_getDataStore()->getData($this->_query)));
-    }
-    return array_sum(ppull($this->_daos, $property));
+    return $this->_getAggregate(
+      __FUNCTION__,
+      SumSelectExpression::create($property)
+    );
   }
 
   public function count()
+  {
+    return $this->_getAggregate(__FUNCTION__, new CountSelectExpression());
+  }
+
+  protected function _getAggregate($method, ISelectExpression $expression)
   {
     if($this->isEmpty() && !$this->_isLoaded)
     {
       $originalClause = $this->_query->getClause('SELECT');
       $this->_query->addClause(
-        (new SelectClause())->addExpression(
-          new CountSelectExpression()
-        )
+        (new SelectClause())->addExpression($expression)
       );
-      $count = head(head($this->_getDataStore()->getData($this->_query)));
+      $result = head(head($this->_getDataStore()->getData($this->_query)));
       $this->_query->addClause($originalClause);
-      return $count;
+      return $result;
     }
-    return parent::count();
+    return parent::$method();
   }
 
   /**

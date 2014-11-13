@@ -11,21 +11,47 @@ require_once 'supporting.php';
 
 class CqlTest extends \PHPUnit_Framework_TestCase
 {
-  public function setup()
+  /**
+   * @var CqlConnection
+   */
+  private static $_connection;
+
+  public static function setUpBeforeClass()
   {
-    $connection = new CqlConnection();
-    $connection->connect();
-    $connection->runQuery(
+    self::$_connection = new CqlConnection();
+    self::$_connection->connect();
+    self::$_connection->runQuery(
       "CREATE KEYSPACE IF NOT EXISTS packaged_dal WITH REPLICATION = "
       . "{'class' : 'SimpleStrategy','replication_factor' : 1};"
     );
-    $connection->runQuery(
-      "CREATE TABLE IF NOT EXISTS packaged_dal.mock_ql_daos ("
-      . "id varchar PRIMARY KEY,"
-      . "username varchar,"
-      . "display varchar"
-      . ");"
+    self::$_connection->runQuery(
+      'CREATE TABLE packaged_dal.mock_ql_daos ('
+      . '"id" varchar PRIMARY KEY,'
+      . '"username" varchar,'
+      . '"display" varchar,'
+      . '"intVal" int,'
+      . '"bigintVal" bigint'
+      . ');'
     );
+  }
+
+  public static function tearDownAfterClass()
+  {
+    self::$_connection->runQuery('DROP TABLE packaged_dal.mock_ql_daos');
+  }
+
+  public function testDataTypes()
+  {
+    $datastore  = new MockCqlDataStore();
+    $connection = new CqlConnection();
+    $this->_configureConnection($connection);
+    $datastore->setConnection($connection);
+    $connection->connect();
+
+    $dao            = new MockCQlDao();
+    $dao->intVal    = 12;
+    $dao->bigintVal = 12;
+    $datastore->save($dao);
   }
 
   protected function _configureConnection(CqlConnection $conn)
@@ -138,6 +164,9 @@ class MockCqlDataStore extends CqlDataStore
 
 class MockCQlDao extends MockQlDao
 {
+  public $intVal;
+  public $bigintVal;
+
   public function getTableName()
   {
     return "mock_ql_daos";

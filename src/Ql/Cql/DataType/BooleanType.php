@@ -1,7 +1,7 @@
 <?php
 namespace Packaged\Dal\Ql\Cql\DataType;
 
-class BooleanType
+class BooleanType extends CassandraType
 {
   public static function pack($value)
   {

@@ -57,7 +57,7 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $dao            = new MockCQlDao();
     $dao->id        = 'cqlid';
     $dao->intVal    = 123456;
-    $dao->bigintVal = 123456;
+    $dao->bigintVal = -PHP_INT_MAX;
     $dao->doubleVal = 123456;
     $dao->floatVal  = 12.3456;
     $dao->boolVal   = true;
@@ -68,7 +68,7 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $datastore->load($daoLoad);
     $this->assertEquals('cqlid', $daoLoad->id);
     $this->assertEquals(123456, $daoLoad->intVal);
-    $this->assertEquals(123456, $daoLoad->bigintVal);
+    $this->assertEquals(-PHP_INT_MAX, $daoLoad->bigintVal);
     $this->assertEquals(123456, $daoLoad->doubleVal);
     $this->assertEquals(12.3456, $daoLoad->floatVal, '', 0.00001);
     $this->assertTrue($daoLoad->boolVal);

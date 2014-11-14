@@ -22,14 +22,8 @@ class CqlDao extends QlDao
         $this->_addCustomSerializer(
           $property,
           'type',
-          function ($arg)
-          {
-            return IntegerType::pack($arg);
-          },
-          function ($arg)
-          {
-            return IntegerType::unpack($arg);
-          }
+          [IntegerType::class, 'pack'],
+          [IntegerType::class, 'unpack']
         );
       }
       else if($this->_hasAnyTag($docblock, ['double']))
@@ -37,14 +31,8 @@ class CqlDao extends QlDao
         $this->_addCustomSerializer(
           $property,
           'type',
-          function ($arg)
-          {
-            return DoubleType::pack($arg);
-          },
-          function ($arg)
-          {
-            return DoubleType::unpack($arg);
-          }
+          [DoubleType::class, 'pack'],
+          [DoubleType::class, 'unpack']
         );
       }
       else if($this->_hasAnyTag($docblock, ['bigint', 'counter', 'timestamp']))
@@ -52,14 +40,8 @@ class CqlDao extends QlDao
         $this->_addCustomSerializer(
           $property,
           'type',
-          function ($arg)
-          {
-            return LongType::pack($arg);
-          },
-          function ($arg)
-          {
-            return LongType::unpack($arg);
-          }
+          [LongType::class, 'pack'],
+          [LongType::class, 'unpack']
         );
       }
       else if($this->_hasAnyTag($docblock, ['float']))
@@ -67,14 +49,8 @@ class CqlDao extends QlDao
         $this->_addCustomSerializer(
           $property,
           'type',
-          function ($arg)
-          {
-            return FloatType::pack($arg);
-          },
-          function ($arg)
-          {
-            return FloatType::unpack($arg);
-          }
+          [FloatType::class, 'pack'],
+          [FloatType::class, 'unpack']
         );
       }
       else if($this->_hasAnyTag($docblock, ['bool']))
@@ -82,14 +58,8 @@ class CqlDao extends QlDao
         $this->_addCustomSerializer(
           $property,
           'type',
-          function ($arg)
-          {
-            return BooleanType::pack($arg);
-          },
-          function ($arg)
-          {
-            return BooleanType::unpack($arg);
-          }
+          [BooleanType::class, 'pack'],
+          [BooleanType::class, 'unpack']
         );
       }
     }

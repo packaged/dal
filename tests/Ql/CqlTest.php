@@ -33,7 +33,11 @@ class CqlTest extends \PHPUnit_Framework_TestCase
       . '"id" varchar PRIMARY KEY,'
       . '"username" varchar,'
       . '"display" varchar,'
-      . '"intVal" int'
+      . '"intVal" int,'
+      . '"bigintVal" bigint,'
+      . '"doubleVal" double,'
+      . '"floatVal" float,'
+      . '"boolVal" boolean'
       . ');'
     );
   }
@@ -50,15 +54,23 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $datastore->setConnection($connection);
     $connection->connect();
 
-    $dao         = new MockCQlDao();
-    $dao->id     = 'cqlid';
-    $dao->intVal = 12;
+    $dao            = new MockCQlDao();
+    $dao->id        = 'cqlid';
+    $dao->intVal    = 123456;
+    $dao->bigintVal = 123456;
+    $dao->doubleVal = 123456;
+    $dao->floatVal  = 12.3456;
+    $dao->boolVal   = true;
     $datastore->save($dao);
 
     $daoLoad     = new MockCQlDao();
     $daoLoad->id = 'cqlid';
     $datastore->load($daoLoad);
-    $this->assertEquals(12, $daoLoad->intVal);
+    $this->assertEquals(123456, $daoLoad->intVal);
+    $this->assertEquals(123456, $daoLoad->bigintVal);
+    $this->assertEquals(123456, $daoLoad->doubleVal);
+    $this->assertEquals(12.3456, $daoLoad->floatVal,'',0.00001);
+    $this->assertTrue($daoLoad->boolVal);
   }
 
   protected function _configureConnection(CqlConnection $conn)
@@ -180,6 +192,22 @@ class MockCQlDao extends CqlDao
    * @int
    */
   public $intVal;
+  /**
+   * @bigint
+   */
+  public $bigintVal;
+  /**
+   * @double
+   */
+  public $doubleVal;
+  /**
+   * @float
+   */
+  public $floatVal;
+  /**
+   * @bool
+   */
+  public $boolVal;
 
   public function getTableName()
   {

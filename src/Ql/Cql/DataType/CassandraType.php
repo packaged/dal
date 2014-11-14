@@ -1,18 +1,8 @@
 <?php
 namespace Packaged\Dal\Ql\Cql\DataType;
 
-abstract class CassandraType
+abstract class CassandraType implements ICassandraType
 {
-  public static function pack($value)
-  {
-    return $value;
-  }
-
-  public static function unpack($raw)
-  {
-    return $raw;
-  }
-
   protected static function _reverseIfLE($bin)
   {
     static $isLittleEndian = null;

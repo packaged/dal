@@ -6,6 +6,8 @@ use Packaged\Dal\Helpers\Phid;
 use Packaged\Dal\IDao;
 use Packaged\Dal\Ql\QlDao;
 use Packaged\Dal\Ql\QlDataStore;
+use Packaged\QueryBuilder\Assembler\CQL\CqlAssembler;
+use Packaged\QueryBuilder\Statement\IStatement;
 
 class CqlDataStore extends QlDataStore
 {
@@ -48,5 +50,10 @@ class CqlDataStore extends QlDataStore
       }
     }
     return parent::save($dao);
+  }
+
+  protected function _assemble(IStatement $statement)
+  {
+    return CqlAssembler::stringify($statement);
   }
 }

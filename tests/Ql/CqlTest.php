@@ -7,6 +7,9 @@ use Packaged\Dal\Ql\Cql\CqlConnection;
 use Packaged\Dal\Ql\Cql\CqlDao;
 use Packaged\Dal\Ql\Cql\CqlDataStore;
 use Packaged\Dal\Ql\IQLDataConnection;
+use Packaged\QueryBuilder\Builder\QueryBuilder;
+use Packaged\QueryBuilder\Expression\ValueExpression;
+use Packaged\QueryBuilder\Predicate\EqualPredicate;
 
 require_once 'supporting.php';
 
@@ -40,38 +43,6 @@ class CqlTest extends \PHPUnit_Framework_TestCase
       . '"boolVal" boolean'
       . ');'
     );
-  }
-
-  public static function tearDownAfterClass()
-  {
-  }
-
-  public function testDataTypes()
-  {
-    $datastore  = new MockCqlDataStore();
-    $connection = new CqlConnection();
-    $this->_configureConnection($connection);
-    $datastore->setConnection($connection);
-    $connection->connect();
-
-    $dao            = new MockCQlDao();
-    $dao->id        = 'cqlid';
-    $dao->intVal    = 123456;
-    $dao->bigintVal = -123456;
-    $dao->doubleVal = 123456;
-    $dao->floatVal  = 12.3456;
-    $dao->boolVal   = true;
-    $datastore->save($dao);
-
-    $daoLoad     = new MockCQlDao();
-    $daoLoad->id = 'cqlid';
-    $datastore->load($daoLoad);
-    $this->assertEquals('cqlid', $daoLoad->id);
-    $this->assertEquals(123456, $daoLoad->intVal);
-    $this->assertEquals(-123456, $daoLoad->bigintVal);
-    $this->assertEquals(123456, $daoLoad->doubleVal);
-    $this->assertEquals(12.3456, $daoLoad->floatVal, '', 0.00001);
-    $this->assertTrue($daoLoad->boolVal);
   }
 
   protected function _configureConnection(CqlConnection $conn)
@@ -113,9 +84,14 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $datastore->setConnection($connection);
     $connection->connect();
 
-    $dao           = new MockCQlDao();
-    $dao->username = time() . 'user';
-    $dao->display  = 'User ' . date("Y-m-d");
+    $dao            = new MockCqlDao();
+    $dao->username  = time() . 'user';
+    $dao->display   = 'User ' . date("Y-m-d");
+    $dao->intVal    = 123456;
+    $dao->bigintVal = -123456;
+    $dao->doubleVal = 123456;
+    $dao->floatVal  = 12.3456;
+    $dao->boolVal   = true;
     $datastore->save($dao);
     $dao->username = 'test 1';
     $dao->display  = 'Brooke';
@@ -123,6 +99,11 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $dao->username = 'test 2';
     $datastore->load($dao);
     $this->assertEquals('test 1', $dao->username);
+    $this->assertEquals(123456, $dao->intVal);
+    $this->assertEquals(-123456, $dao->bigintVal);
+    $this->assertEquals(123456, $dao->doubleVal);
+    $this->assertEquals(12.3456, $dao->floatVal, '', 0.00001);
+    $this->assertTrue($dao->boolVal);
     $dao->display = 'Save 2';
     $datastore->save($dao);
     $datastore->delete($dao);
@@ -163,6 +144,31 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     );
     $connection->execute(new CqlPreparedResult());
   }
+
+  public function testGetData()
+  {
+    $dao        = new MockCqlDao();
+    $datastore  = new MockCqlDataStore();
+    $connection = new MockCqlConnection();
+    $datastore->setConnection($connection);
+
+    $dao           = new MockCqlDao();
+    $dao->id       = 'testdao';
+    $dao->username = 'testuser';
+    $datastore->save($dao);
+
+    $eq = new EqualPredicate();
+    $eq->setField('id');
+    $eq->setExpression(ValueExpression::create('testdao'));
+    $d = $datastore->getData(
+      QueryBuilder::select()->from($dao->getTableName())->where($eq)
+    );
+
+    $testDao = new MockCqlDao();
+    $testDao->hydrateDao($d[0], true);
+
+    $this->assertEquals($dao, $testDao);
+  }
 }
 
 class MockCqlConnection extends CqlConnection
@@ -182,7 +188,7 @@ class MockCqlDataStore extends CqlDataStore
   }
 }
 
-class MockCQlDao extends CqlDao
+class MockCqlDao extends CqlDao
 {
   protected $_dataStoreName = 'mockql';
 

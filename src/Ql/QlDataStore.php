@@ -11,7 +11,6 @@ use Packaged\Dal\IDao;
 use Packaged\Dal\IDataStore;
 use Packaged\QueryBuilder\Assembler\MySQL\MySQLAssembler;
 use Packaged\QueryBuilder\Statement\IStatement;
-use Packaged\QueryBuilder\Statement\QueryStatement;
 
 class QlDataStore implements IDataStore, ConfigurableInterface
 {
@@ -260,10 +259,15 @@ class QlDataStore implements IDataStore, ConfigurableInterface
   public function getData(IStatement $statement)
   {
     $results = $this->_connectedConnection()->fetchQueryResults(
-      MySQLAssembler::stringify($statement),
+      $this->_assemble($statement),
       []
     );
     return $results;
+  }
+
+  protected function _assemble(IStatement $statement)
+  {
+    return MySQLAssembler::stringify($statement);
   }
 
   public function escapeTableName($table)

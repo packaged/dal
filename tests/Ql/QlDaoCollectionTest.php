@@ -7,7 +7,6 @@ use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\Ql\PdoConnection;
 use Packaged\Dal\Ql\QlDaoCollection;
 use Packaged\Helpers\ValueAs;
-use Packaged\QueryBuilder\Assembler\QueryAssembler;
 use Packaged\QueryBuilder\Clause\LimitClause;
 
 class QlDaoCollectionTest extends \PHPUnit_Framework_TestCase
@@ -47,15 +46,19 @@ class QlDaoCollectionTest extends \PHPUnit_Framework_TestCase
     $this->assertNull($collection->sum('id'));
     $this->assertEmpty($collection->distinct('username'));
 
+    $u->display  = 'queried';
     $u->username = 'Test';
     $u->id       = 1;
     $u->save();
+    $u->markDaoAsLoaded(false);
     $u->username = 'Test';
     $u->id       = 2;
     $u->save();
+    $u->markDaoAsLoaded(false);
     $u->username = 'User';
     $u->id       = 5;
     $u->save();
+    $u->markDaoAsLoaded(false);
     $u->username = 'Testing';
     $u->id       = 8;
     $u->save();

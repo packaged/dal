@@ -69,6 +69,22 @@ interface IDao extends \JsonSerializable
   public function getDaoIDProperties();
 
   /**
+   * Set the current dataset to be that of the data store values
+   *
+   * @return self
+   */
+  public function markDaoDatasetAsSaved();
+
+  /**
+   * Set the DAO as loaded
+   *
+   * @param bool $isLoaded
+   *
+   * @returns self
+   */
+  public function markDaoAsLoaded($isLoaded = true);
+
+  /**
    * Retrieve the ID for a DAO, if multiple properties make up the ID,
    * they will be returned in an array
    *

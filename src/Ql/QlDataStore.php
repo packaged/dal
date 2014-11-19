@@ -6,13 +6,13 @@ use Packaged\Config\ConfigurableTrait;
 use Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException;
 use Packaged\Dal\Exceptions\DataStore\DaoNotFoundException;
 use Packaged\Dal\Exceptions\DataStore\DataStoreException;
+use Packaged\Dal\Foundation\AbstractDataStore;
 use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\IDao;
-use Packaged\Dal\IDataStore;
 use Packaged\QueryBuilder\Assembler\MySQL\MySQLAssembler;
 use Packaged\QueryBuilder\Statement\IStatement;
 
-class QlDataStore implements IDataStore, ConfigurableInterface
+class QlDataStore extends AbstractDataStore implements ConfigurableInterface
 {
   use ConfigurableTrait;
 
@@ -67,14 +67,20 @@ class QlDataStore implements IDataStore, ConfigurableInterface
         $dao->setDaoProperty($property, $id);
       }
     }
+    $changes = $dao->getDaoChanges();
+    parent::save($dao);
+    return $changes;
   }
 
   protected function _saveInsertDuplicate(QlDao $dao)
   {
     //ATTEMPT
     $this->_saveInsert($dao);
-    $this->_query .= " ON DUPLICATE KEY UPDATE ";
-    $this->_subUpdate($dao, false);
+    if($this->_getDaoChanges($dao, false))
+    {
+      $this->_query .= " ON DUPLICATE KEY UPDATE ";
+      $this->_subUpdate($dao, false);
+    }
   }
 
   protected function _saveUpdate(QlDao $dao)
@@ -91,17 +97,27 @@ class QlDataStore implements IDataStore, ConfigurableInterface
   protected function _subUpdate(QlDao $dao, $includeIds = true)
   {
     $updates = [];
-    foreach($dao->getDaoChanges() as $column => $value)
+    foreach($this->_getDaoChanges($dao, $includeIds) as $column => $value)
     {
-      if(!$includeIds && in_array($column, $dao->getDaoIDProperties()))
-      {
-        continue;
-      }
-      $updates[]            = $this->escapeColumn($column) . ' = ?';
-      $this->_queryValues[] = $value['to'];
+      $updates[] = $this->escapeColumn($column) . ' = ?';
+      $this->_queryValues[]
+                 = is_bool($value['to']) ? (int)$value['to'] : $value['to'];
     }
 
     $this->_query .= implode(', ', $updates);
+  }
+
+  protected function _getDaoChanges(QlDao $dao, $includeIds = true)
+  {
+    $changes = $dao->getDaoChanges();
+    foreach($changes as $column => $value)
+    {
+      if(!$includeIds && in_array($column, $dao->getDaoIDProperties()))
+      {
+        unset($changes[$column]);
+      }
+    }
+    return $changes;
   }
 
   protected function _saveInsert(QlDao $dao)
@@ -114,7 +130,7 @@ class QlDataStore implements IDataStore, ConfigurableInterface
     {
       $colCount++;
       $columns[]            = $this->escapeColumn($column);
-      $this->_queryValues[] = $data;
+      $this->_queryValues[] = is_bool($data) ? (int)$data : $data;
     }
 
     $this->_query .= ' (' . implode(', ', $columns) . ') ';

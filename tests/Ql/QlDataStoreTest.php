@@ -200,8 +200,8 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     $dao->display  = 'John Smith';
     $datastore->save($dao);
     $this->assertEquals(
-      'INSERT INTO `mock_ql_daos` (`id`, `username`, `display`) '
-      . 'VALUES(NULL, "username", "John Smith")',
+      'INSERT INTO `mock_ql_daos` (`id`, `username`, `display`, `boolTest`) '
+      . 'VALUES(NULL, "username", "John Smith", NULL)',
       $connection->getExecutedQuery()
     );
 
@@ -217,13 +217,14 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     );
 
     //Insert Update
-    $dao          = new MockQlDao();
-    $dao->id      = 3;
-    $dao->display = 'John Smith';
+    $dao           = new MockQlDao();
+    $dao->id       = 3;
+    $dao->display  = 'John Smith';
+    $dao->boolTest = false;
     $datastore->save($dao);
     $this->assertEquals(
-      'INSERT INTO `mock_ql_daos` (`id`, `username`, `display`) '
-      . 'VALUES("3", NULL, "John Smith") '
+      'INSERT INTO `mock_ql_daos` (`id`, `username`, `display`, `boolTest`) '
+      . 'VALUES("3", NULL, "John Smith", "0") '
       . 'ON DUPLICATE KEY UPDATE `display` = "John Smith"',
       $connection->getExecutedQuery()
     );

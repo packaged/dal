@@ -14,6 +14,7 @@ class MockQlDao extends QlDao
   public $id;
   public $username;
   public $display;
+  public $boolTest;
 }
 
 class MockMultiKeyQlDao extends QlDao
@@ -21,6 +22,7 @@ class MockMultiKeyQlDao extends QlDao
   public $id;
   public $username;
   public $display;
+  public $boolTest;
 
   public function getDaoIDProperties()
   {

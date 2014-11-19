@@ -147,7 +147,6 @@ class CqlTest extends \PHPUnit_Framework_TestCase
 
   public function testGetData()
   {
-    $dao        = new MockCqlDao();
     $datastore  = new MockCqlDataStore();
     $connection = new MockCqlConnection();
     $datastore->setConnection($connection);
@@ -166,6 +165,8 @@ class CqlTest extends \PHPUnit_Framework_TestCase
 
     $testDao = new MockCqlDao();
     $testDao->hydrateDao($d[0], true);
+    $testDao->markDaoAsLoaded();
+    $testDao->markDaoDatasetAsSaved();
 
     $this->assertEquals($dao, $testDao);
   }

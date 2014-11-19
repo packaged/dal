@@ -123,13 +123,16 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
     $dao           = new MockQlDao();
     $dao->username = time() . 'user';
     $dao->display  = 'User ' . date("Y-m-d");
+    $dao->boolTest = true;
     $datastore->save($dao);
     $dao->username = 'test 1';
     $dao->display  = 'Brooke';
+    $dao->boolTest = false;
     $datastore->save($dao);
     $dao->username = 'test 2';
     $datastore->load($dao);
     $this->assertEquals('test 1', $dao->username);
+    $this->assertEquals(0, $dao->boolTest);
     $dao->display = 'Save 2';
     $datastore->save($dao);
 

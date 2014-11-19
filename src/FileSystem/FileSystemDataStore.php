@@ -3,10 +3,10 @@ namespace Packaged\Dal\FileSystem;
 
 use Packaged\Dal\Exceptions\DataStore\DaoNotFoundException;
 use Packaged\Dal\Exceptions\DataStore\DataStoreException;
+use Packaged\Dal\Foundation\AbstractDataStore;
 use Packaged\Dal\IDao;
-use Packaged\Dal\IDataStore;
 
-class FileSystemDataStore implements IDataStore
+class FileSystemDataStore extends AbstractDataStore
 {
   /**
    * Save a file to the filesystem
@@ -25,8 +25,7 @@ class FileSystemDataStore implements IDataStore
       $dao->getPropertySerialized('content', $dao->content)
     );
     $changes = $dao->getDaoChanges();
-    $dao->markDaoDatasetAsSaved();
-    $dao->markDaoAsLoaded();
+    parent::save($dao);
     return $changes;
   }
 

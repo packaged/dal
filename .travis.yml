@@ -17,6 +17,7 @@ before_script:
                 `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
                 `username` varchar(50) DEFAULT NULL,
                 `display` varchar(50) DEFAULT NULL,
+                `boolTest` boolean,
                 PRIMARY KEY (`id`)
               ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;'
 

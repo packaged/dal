@@ -4,7 +4,6 @@ namespace Ql;
 use Packaged\Config\Provider\ConfigSection;
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
-use Packaged\Dal\Ql\PdoConnection;
 
 require_once 'supporting.php';
 
@@ -12,7 +11,8 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
 {
   public function testConnection()
   {
-    $connection = new PdoConnection();
+    $connection = new MockPdoConnection();
+    $connection->config();
     $this->assertFalse($connection->isConnected());
     $connection->connect();
     $this->assertTrue($connection->isConnected());
@@ -22,8 +22,8 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
 
   public function testConnectionException()
   {
-    $connection = new PdoConnection();
-    $config     = new ConfigSection();
+    $connection = new MockPdoConnection();
+    $config     = $connection->config();
     $config->addItem('hostname', '255.255.255.255');
     $connection->configure($config);
 
@@ -47,8 +47,8 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
   public function testAutoConnect()
   {
     $datastore  = new MockQlDataStore();
-    $connection = new PdoConnection();
-    $connection->configure(new ConfigSection());
+    $connection = new MockPdoConnection();
+    $connection->config();
     $datastore->setConnection($connection);
 
     $dao           = new MockQlDao();
@@ -66,8 +66,8 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
 
   public function testRunQueryExceptions()
   {
-    $connection = new PdoConnection();
-    $connection->configure(new ConfigSection());
+    $connection = new MockPdoConnection();
+    $connection->config();
     $connection->connect();
     $this->setExpectedException(ConnectionException::class);
     $connection->runQuery("SELECT * FROM `made_up_table_r43i`", []);
@@ -75,8 +75,8 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
 
   public function testfetchQueryResultsExceptions()
   {
-    $connection = new PdoConnection();
-    $connection->configure(new ConfigSection());
+    $connection = new MockPdoConnection();
+    $connection->config();
     $connection->connect();
     $this->setExpectedException(ConnectionException::class);
     $connection->fetchQueryResults("SELECT * FROM `made_up_table_r43i`", []);
@@ -111,8 +111,8 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
   public function testLsd()
   {
     $datastore  = new MockQlDataStore();
-    $connection = new PdoConnection();
-    $connection->configure(new ConfigSection());
+    $connection = new MockPdoConnection();
+    $connection->config();
     $datastore->setConnection($connection);
     $connection->connect();
 
@@ -145,7 +145,7 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
   }
 }
 
-class CorruptablePdoConnection extends PdoConnection
+class CorruptablePdoConnection extends MockPdoConnection
 {
   public function causeGoneAway()
   {

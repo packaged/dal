@@ -45,11 +45,26 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     );
   }
 
+  public function testNoKeyspace()
+  {
+    $datastore  = new MockCqlDataStore();
+    $connection = new MockCqlConnection();
+    $connection->connect();
+    $connection->setConfig('keyspace', 'packaged_dal');
+    $datastore->setConnection($connection);
+
+    $dao     = new MockCqlDao();
+    $dao->id = 'testdao';
+    $datastore->save($dao);
+    $this->assertTrue($datastore->exists($dao));
+  }
+
   protected function _configureConnection(CqlConnection $conn)
   {
     $conn->setReceiveTimeout(5000);
     $conn->setSendTimeout(5000);
     $conn->setConfig('connect_timeout', 1000);
+    $conn->setConfig('keyspace', 'packaged_dal');
   }
 
   public function testConnection()

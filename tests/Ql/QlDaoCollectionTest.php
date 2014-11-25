@@ -4,7 +4,6 @@ namespace Ql;
 use Foundation\MockAbstractDao;
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Foundation\Dao;
-use Packaged\Dal\Ql\PdoConnection;
 use Packaged\Dal\Ql\QlDaoCollection;
 use Packaged\Helpers\ValueAs;
 use Packaged\QueryBuilder\Clause\LimitClause;
@@ -30,7 +29,8 @@ class QlDaoCollectionTest extends \PHPUnit_Framework_TestCase
   {
     Dao::setDalResolver(new DalResolver());
     $datastore  = new MockQlDataStore();
-    $connection = new PdoConnection();
+    $connection = new MockPdoConnection();
+    $connection->config();
     $datastore->setConnection($connection);
     MockQlDao::getDalResolver()->addDataStore('mockql', $datastore);
 

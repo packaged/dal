@@ -11,7 +11,8 @@ class QlDaoTest extends \PHPUnit_Framework_TestCase
   public function testStatics()
   {
     $datastore  = new MockQlDataStore();
-    $connection = new PdoConnection();
+    $connection = new MockPdoConnection();
+    $connection->config();
     $datastore->setConnection($connection);
 
     $collection = MockQlDao::collection();

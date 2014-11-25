@@ -32,7 +32,7 @@ class PdoConnection
       $dsn = sprintf(
         "mysql:host=%s;dbname=%s;port=%d",
         $this->_config()->getItem('hostname', '127.0.0.1'),
-        $this->_config()->getItem('database', 'packaged_dal'),
+        $this->_config()->getItem('database'),
         $this->_config()->getItem('port', 3306)
       );
     }

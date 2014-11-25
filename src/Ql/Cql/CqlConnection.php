@@ -9,12 +9,11 @@ use cassandra\CqlPreparedResult;
 use cassandra\CqlResult;
 use cassandra\CqlResultType;
 use cassandra\CqlRow;
-use cassandra\InvalidRequestException;
 use Packaged\Config\ConfigurableInterface;
+use Packaged\Config\ConfigurableTrait;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
 use Packaged\Dal\Exceptions\Connection\CqlException;
 use Packaged\Dal\Ql\IQLDataConnection;
-use Packaged\Config\ConfigurableTrait;
 use Packaged\Helpers\ValueAs;
 use Thrift\Exception\TException;
 use Thrift\Protocol\TBinaryProtocolAccelerated;
@@ -90,15 +89,10 @@ class CqlConnection implements IQLDataConnection, ConfigurableInterface
           (int)$this->_config()->getItem('send_timeout', 1000)
         );
 
-        try
+        $keyspace = $this->_config()->getItem('keyspace');
+        if($keyspace)
         {
-          $this->_client->set_keyspace(
-            $this->_config()->getItem('keyspace', 'packaged_dal')
-          );
-        }
-        catch(InvalidRequestException $e)
-        {
-          //Allow connection with no keyspace, for keyspace creation
+          $this->_client->set_keyspace($keyspace);
         }
       }
       catch(TException $e)
@@ -200,7 +194,17 @@ class CqlConnection implements IQLDataConnection, ConfigurableInterface
     }
     catch(\Exception $e)
     {
-      throw CqlException::from($e);
+      $exception = CqlException::from($e);
+      if(starts_with(
+          $exception->getMessage(),
+          'No keyspace has been specified.'
+        ) && ($keyspace = $this->_config()->getItem('keyspace'))
+      )
+      {
+        $this->_client->set_keyspace($keyspace);
+        return $this->prepare($query, $compression);
+      }
+      throw $exception;
     }
   }
 

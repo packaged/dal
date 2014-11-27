@@ -52,6 +52,17 @@ class CqlDataStore extends QlDataStore
     return parent::save($dao);
   }
 
+  protected function _prepareQuery(QlDao $dao)
+  {
+    if($dao instanceof CqlDao)
+    {
+      if($dao->getTtl() !== null && $dao->getTtl() > 0)
+      {
+        $this->_query .= " USING TTL " . (int)$dao->getTtl();
+      }
+    }
+  }
+
   protected function _assemble(IStatement $statement)
   {
     return CqlAssembler::stringify($statement);

@@ -56,6 +56,7 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
       $this->_saveInsertDuplicate($dao);
     }
 
+    $this->_prepareQuery($dao);
     $connection = $this->_connectedConnection();
     $connection->runQuery($this->_query, $this->_queryValues);
 
@@ -70,6 +71,10 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
     $changes = $dao->getDaoChanges();
     parent::save($dao);
     return $changes;
+  }
+
+  protected function _prepareQuery(QlDao $dao)
+  {
   }
 
   protected function _saveInsertDuplicate(QlDao $dao)

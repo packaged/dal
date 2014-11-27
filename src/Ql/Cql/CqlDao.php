@@ -9,8 +9,13 @@ use Packaged\Dal\Ql\Cql\DataType\LongType;
 use Packaged\Dal\Ql\QlDao;
 use Packaged\DocBlock\DocBlockParser;
 
-class CqlDao extends QlDao
+abstract class CqlDao extends QlDao
 {
+  public function getTtl()
+  {
+    return null;
+  }
+
   protected function _configure()
   {
     parent::_configure();

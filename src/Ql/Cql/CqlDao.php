@@ -81,4 +81,12 @@ abstract class CqlDao extends QlDao
     }
     return false;
   }
+
+  /**
+   * @return CqlDaoCollection
+   */
+  protected static function _createCollection()
+  {
+    return CqlDaoCollection::create(get_called_class());
+  }
 }

@@ -64,13 +64,21 @@ abstract class QlDao extends AbstractSanitizableDao
   }
 
   /**
+   * @return QlDaoCollection
+   */
+  protected static function _createCollection()
+  {
+    return QlDaoCollection::create(get_called_class());
+  }
+
+  /**
    * @param $params
    *
    * @return QlDaoCollection
    */
   public static function collection(...$params)
   {
-    $collection = QlDaoCollection::create(get_called_class());
+    $collection = static::_createCollection();
     if(func_num_args() > 0)
     {
       $collection->where(...$params);
@@ -87,8 +95,7 @@ abstract class QlDao extends AbstractSanitizableDao
    */
   public static function loadOneWhere(...$params)
   {
-    $collection = QlDaoCollection::create(get_called_class());
-
+    $collection = static::_createCollection();
     if(func_num_args() > 0)
     {
       $collection->where(...$params);

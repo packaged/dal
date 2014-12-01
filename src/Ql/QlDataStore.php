@@ -34,6 +34,11 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
     $this->_clearQuery();
     $dao = $this->_verifyDao($dao);
 
+    if(!$this->_getDaoChanges($dao))
+    {
+      return [];
+    }
+
     $ids    = array_filter(
       $dao->getId(true),
       function ($value)

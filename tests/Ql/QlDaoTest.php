@@ -33,6 +33,8 @@ class QlDaoTest extends \PHPUnit_Framework_TestCase
     $u->username = 'Test';
     $u->display  = 'Test One';
     $u->save();
+    // save again to ensure no query is made
+    $u->save();
     $mocks = MockQlDao::collection(['username' => 'Test']);
     $this->assertCount(1, $mocks);
 

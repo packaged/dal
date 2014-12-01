@@ -56,11 +56,18 @@ class AbstractDaoTest extends \PHPUnit_Framework_TestCase
     $dao = new MockAbstractDao();
     $this->assertEmpty($dao->getDaoChanges());
     $dao->markDaoDatasetAsSaved();
+
+    $this->assertFalse($dao->hasChanged('email'));
+    $this->assertFalse($dao->hasChanges());
+
     $dao->email = 'john@example.com';
     $this->assertEquals(
       ['email' => ['from' => 'nobody@example.com', 'to' => $dao->email]],
       $dao->getDaoChanges()
     );
+
+    $this->assertTrue($dao->hasChanged('email'));
+    $this->assertTrue($dao->hasChanges());
   }
 
   public function testPropertyGetSet()

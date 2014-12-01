@@ -109,6 +109,34 @@ abstract class AbstractDao implements IDao
   }
 
   /**
+   * Check to see if a property data has changed
+   *
+   * @param $property
+   *
+   * @return bool
+   */
+  public function hasChanged($property)
+  {
+    if(!isset($this->_savedData[$property])
+      || $this->_savedData[$property] !== $this->getDaoProperty($property)
+    )
+    {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Check for if any properties have changed
+   *
+   * @return bool
+   */
+  public function hasChanges()
+  {
+    return !empty($this->getDaoChanges());
+  }
+
+  /**
    * Get the current properties on the dao
    *
    * @return array[property] = value

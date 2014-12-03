@@ -64,7 +64,7 @@ class CqlConnection implements IQLDataConnection, ConfigurableInterface
       );
 
       $this->_socket->setSendTimeout(
-        (int)$this->_config()->getItem('connect_timeout', 150)
+        (int)$this->_config()->getItem('connect_timeout', 1000)
       );
       $this->_socket->setRetryInterval(
         (int)$this->_config()->getItem('retry_interval', 0)

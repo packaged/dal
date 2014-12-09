@@ -7,6 +7,8 @@ use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\Ql\PdoConnection;
 use Packaged\Dal\Ql\QlDataStore;
 use Packaged\QueryBuilder\Builder\QueryBuilder;
+use Packaged\QueryBuilder\Expression\NumericExpression;
+use Packaged\QueryBuilder\Predicate\EqualPredicate;
 
 require_once 'supporting.php';
 
@@ -239,6 +241,32 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     $datastore->getData(QueryBuilder::select()->from($dao->getTableName()));
     $this->assertEquals(
       'SELECT * FROM `mock_ql_daos`',
+      $connection->getExecutedQuery()
+    );
+  }
+
+  public function testExecute()
+  {
+    $datastore  = new MockQlDataStore();
+    $connection = new MockAbstractQlDataConnection();
+    $datastore->setConnection($connection);
+
+    $dao           = new MockQlDao();
+    $dao->id       = 4;
+    $dao->display  = 'John Smith';
+    $dao->boolTest = false;
+    $datastore->save($dao);
+
+    $datastore->execute(
+      QueryBuilder::deleteFrom(
+        $dao->getTableName(),
+        (new EqualPredicate())
+          ->setField('id')
+          ->setExpression(NumericExpression::create(4))
+      )
+    );
+    $this->assertEquals(
+      'DELETE FROM `mock_ql_daos` WHERE `id` = 4',
       $connection->getExecutedQuery()
     );
   }

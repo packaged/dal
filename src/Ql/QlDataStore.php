@@ -291,6 +291,15 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
     return $results;
   }
 
+  public function execute(IStatement $statement)
+  {
+    $results = $this->_connectedConnection()->runQuery(
+      $this->_assemble($statement),
+      []
+    );
+    return $results;
+  }
+
   protected function _assemble(IStatement $statement)
   {
     return MySQLAssembler::stringify($statement);

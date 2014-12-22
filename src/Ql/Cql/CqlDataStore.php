@@ -42,7 +42,8 @@ class CqlDataStore extends QlDataStore
    */
   public function save(IDao $dao)
   {
-    if($dao->getId() === null) //TODO: Check for ID Type
+    $dao = $this->_verifyDao($dao);
+    if($dao->getId(false, false) === null) //TODO: Check for ID Type
     {
       foreach($dao->getDaoIDProperties() as $key)
       {

@@ -11,6 +11,9 @@ class MockQlDao extends QlDao
 {
   protected $_dataStoreName = 'mockql';
 
+  /**
+   * @bigint
+   */
   public $id;
   public $username;
   public $display;
@@ -19,6 +22,9 @@ class MockQlDao extends QlDao
 
 class MockMultiKeyQlDao extends QlDao
 {
+  /**
+   * @bigint
+   */
   public $id;
   public $username;
   public $display;
@@ -61,26 +67,17 @@ class MockAbstractQlDataConnection implements IQLDataConnection
 
   public function getExecutedQuery()
   {
-    $this->_values = array_map(
-      function ($value)
-      {
-        if($value === null)
-        {
-          return 'NULL';
-        }
-        else
-        {
-          return '"' . $value . '"';
-        }
-      },
-      $this->_values
-    );
-    return vsprintf(str_replace('?', '%s', $this->_query), $this->_values);
+    return $this->_query;
+  }
+
+  public function getExecutedQueryValues()
+  {
+    return $this->_values;
   }
 
   public function runQuery($query, array $values = null)
   {
-    $this->_query  = $query;
+    $this->_query = $query;
     $this->_values = $values;
     return $this->_runResult;
   }
@@ -129,7 +126,7 @@ class PrepareErrorPdoConnection extends \PDO
   public function __construct($message, $code = 0)
   {
     $this->_errorMessage = $message;
-    $this->_errorCode    = $code;
+    $this->_errorCode = $code;
   }
 
   function prepare($statement, $options = null)

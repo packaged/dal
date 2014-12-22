@@ -22,14 +22,14 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     $dao = $this->getMockForAbstractClass(
       '\Packaged\Dal\Foundation\AbstractDao'
     );
-    $fs  = new MockQlDataStore();
+    $fs = new MockQlDataStore();
     $fs->load($dao);
   }
 
   public function testGetConnection()
   {
     $resolver = new DalResolver();
-    $conn     = new PdoConnection();
+    $conn = new PdoConnection();
     $resolver->addConnection('pdo', $conn);
     $resolver->boot();
     $datastore = new QlDataStore();
@@ -61,40 +61,45 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
 
   public function testLoad()
   {
-    $datastore  = new MockQlDataStore();
+    $datastore = new MockQlDataStore();
     $connection = new MockAbstractQlDataConnection();
     $datastore->setConnection($connection);
 
-    $dao     = new MockQlDao();
+    $dao = new MockQlDao();
     $dao->id = 3;
     $this->assertTrue($datastore->exists($dao));
     $datastore->load($dao);
     $this->assertEquals(
-      'SELECT * FROM `mock_ql_daos` WHERE `id` = "3" LIMIT 2',
+      'SELECT * FROM `mock_ql_daos` WHERE `id` = ? LIMIT 2',
       $connection->getExecutedQuery()
     );
+    $this->assertEquals([3], $connection->getExecutedQueryValues());
 
-    $dao           = new MockMultiKeyQlDao();
-    $dao->id       = 2;
+    $dao = new MockMultiKeyQlDao();
+    $dao->id = 2;
     $dao->username = 'test@example.com';
     $datastore->load($dao);
     $this->assertEquals('x', $dao->username);
     $this->assertEquals('y', $dao->display);
     $this->assertEquals(
       'SELECT * FROM `mock_multi_key_ql_daos` '
-      . 'WHERE `id` = "2" AND `username` = "test@example.com" LIMIT 2',
+      . 'WHERE `id` = ? AND `username` = ? LIMIT 2',
       $connection->getExecutedQuery()
+    );
+    $this->assertEquals(
+      [2, "test@example.com"],
+      $connection->getExecutedQueryValues()
     );
   }
 
   public function testLoadNone()
   {
-    $datastore  = new MockQlDataStore();
+    $datastore = new MockQlDataStore();
     $connection = new MockAbstractQlDataConnection();
     $connection->setFetchResult([]);
     $datastore->setConnection($connection);
 
-    $dao     = new MockQlDao();
+    $dao = new MockQlDao();
     $dao->id = 3;
 
     $this->assertFalse($datastore->exists($dao));
@@ -108,12 +113,12 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
 
   public function testLoadTooMany()
   {
-    $datastore  = new MockQlDataStore();
+    $datastore = new MockQlDataStore();
     $connection = new MockAbstractQlDataConnection();
     $connection->setFetchResult([['username' => '1'], ['username' => '2']]);
     $datastore->setConnection($connection);
 
-    $dao     = new MockQlDao();
+    $dao = new MockQlDao();
     $dao->id = 3;
 
     $this->setExpectedException(
@@ -125,32 +130,37 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
 
   public function testDelete()
   {
-    $datastore  = new MockQlDataStore();
+    $datastore = new MockQlDataStore();
     $connection = new MockAbstractQlDataConnection();
     $datastore->setConnection($connection);
 
-    $dao     = new MockQlDao();
+    $dao = new MockQlDao();
     $dao->id = 3;
     $datastore->delete($dao);
     $this->assertEquals(
-      'DELETE FROM `mock_ql_daos` WHERE `id` = "3"',
+      'DELETE FROM `mock_ql_daos` WHERE `id` = ?',
       $connection->getExecutedQuery()
     );
+    $this->assertEquals([3], $connection->getExecutedQueryValues());
 
-    $dao           = new MockMultiKeyQlDao();
-    $dao->id       = 2;
+    $dao = new MockMultiKeyQlDao();
+    $dao->id = 2;
     $dao->username = 'test@example.com';
     $datastore->delete($dao);
     $this->assertEquals(
       'DELETE FROM `mock_multi_key_ql_daos` '
-      . 'WHERE `id` = "2" AND `username` = "test@example.com"',
+      . 'WHERE `id` = ? AND `username` = ?',
       $connection->getExecutedQuery()
+    );
+    $this->assertEquals(
+      [2, "test@example.com"],
+      $connection->getExecutedQueryValues()
     );
   }
 
   public function testDeleteNone()
   {
-    $datastore  = new MockQlDataStore();
+    $datastore = new MockQlDataStore();
     $connection = new MockAbstractQlDataConnection();
     $datastore->setConnection($connection);
     $connection->setRunResult(0);
@@ -160,18 +170,19 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
       'The delete query executed affected 0 rows'
     );
 
-    $dao     = new MockQlDao();
+    $dao = new MockQlDao();
     $dao->id = 3;
     $datastore->delete($dao);
     $this->assertEquals(
-      'DELETE FROM `mock_ql_daos` WHERE `id` = "3"',
+      'DELETE FROM `mock_ql_daos` WHERE `id` = ?',
       $connection->getExecutedQuery()
     );
+    $this->assertEquals([3], $connection->getExecutedQueryValues());
   }
 
   public function testDeleteTooMany()
   {
-    $datastore  = new MockQlDataStore();
+    $datastore = new MockQlDataStore();
     $connection = new MockAbstractQlDataConnection();
     $datastore->setConnection($connection);
     $connection->setRunResult(2);
@@ -181,7 +192,7 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
       "Looks like we deleted multiple rows :("
     );
 
-    $dao     = new MockQlDao();
+    $dao = new MockQlDao();
     $dao->id = 3;
     $datastore->delete($dao);
     $this->assertEquals(
@@ -192,50 +203,62 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
 
   public function testSave()
   {
-    $datastore  = new MockQlDataStore();
+    $datastore = new MockQlDataStore();
     $connection = new MockAbstractQlDataConnection();
     $datastore->setConnection($connection);
 
     //Insert
-    $dao           = new MockQlDao();
+    $dao = new MockQlDao();
     $dao->username = 'username';
-    $dao->display  = 'John Smith';
+    $dao->display = 'John Smith';
     $datastore->save($dao);
     $this->assertEquals(
       'INSERT INTO `mock_ql_daos` (`id`, `username`, `display`, `boolTest`) '
-      . 'VALUES(NULL, "username", "John Smith", NULL)',
+      . 'VALUES(?, ?, ?, ?)',
       $connection->getExecutedQuery()
+    );
+    $this->assertEquals(
+      [null, "username", "John Smith", null],
+      $connection->getExecutedQueryValues()
     );
 
     //Update
-    $dao     = new MockQlDao();
+    $dao = new MockQlDao();
     $dao->id = 3;
     $datastore->load($dao);
     $dao->username = 'usernamde';
     $datastore->save($dao);
     $this->assertEquals(
-      'UPDATE `mock_ql_daos` SET `username` = "usernamde" WHERE `id` = "3"',
+      'UPDATE `mock_ql_daos` SET `username` = ? WHERE `id` = ?',
       $connection->getExecutedQuery()
+    );
+    $this->assertEquals(
+      ['usernamde', '3'],
+      $connection->getExecutedQueryValues()
     );
 
     //Insert Update
-    $dao           = new MockQlDao();
-    $dao->id       = 3;
-    $dao->display  = 'John Smith';
+    $dao = new MockQlDao();
+    $dao->id = 3;
+    $dao->display = 'John Smith';
     $dao->boolTest = false;
     $datastore->save($dao);
     $this->assertEquals(
       'INSERT INTO `mock_ql_daos` (`id`, `username`, `display`, `boolTest`) '
-      . 'VALUES("3", NULL, "John Smith", "0") '
-      . 'ON DUPLICATE KEY UPDATE `display` = "John Smith"',
+      . 'VALUES(?, ?, ?, ?) '
+      . 'ON DUPLICATE KEY UPDATE `display` = ?',
       $connection->getExecutedQuery()
+    );
+    $this->assertEquals(
+      ["3", null, "John Smith", "0", "John Smith"],
+      $connection->getExecutedQueryValues()
     );
   }
 
   public function testGetData()
   {
-    $dao        = new MockQlDao();
-    $datastore  = new MockQlDataStore();
+    $dao = new MockQlDao();
+    $datastore = new MockQlDataStore();
     $connection = new MockAbstractQlDataConnection();
     $datastore->setConnection($connection);
     $datastore->getData(QueryBuilder::select()->from($dao->getTableName()));
@@ -247,13 +270,13 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
 
   public function testExecute()
   {
-    $datastore  = new MockQlDataStore();
+    $datastore = new MockQlDataStore();
     $connection = new MockAbstractQlDataConnection();
     $datastore->setConnection($connection);
 
-    $dao           = new MockQlDao();
-    $dao->id       = 4;
-    $dao->display  = 'John Smith';
+    $dao = new MockQlDao();
+    $dao->id = 4;
+    $dao->display = 'John Smith';
     $dao->boolTest = false;
     $datastore->save($dao);
 

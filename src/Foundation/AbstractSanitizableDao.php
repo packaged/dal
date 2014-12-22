@@ -422,4 +422,37 @@ abstract class AbstractSanitizableDao extends AbstractDao
     }
     return $data;
   }
+
+  /**
+   * Retrieve the ID for this DAO, if multiple properties make up the ID,
+   * they will be returned in an array
+   *
+   * @param bool $forceArray Force an array return, even with single property
+   * @param bool $serialized Return the values serialized
+   *
+   * @return array|mixed
+   */
+  public function getId($forceArray = false, $serialized = true)
+  {
+    $id = [];
+    foreach($this->getDaoIDProperties() as $property)
+    {
+      if($serialized)
+      {
+        $id[$property] = $this->getPropertySerialized(
+          $property,
+          $this->getDaoProperty($property)
+        );
+      }
+      else
+      {
+        $id[$property] = $this->getDaoProperty($property);
+      }
+    }
+    if(!$forceArray && count($id) === 1)
+    {
+      return reset($id);
+    }
+    return $id;
+  }
 }

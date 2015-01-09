@@ -1,6 +1,7 @@
 <?php
 namespace Packaged\Dal\Ql\Cql;
 
+use cassandra\AuthenticationRequest;
 use cassandra\CassandraClient;
 use cassandra\Column;
 use cassandra\Compression;
@@ -74,8 +75,25 @@ class CqlConnection implements IQLDataConnection, ConfigurableInterface
       );
 
       $this->_transport = new TFramedTransport($this->_socket);
-      $this->_protocol  = new TBinaryProtocolAccelerated($this->_transport);
-      $this->_client    = new CassandraClient($this->_protocol);
+      $this->_protocol = new TBinaryProtocolAccelerated($this->_transport);
+      $this->_client = new CassandraClient($this->_protocol);
+
+      $username = $this->_config()->getItem('username');
+      // @codeCoverageIgnoreStart
+      if($username)
+      {
+        $this->_client->login(
+          new AuthenticationRequest(
+            [
+              'credentials' => [
+                'username' => $username,
+                'password' => $this->_config()->getItem('password', ''),
+              ]
+            ]
+          )
+        );
+      }
+      //@codeCoverageIgnoreEnd
 
       try
       {
@@ -97,7 +115,7 @@ class CqlConnection implements IQLDataConnection, ConfigurableInterface
       }
       catch(TException $e)
       {
-        $exception        = CqlException::from($e);
+        $exception = CqlException::from($e);
         $this->_connected = false;
         throw new ConnectionException(
           $exception->getMessage(),
@@ -131,7 +149,7 @@ class CqlConnection implements IQLDataConnection, ConfigurableInterface
     $this->_client = null;
     $this->_transport->close();
     $this->_transport = null;
-    $this->_protocol  = null;
+    $this->_protocol = null;
     $this->_connected = false;
     return $this;
   }
@@ -165,7 +183,7 @@ class CqlConnection implements IQLDataConnection, ConfigurableInterface
    */
   public function fetchQueryResults($query, array $values = [])
   {
-    $prep    = $this->prepare($query);
+    $prep = $this->prepare($query);
     $results = $this->execute(
       $prep,
       $values,

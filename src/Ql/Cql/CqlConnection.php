@@ -78,23 +78,6 @@ class CqlConnection implements IQLDataConnection, ConfigurableInterface
       $this->_protocol = new TBinaryProtocolAccelerated($this->_transport);
       $this->_client = new CassandraClient($this->_protocol);
 
-      $username = $this->_config()->getItem('username');
-      // @codeCoverageIgnoreStart
-      if($username)
-      {
-        $this->_client->login(
-          new AuthenticationRequest(
-            [
-              'credentials' => [
-                'username' => $username,
-                'password' => $this->_config()->getItem('password', ''),
-              ]
-            ]
-          )
-        );
-      }
-      //@codeCoverageIgnoreEnd
-
       try
       {
         $this->_transport->open();
@@ -106,6 +89,23 @@ class CqlConnection implements IQLDataConnection, ConfigurableInterface
         $this->_socket->setSendTimeout(
           (int)$this->_config()->getItem('send_timeout', 1000)
         );
+
+        $username = $this->_config()->getItem('username');
+        // @codeCoverageIgnoreStart
+        if($username)
+        {
+          $this->_client->login(
+            new AuthenticationRequest(
+              [
+                'credentials' => [
+                  'username' => $username,
+                  'password' => $this->_config()->getItem('password', ''),
+                ]
+              ]
+            )
+          );
+        }
+        //@codeCoverageIgnoreEnd
 
         $keyspace = $this->_config()->getItem('keyspace');
         if($keyspace)

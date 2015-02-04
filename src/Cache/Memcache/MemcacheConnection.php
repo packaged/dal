@@ -40,7 +40,7 @@ class MemcacheConnection extends AbstractCacheConnection
       );
       $weight = $cfg->getItem(
         $alias . '.weight',
-        $cfg->getItem('weight', null)
+        $cfg->getItem('weight', 1)
       );
       $timeout = $cfg->getItem(
         $alias . '.timeout',
@@ -82,21 +82,6 @@ class MemcacheConnection extends AbstractCacheConnection
       $this->_connection->close();
     }
     $this->_connection = null;
-    return $this;
-  }
-
-  /**
-   * Add a server to the memcache pool
-   *
-   * @param     $host
-   * @param int $port
-   * @param int $weight
-   *
-   * @return $this
-   */
-  public function addServer($host, $port = 11211, $weight = 0)
-  {
-    $this->_connection->addServer($host, $port, $weight);
     return $this;
   }
 

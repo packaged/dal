@@ -2,6 +2,7 @@ language: php
 
 services:
   - cassandra
+  - memcached
 
 php:
   - 5.6

@@ -47,15 +47,14 @@ class MemcacheConnection extends AbstractCacheConnection
         $cfg->getItem('timeout', 1)
       );
 
-      $this->_connection->addserver(
-        $server,
-        $port,
-        $persist,
-        $weight,
-        $timeout
-      );
+      $this->_addserver($server, $port, $persist, $weight, $timeout);
     }
     return $this;
+  }
+
+  protected function _addServer($server, $port, $persist, $weight, $timeout)
+  {
+    $this->_connection->addserver($server, $port, $persist, $weight, $timeout);
   }
 
   /**

@@ -70,7 +70,7 @@ class BlackholeConnection extends AbstractCacheConnection
    */
   public function getItem($key)
   {
-    return (new CacheItem($this, $key))->hydrate($key, false);
+    return (new CacheItem($key))->hydrate(null, false);
   }
 
   /**

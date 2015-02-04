@@ -44,9 +44,12 @@ abstract class AbstractCacheConnection implements ICacheConnection
     {
       if($key instanceof ICacheItem)
       {
-        $key = $key->getKey();
+        $results[$key->getKey()] = $this->deleteItem($key);
       }
-      $results[$key] = $this->deleteKey($key);
+      else
+      {
+        $results[$key] = $this->deleteKey($key);
+      }
     }
     return $results;
   }

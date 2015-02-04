@@ -9,6 +9,8 @@ use Packaged\Dal\Traits\Dao\LSDTrait;
  */
 class CacheDao extends AbstractSanitizableDao
 {
+  protected $_dataStoreName = 'cache';
+
   use LSDTrait;
 
   protected $_ttl;
@@ -24,5 +26,11 @@ class CacheDao extends AbstractSanitizableDao
     return $this;
   }
 
+  public function getDaoIDProperties()
+  {
+    return ['key'];
+  }
+
+  public $key;
   public $data;
 }

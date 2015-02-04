@@ -261,7 +261,7 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
     }
 
     throw new DataStoreException(
-      "You must pass a QlDao to SqlDataStore", 500
+      "You must pass a QlDao to QlDataStore", 500
     );
   }
 

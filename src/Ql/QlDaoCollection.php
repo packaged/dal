@@ -148,7 +148,9 @@ class QlDaoCollection extends DaoCollection
     {
       foreach($results as $result)
       {
-        $this->_daos[] = $this->createNewDao()->hydrateDao($result, true);
+        $this->_daos[] = $this->createNewDao()
+          ->hydrateDao($result, true)
+          ->markDaoAsLoaded()->markDaoDatasetAsSaved();
       }
     }
     $this->_isLoaded = true;

@@ -1,9 +1,11 @@
 <?php
 namespace Packaged\Dal\Cache;
 
+use Packaged\Config\ConfigurableInterface;
 use Packaged\Config\ConfigurableTrait;
 
-abstract class AbstractCacheConnection implements ICacheConnection
+abstract class AbstractCacheConnection
+  implements ICacheConnection, ConfigurableInterface
 {
   use ConfigurableTrait;
 

@@ -1,6 +1,7 @@
 <?php
 namespace Packaged\Dal\Cache;
 
+use Packaged\Config\ConfigurableInterface;
 use Packaged\Config\ConfigurableTrait;
 use Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException;
 use Packaged\Dal\Exceptions\DataStore\DaoNotFoundException;
@@ -9,7 +10,7 @@ use Packaged\Dal\Foundation\AbstractDataStore;
 use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\IDao;
 
-class CacheDataStore extends AbstractDataStore
+class CacheDataStore extends AbstractDataStore implements ConfigurableInterface
 {
   use ConfigurableTrait;
 

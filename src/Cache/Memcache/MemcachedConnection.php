@@ -27,7 +27,10 @@ class MemcachedConnection extends MemcacheConnection
   {
     if($this->_connection !== null)
     {
-      $this->_connection->quit();
+      if(method_exists($this->_connection, 'quit'))
+      {
+        $this->_connection->quit();
+      }
     }
     $this->_connection = null;
     return $this;

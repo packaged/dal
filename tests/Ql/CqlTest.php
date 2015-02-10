@@ -3,7 +3,9 @@ namespace Ql;
 
 use cassandra\CqlPreparedResult;
 use Packaged\Config\Provider\ConfigSection;
+use Packaged\Dal\DalResolver;
 use Packaged\Dal\DataTypes\Counter;
+use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\Ql\Cql\CqlConnection;
 use Packaged\Dal\Ql\Cql\CqlDao;
 use Packaged\Dal\Ql\Cql\CqlDaoCollection;
@@ -286,6 +288,9 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $this->_configureConnection($connection);
     $datastore->setConnection($connection);
     $connection->connect();
+    $resolver = new DalResolver();
+    $resolver->boot();
+    Dao::getDalResolver()->addDataStore('mockcql', $datastore);
 
     $dao = new MockCounterCqlDao();
     $dao->id = 'test1';
@@ -296,12 +301,7 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $dao->c2->decrement(3);
     $datastore->save($dao);
 
-    $loaded = new MockCounterCqlDao();
-    $loaded->id = 'test1';
-    $loaded = $datastore->load($loaded);
-    /**
-     * @var $loaded MockCounterCqlDao
-     */
+    $loaded = MockCounterCqlDao::loadById('test1');
     $this->assertEquals(5, $loaded->c1->calculated());
     $this->assertEquals(-2, $loaded->c2->calculated());
   }
@@ -336,7 +336,7 @@ class MockCqlDataStore extends CqlDataStore
 
 class MockCqlDao extends CqlDao
 {
-  protected $_dataStoreName = 'mockql';
+  protected $_dataStoreName = 'mockcql';
   protected $_ttl;
   protected $_timestamp;
 
@@ -411,7 +411,7 @@ class MockCqlDao extends CqlDao
 
 class MockCounterCqlDao extends CqlDao
 {
-  protected $_dataStoreName = 'mockql';
+  protected $_dataStoreName = 'mockcql';
   protected $_ttl;
 
   public $id;

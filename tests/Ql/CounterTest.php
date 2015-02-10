@@ -24,6 +24,7 @@ class CounterTest extends \PHPUnit_Framework_TestCase
     $dao->id = 'test1';
     $dao->c1->increment(10);
     $dao->c1->decrement(5);
+    $datastore->save($dao);
     $dao->c2->increment(1);
     $dao->c2->decrement(3);
     $datastore->save($dao);

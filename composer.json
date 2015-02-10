@@ -12,7 +12,7 @@
     "php": ">=5.6.0",
     "packaged/helpers": "~0.0",
     "packaged/docblock": "~0.0",
-    "packaged/querybuilder": "~0.0",
+    "packaged/querybuilder": "~0.7",
     "packaged/config": "~0.0",
     "packaged/cassandrathrift": "~20.0",
     "doctrine/inflector": "~1.0"

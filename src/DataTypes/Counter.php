@@ -67,17 +67,12 @@ class Counter implements IDataType
 
   public function getIncrement()
   {
-    return $this->isIncrement() ? $this->_adjust : 0;
+    return $this->isIncrement() ? abs($this->_adjust) : 0;
   }
 
   public function getDecrement()
   {
-    return $this->isDecrement() ? $this->_adjust : 0;
-  }
-
-  public function getValue()
-  {
-    return $this->_value;
+    return $this->isDecrement() ? abs($this->_adjust) : 0;
   }
 
   public function __toString()

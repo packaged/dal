@@ -10,6 +10,8 @@ use Packaged\Dal\Foundation\AbstractDataStore;
 use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\IDao;
 use Packaged\QueryBuilder\Assembler\MySQL\MySQLAssembler;
+use Packaged\QueryBuilder\Builder\QueryBuilder;
+use Packaged\QueryBuilder\SelectExpression\AllSelectExpression;
 use Packaged\QueryBuilder\Statement\IStatement;
 
 class QlDataStore extends AbstractDataStore implements ConfigurableInterface
@@ -17,8 +19,14 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
   use ConfigurableTrait;
 
   protected $_connection;
-  protected $_query;
-  protected $_queryValues;
+
+  /**
+   * @return QueryBuilder
+   */
+  protected function _getQueryBuilderClass()
+  {
+    return QueryBuilder::class;
+  }
 
   /**
    * Save a DAO to the data store
@@ -31,7 +39,6 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
    */
   public function save(IDao $dao)
   {
-    $this->_clearQuery();
     $dao = $this->_verifyDao($dao);
 
     if(!$this->_getDaoChanges($dao))
@@ -39,33 +46,14 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
       return [];
     }
 
-    $ids    = array_filter(
-      $dao->getId(true),
-      function ($value)
-      {
-        return $value !== null;
-      }
-    );
-    $hasIds = !empty($ids);
+    $statement = $this->_getStatement($dao);
+    $this->_prepareQuery($statement, $dao);
+    $assembler = $this->_assemble($statement);
 
-    if(!$hasIds)
-    {
-      $this->_saveInsert($dao);
-    }
-    else if($dao->isDaoLoaded())
-    {
-      $this->_saveUpdate($dao);
-    }
-    else
-    {
-      $this->_saveInsertDuplicate($dao);
-    }
-
-    $this->_prepareQuery($dao);
     $connection = $this->_connectedConnection();
-    $connection->runQuery($this->_query, $this->_queryValues);
+    $connection->runQuery($assembler->getQuery(), $assembler->getParameters());
 
-    if(!$hasIds && $connection instanceof ILastInsertId)
+    if(!$this->_hasIds($dao) && $connection instanceof ILastInsertId)
     {
       $id = $connection->getLastInsertId();
       foreach($dao->getDaoIDProperties(true) as $property)
@@ -74,47 +62,59 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
       }
     }
     $changes = $dao->getDaoChanges();
+    $dao->resetCounters();
     parent::save($dao);
     return $changes;
   }
 
-  protected function _prepareQuery(QlDao $dao)
+  protected function _hasIds(QlDao $dao)
+  {
+    $ids = array_filter(
+      $dao->getId(true),
+      function ($value)
+      {
+        return $value !== null;
+      }
+    );
+    return !empty($ids);
+  }
+
+  protected function _prepareQuery(IStatement $stmt, QlDao $dao)
   {
   }
 
-  protected function _saveInsertDuplicate(QlDao $dao)
+  /**
+   * @param QlDao $dao
+   *
+   * @return IStatement
+   */
+  protected function _getStatement(QlDao $dao)
   {
-    //ATTEMPT
-    $this->_saveInsert($dao);
-    if($this->_getDaoChanges($dao, false))
+    $qb = static::_getQueryBuilderClass();
+    if($dao->isDaoLoaded())
     {
-      $this->_query .= " ON DUPLICATE KEY UPDATE ";
-      $this->_subUpdate($dao, false);
+      $data = $this->_getDaoChanges($dao);
+      $qb = static::_getQueryBuilderClass();
+      $statement = $qb::update($dao->getTableName(), $data)
+        ->where($dao->getId(true));
     }
-  }
-
-  protected function _saveUpdate(QlDao $dao)
-  {
-    //UPDATE
-    $this->_query = "UPDATE ";
-    $this->_query .= $this->escapeTableName($dao->getTableName());
-    $this->_query .= " SET ";
-    $this->_subUpdate($dao);
-    $this->_query .= " WHERE ";
-    $this->_appendIdWhere($dao);
-  }
-
-  protected function _subUpdate(QlDao $dao, $includeIds = true)
-  {
-    $updates = [];
-    foreach($this->_getDaoChanges($dao, $includeIds) as $column => $value)
+    else
     {
-      $updates[] = $this->escapeColumn($column) . ' = ?';
-      $this->_queryValues[]
-                 = is_bool($value['to']) ? (int)$value['to'] : $value['to'];
-    }
+      $data = $this->_getDaoChanges($dao);
+      $statement = $qb::insertInto(
+        $dao->getTableName(),
+        ...array_keys($data)
+      )->values(...array_values($data));
 
-    $this->_query .= implode(', ', $updates);
+      if($this->_hasIds($dao))
+      {
+        foreach($this->_getDaoChanges($dao, false) as $field => $value)
+        {
+          $statement->onDuplicate($field, $value);
+        }
+      }
+    }
+    return $statement;
   }
 
   protected function _getDaoChanges(QlDao $dao, $includeIds = true)
@@ -126,27 +126,12 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
       {
         unset($changes[$column]);
       }
+      else
+      {
+        $changes[$column] = $value['to'];
+      }
     }
     return $changes;
-  }
-
-  protected function _saveInsert(QlDao $dao)
-  {
-    $this->_query = "INSERT INTO ";
-    $this->_query .= $this->escapeTableName($dao->getTableName());
-    $colCount = 0;
-    $columns  = [];
-    foreach($dao->getDaoPropertyData() as $column => $data)
-    {
-      $colCount++;
-      $columns[]            = $this->escapeColumn($column);
-      $this->_queryValues[] = is_bool($data) ? (int)$data : $data;
-    }
-
-    $this->_query .= ' (' . implode(', ', $columns) . ') ';
-    $this->_query .= 'VALUES(';
-    $this->_query .= implode(', ', array_fill(0, $colCount, '?'));
-    $this->_query .= ')';
   }
 
   /**
@@ -161,19 +146,20 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
    */
   public function load(IDao $dao)
   {
-    $this->_clearQuery();
-    $dao          = $this->_verifyDao($dao);
-    $this->_query = "SELECT * FROM ";
-    $this->_query .= $this->escapeTableName($dao->getTableName());
-    $this->_query .= " WHERE ";
-    $this->_appendIdWhere($dao);
+    $dao = $this->_verifyDao($dao);
+    $qb = static::_getQueryBuilderClass();
 
     //Limit the result set to 2, for validation against multiple results
-    $this->_query .= " LIMIT 2";
+    $assembler = $this->_assemble(
+      $qb::select(AllSelectExpression::create())
+        ->from($dao->getTableName())
+        ->where($dao->getId(true))
+        ->limit(2)
+    );
 
     $results = $this->_connectedConnection()->fetchQueryResults(
-      $this->_query,
-      $this->_queryValues
+      $assembler->getQuery(),
+      $assembler->getParameters()
     );
 
     switch(count($results))
@@ -202,14 +188,18 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
    */
   public function delete(IDao $dao)
   {
-    $this->_clearQuery();
-    $dao          = $this->_verifyDao($dao);
-    $this->_query = "DELETE FROM ";
-    $this->_query .= $this->escapeTableName($dao->getTableName());
-    $this->_query .= " WHERE ";
-    $this->_appendIdWhere($dao);
-    $del = $this->_connectedConnection()
-      ->runQuery($this->_query, $this->_queryValues);
+    $dao = $this->_verifyDao($dao);
+    $qb = static::_getQueryBuilderClass();
+
+    $assembler = $this->_assemble(
+      $qb::deleteFrom($dao->getTableName())
+        ->where($dao->getId(true))
+    );
+
+    $del = $this->_connectedConnection()->runQuery(
+      $assembler->getQuery(),
+      $assembler->getParameters()
+    );
 
     if($del === 1)
     {
@@ -265,54 +255,29 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
     );
   }
 
-  protected function _clearQuery()
-  {
-    $this->_queryValues = [];
-    $this->_query       = '';
-  }
-
-  protected function _appendIdWhere(IDao $dao)
-  {
-    $queryParts = [];
-    foreach($dao->getId(true) as $column => $value)
-    {
-      $queryParts[]         = $this->escapeColumn($column) . ' = ?';
-      $this->_queryValues[] = $value;
-    }
-    $this->_query .= implode(' AND ', $queryParts);
-  }
-
   public function getData(IStatement $statement)
   {
+    $assembler = $this->_assemble($statement);
     $results = $this->_connectedConnection()->fetchQueryResults(
-      $this->_assemble($statement),
-      []
+      $assembler->getQuery(),
+      $assembler->getParameters()
     );
     return $results;
   }
 
   public function execute(IStatement $statement)
   {
+    $assembler = $this->_assemble($statement);
     $results = $this->_connectedConnection()->runQuery(
-      $this->_assemble($statement),
-      []
+      $assembler->getQuery(),
+      $assembler->getParameters()
     );
     return $results;
   }
 
-  protected function _assemble(IStatement $statement)
+  protected function _assemble(IStatement $statement, $forPrepare = true)
   {
-    return MySQLAssembler::stringify($statement);
-  }
-
-  public function escapeTableName($table)
-  {
-    return "`$table`";
-  }
-
-  public function escapeColumn($column)
-  {
-    return "`$column`";
+    return new MySQLAssembler($statement, $forPrepare);
   }
 
   /**

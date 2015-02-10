@@ -5,6 +5,10 @@ class LongType extends CassandraType
 {
   public static function pack($value)
   {
+    if($value === null)
+    {
+      return null;
+    }
     // If we are on a 32bit architecture we have to explicitly deal with
     // 64-bit twos-complement arithmetic since PHP wants to treat all ints
     // as signed and any int over 2^31 - 1 as a float
@@ -38,8 +42,8 @@ class LongType extends CassandraType
     } // @codeCoverageIgnoreStart
     else
     {
-      $hi   = $value >> 32;
-      $lo   = $value & 0xFFFFFFFF;
+      $hi = $value >> 32;
+      $lo = $value & 0xFFFFFFFF;
       $data = pack('N2', $hi, $lo);
     }
     return $data;
@@ -47,6 +51,10 @@ class LongType extends CassandraType
 
   public static function unpack($data)
   {
+    if($data === null)
+    {
+      return null;
+    }
     $arr = unpack('N2', $data);
 
     // If we are on a 32bit architecture we have to explicitly deal with
@@ -54,8 +62,8 @@ class LongType extends CassandraType
     // as signed and any int over 2^31 - 1 as a float
     if(PHP_INT_SIZE == 4)
     { // @codeCoverageIgnoreStart
-      $hi    = $arr[1];
-      $lo    = $arr[2];
+      $hi = $arr[1];
+      $lo = $arr[2];
       $isNeg = $hi < 0;
 
       // Check for a negative
@@ -111,7 +119,7 @@ class LongType extends CassandraType
         $arr[1] = $arr[1] & 0xffffffff;
         $arr[1] = $arr[1] ^ 0xffffffff;
         $arr[2] = $arr[2] ^ 0xffffffff;
-        $value  = 0 - $arr[1] * 4294967296 - $arr[2] - 1;
+        $value = 0 - $arr[1] * 4294967296 - $arr[2] - 1;
       }
       else
       {

@@ -1,7 +1,9 @@
 <?php
 namespace Packaged\Dal\Foundation;
 
+use Packaged\Dal\DataTypes\Counter;
 use Packaged\Dal\ISanitizableDao;
+use Packaged\DocBlock\DocBlockParser;
 
 abstract class AbstractSanitizableDao extends AbstractDao
   implements ISanitizableDao
@@ -18,6 +20,63 @@ abstract class AbstractSanitizableDao extends AbstractDao
     'validators'  => [],
     'serializers' => []
   ];
+
+  protected $_hasCounter = false;
+
+  public function hasCounter()
+  {
+    return $this->_hasCounter;
+  }
+
+  public function resetCounters()
+  {
+    // reset all counters
+    foreach($this->getDaoPropertyData(false) as $field => $value)
+    {
+      if($value instanceof Counter)
+      {
+        $value->setValue($value->calculated());
+      }
+    }
+  }
+
+  protected function _serializeCounter($value)
+  {
+    if($value instanceof Counter)
+    {
+      return $value->calculated();
+    }
+    return $value;
+  }
+
+  protected function _unserializeCounter($data)
+  {
+    if($data instanceof Counter)
+    {
+      return $data;
+    }
+    return new Counter($data);
+  }
+
+  protected function _configure()
+  {
+    parent::_configure();
+    foreach($this->getDaoProperties() as $property)
+    {
+      $docblock = DocBlockParser::fromProperty($this, $property);
+      if($docblock->hasTag('counter'))
+      {
+        $this->_hasCounter = true;
+        $this->_addCustomSerializer(
+          $property,
+          'counter',
+          [$this, '_serializeCounter'],
+          [$this, '_unserializeCounter']
+        );
+      }
+    }
+  }
+
 
   /**
    * Set the value of a property, and filter when setting
@@ -240,7 +299,22 @@ abstract class AbstractSanitizableDao extends AbstractDao
       }
       $this->setDaoProperty($key, $value);
     }
+    $this->postHydrateDao();
     return $this;
+  }
+
+  public function postHydrateDao()
+  {
+    parent::postHydrateDao();
+
+    foreach($this->getDaoProperties() as $property)
+    {
+      $docblock = DocBlockParser::fromProperty($this, $property);
+      if($docblock->hasTag('counter'))
+      {
+        $this->$property = $this->_unserializeCounter($this->$property);
+      }
+    }
   }
 
   /**

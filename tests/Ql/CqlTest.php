@@ -3,6 +3,7 @@ namespace Ql;
 
 use cassandra\CqlPreparedResult;
 use Packaged\Config\Provider\ConfigSection;
+use Packaged\Dal\DataTypes\Counter;
 use Packaged\Dal\Ql\Cql\CqlConnection;
 use Packaged\Dal\Ql\Cql\CqlDao;
 use Packaged\Dal\Ql\Cql\CqlDaoCollection;
@@ -34,7 +35,7 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     );
     self::$_connection->runQuery(
       'CREATE TABLE packaged_dal.mock_ql_daos ('
-      . '"id" bigint PRIMARY KEY,'
+      . '"id" varchar PRIMARY KEY,'
       . '"username" varchar,'
       . '"display" varchar,'
       . '"intVal" int,'
@@ -42,6 +43,16 @@ class CqlTest extends \PHPUnit_Framework_TestCase
       . '"doubleVal" double,'
       . '"floatVal" float,'
       . '"boolVal" boolean'
+      . ');'
+    );
+    self::$_connection->runQuery(
+      'DROP TABLE IF EXISTS packaged_dal.mock_counter_daos'
+    );
+    self::$_connection->runQuery(
+      'CREATE TABLE packaged_dal.mock_counter_daos ('
+      . '"id" varchar PRIMARY KEY,'
+      . '"c1" counter,'
+      . '"c2" counter,'
       . ');'
     );
   }
@@ -55,7 +66,7 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $datastore->setConnection($connection);
 
     $dao = new MockCqlDao();
-    $dao->id = 2;
+    $dao->id = 'test2';
     $dao->username = 'daotest';
     $datastore->save($dao);
     $this->assertTrue($datastore->exists($dao));
@@ -204,21 +215,14 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $dao->setTtl(100);
     $datastore->save($dao);
     $this->assertEquals(
-      'INSERT INTO "mock_ql_daos" ("id", "username", "display", "intVal", '
-      . '"bigintVal", "doubleVal", "floatVal", "boolVal") '
-      . 'VALUES(?, ?, ?, ?, ?, ?, ?, ?) USING TTL 100',
+      'INSERT INTO "mock_ql_daos" ("id", "username") VALUES (?, ?) USING TTL ?',
       $connection->getExecutedQuery()
     );
     $this->assertEquals(
       [
         $dao->getPropertySerialized('id', $dao->id),
         'testuser',
-        null,
-        $dao->getPropertySerialized('intVal', $dao->intVal),
-        $dao->getPropertySerialized('bigintVal', $dao->bigintVal),
-        $dao->getPropertySerialized('doubleVal', $dao->doubleVal),
-        $dao->getPropertySerialized('floatVal', $dao->floatVal),
-        $dao->getPropertySerialized('boolVal', $dao->boolVal)
+        100
       ],
       $connection->getExecutedQueryValues()
     );
@@ -229,34 +233,27 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $dao->setTtl(null);
     $datastore->save($dao);
     $this->assertEquals(
-      'INSERT INTO "mock_ql_daos" ("id", "username", "display", "intVal", '
-      . '"bigintVal", "doubleVal", "floatVal", "boolVal") '
-      . 'VALUES(?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO "mock_ql_daos" ("id", "username") VALUES (?, ?)',
       $connection->getExecutedQuery()
     );
     $this->assertEquals(
       [
         $dao->getPropertySerialized('id', $dao->id),
         'testuser',
-        null,
-        $dao->getPropertySerialized('intVal', $dao->intVal),
-        $dao->getPropertySerialized('bigintVal', $dao->bigintVal),
-        $dao->getPropertySerialized('doubleVal', $dao->doubleVal),
-        $dao->getPropertySerialized('floatVal', $dao->floatVal),
-        $dao->getPropertySerialized('boolVal', $dao->boolVal)
       ],
       $connection->getExecutedQueryValues()
     );
 
     $dao->setTtl(101);
+    $dao->setTimestamp(123456);
     $dao->username = "test";
     $datastore->save($dao);
     $this->assertEquals(
-      'UPDATE "mock_ql_daos" SET "username" = ? WHERE "id" = ? USING TTL 101',
+      'UPDATE "mock_ql_daos" USING TTL ? AND TIMESTAMP ? SET "username" = ? WHERE "id" = ?',
       $connection->getExecutedQuery()
     );
     $this->assertEquals(
-      ["test", $dao->getPropertySerialized('id', $dao->id)],
+      [101, 123456, "test", $dao->getPropertySerialized('id', $dao->id)],
       $connection->getExecutedQueryValues()
     );
 
@@ -280,6 +277,33 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $data = $collection->loadWhere()->getRawArray();
     $this->assertNotEmpty($data);
     $this->assertInstanceOf(MockCqlDao::class, $data[0]);
+  }
+
+  public function testCounters()
+  {
+    $datastore = new MockCqlDataStore();
+    $connection = new CqlConnection();
+    $this->_configureConnection($connection);
+    $datastore->setConnection($connection);
+    $connection->connect();
+
+    $dao = new MockCounterCqlDao();
+    $dao->id = 'test1';
+    $dao->c1->increment(10);
+    $dao->c1->decrement(5);
+    $datastore->save($dao);
+    $dao->c2->increment(1);
+    $dao->c2->decrement(3);
+    $datastore->save($dao);
+
+    $loaded = new MockCounterCqlDao();
+    $loaded->id = 'test1';
+    $loaded = $datastore->load($loaded);
+    /**
+     * @var $loaded MockCounterCqlDao
+     */
+    $this->assertEquals(5, $loaded->c1->calculated());
+    $this->assertEquals(-2, $loaded->c2->calculated());
   }
 }
 
@@ -314,10 +338,8 @@ class MockCqlDao extends CqlDao
 {
   protected $_dataStoreName = 'mockql';
   protected $_ttl;
+  protected $_timestamp;
 
-  /**
-   * @bigint
-   */
   public $id;
   public $username;
   public $display;
@@ -347,6 +369,76 @@ class MockCqlDao extends CqlDao
   public function getTableName()
   {
     return "mock_ql_daos";
+  }
+
+  public function getTtl()
+  {
+    return $this->_ttl;
+  }
+
+  public function setTtl($ttl)
+  {
+    $this->_ttl = $ttl;
+    return $this;
+  }
+
+  public function getTimestamp()
+  {
+    return $this->_timestamp;
+  }
+
+  public function setTimestamp($timestamp)
+  {
+    $this->_timestamp = $timestamp;
+    return $this;
+  }
+
+  public function setDataStore(CqlDataStore $store)
+  {
+    $this->_dataStore = $store;
+    return $this;
+  }
+
+  public function getDataStore()
+  {
+    if($this->_dataStore === null)
+    {
+      return parent::getDataStore();
+    }
+    return $this->_dataStore;
+  }
+}
+
+class MockCounterCqlDao extends CqlDao
+{
+  protected $_dataStoreName = 'mockql';
+  protected $_ttl;
+
+  public $id;
+  /**
+   * @counter
+   * @var Counter
+   */
+  public $c1;
+  /**
+   * @counter
+   * @var Counter
+   */
+  public $c2;
+
+  protected $_dataStore;
+
+  protected $_tableName = 'mock_counter_daos';
+
+  public function getTableName()
+  {
+    return $this->_tableName;
+  }
+
+  public function setTableName($table)
+  {
+    $this->_tableName = $table;
+    return $this;
   }
 
   public function getTtl()

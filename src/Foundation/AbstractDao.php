@@ -24,6 +24,12 @@ abstract class AbstractDao implements IDao
    * @var array[property] = value
    */
   protected $_savedData = [];
+  /**
+   * A copy of the data from a newly initialised object
+   *
+   * @var array[property] = value
+   */
+  protected $_initialData = [];
 
   /**
    * Cache of public properties and their default values
@@ -48,6 +54,8 @@ abstract class AbstractDao implements IDao
 
   /**
    * Create a new instance of your DAO
+   *
+   * @param mixed $constructArgs Arguments to construct class with
    */
   public function __construct(...$constructArgs)
   {
@@ -63,13 +71,17 @@ abstract class AbstractDao implements IDao
 
   /**
    * Construct the class with daoConstruct
-   *
    * This should always be called at the first line of your __construct
+   *
+   * @param mixed $constructArgs Arguments to construct class with
    */
   final public function daoConstruct(...$constructArgs)
   {
     //Calculate public properties
     $this->_startup();
+
+    //Configure the DAO
+    $this->_configure();
 
     //Set the current dataset with the defaults from public properties
     $this->hydrateDao(static::$_properties[$this->_calledClass]);
@@ -77,10 +89,8 @@ abstract class AbstractDao implements IDao
     //Run any specific constructor
     $this->_construct(...$constructArgs);
 
-    //Configure the DAO
-    $this->_configure();
-
     $this->markDaoDatasetAsSaved();
+    $this->_initialData = $this->_savedData;
   }
 
   /**
@@ -90,14 +100,11 @@ abstract class AbstractDao implements IDao
    */
   public function getDaoChanges()
   {
-    $current    = (array)$this->getDaoPropertyData();
-    $changeKeys = array_keys(array_diff_assoc($current, $this->_savedData));
-
+    $current = (array)$this->getDaoPropertyData();
     $changes = [];
-
-    if($changeKeys)
+    foreach($current as $key => $val)
     {
-      foreach($changeKeys as $key)
+      if($val !== $this->_savedData[$key])
       {
         $changes[$key] = [
           'from' => idx($this->_savedData, $key),
@@ -176,7 +183,15 @@ abstract class AbstractDao implements IDao
     {
       $this->setDaoProperty($key, $value);
     }
+    $this->postHydrateDao();
     return $this;
+  }
+
+  /**
+   * Method called after dao is hydrated
+   */
+  public function postHydrateDao()
+  {
   }
 
   /**
@@ -296,6 +311,10 @@ abstract class AbstractDao implements IDao
   public function markDaoAsLoaded($isLoaded = true)
   {
     $this->_isLoaded = $isLoaded;
+    if(!$isLoaded)
+    {
+      $this->_savedData = $this->_initialData;
+    }
     return $this;
   }
 

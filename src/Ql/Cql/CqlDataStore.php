@@ -1,34 +1,69 @@
 <?php
 namespace Packaged\Dal\Ql\Cql;
 
+use Packaged\Dal\DataTypes\Counter;
 use Packaged\Dal\Exceptions\DataStore\DataStoreException;
 use Packaged\Dal\Helpers\Phid;
 use Packaged\Dal\IDao;
 use Packaged\Dal\Ql\QlDao;
 use Packaged\Dal\Ql\QlDataStore;
 use Packaged\QueryBuilder\Assembler\CQL\CqlAssembler;
+use Packaged\QueryBuilder\Builder\CQL\CqlQueryBuilder;
+use Packaged\QueryBuilder\Expression\DecrementExpression;
+use Packaged\QueryBuilder\Expression\IncrementExpression;
+use Packaged\QueryBuilder\Expression\ValueExpression;
+use Packaged\QueryBuilder\Statement\CQL\CqlInsertStatement;
+use Packaged\QueryBuilder\Statement\CQL\CqlUpdateStatement;
 use Packaged\QueryBuilder\Statement\IStatement;
 
 class CqlDataStore extends QlDataStore
 {
   /**
-   * CQL does not require any on duplicate key, as an insert will overwrite
-   *
-   * @param QlDao $dao
+   * @return CqlQueryBuilder
    */
-  protected function _saveInsertDuplicate(QlDao $dao)
+  protected function _getQueryBuilderClass()
   {
-    $this->_saveInsert($dao);
+    return CqlQueryBuilder::class;
   }
 
-  public function escapeTableName($table)
+  protected function _getStatement(QlDao $dao)
   {
-    return "\"$table\"";
-  }
+    if(!$dao->hasCounter())
+    {
+      return parent::_getStatement($dao);
+    }
 
-  public function escapeColumn($column)
-  {
-    return "\"$column\"";
+    $data = $this->_getDaoChanges($dao, false);
+    foreach($dao->getDaoPropertyData(false) as $field => $value)
+    {
+      if($value instanceof Counter)
+      {
+        if($value->isIncrement())
+        {
+          $data[$field] = IncrementExpression::create($field)->setExpression(
+            ValueExpression::create(
+              $dao->getPropertySerialized($field, $value->getIncrement())
+            )
+          );
+        }
+        elseif($value->isDecrement())
+        {
+          $data[$field] = DecrementExpression::create($field)->setExpression(
+            ValueExpression::create(
+              $dao->getPropertySerialized($field, $value->getDecrement())
+            )
+          );
+        }
+        else
+        {
+          unset($data[$field]);
+        }
+      }
+    }
+
+    $qb = static::_getQueryBuilderClass();
+    return $qb::update($dao->getTableName(), $data)
+      ->where($dao->getId(true));
   }
 
   /**
@@ -53,19 +88,25 @@ class CqlDataStore extends QlDataStore
     return parent::save($dao);
   }
 
-  protected function _prepareQuery(QlDao $dao)
+  protected function _prepareQuery(IStatement $stmt, QlDao $dao)
   {
-    if($dao instanceof CqlDao)
+    if(($stmt instanceof CqlInsertStatement || $stmt instanceof CqlUpdateStatement)
+      && ($dao instanceof CqlDao)
+    )
     {
-      if($dao->getTtl() !== null && $dao->getTtl() > 0)
+      if(($dao->getTtl() !== null && $dao->getTtl() > 0))
       {
-        $this->_query .= " USING TTL " . (int)$dao->getTtl();
+        $stmt->usingTtl($dao->getTtl());
+      }
+      if(($dao->getTimestamp() !== null && $dao->getTimestamp() > 0))
+      {
+        $stmt->usingTimestamp($dao->getTimestamp());
       }
     }
   }
 
-  protected function _assemble(IStatement $statement)
+  protected function _assemble(IStatement $statement, $forPrepare = true)
   {
-    return CqlAssembler::stringify($statement);
+    return new CqlAssembler($statement, $forPrepare);
   }
 }

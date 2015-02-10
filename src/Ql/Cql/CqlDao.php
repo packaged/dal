@@ -16,6 +16,11 @@ abstract class CqlDao extends QlDao
     return null;
   }
 
+  public function getTimestamp()
+  {
+    return null;
+  }
+
   protected function _configure()
   {
     parent::_configure();

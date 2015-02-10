@@ -10,7 +10,7 @@ class QlDaoTest extends \PHPUnit_Framework_TestCase
 {
   public function testStatics()
   {
-    $datastore  = new MockQlDataStore();
+    $datastore = new MockQlDataStore();
     $connection = new MockPdoConnection();
     $connection->config();
     $datastore->setConnection($connection);
@@ -29,26 +29,27 @@ class QlDaoTest extends \PHPUnit_Framework_TestCase
     $resolver->boot();
     $resolver->addDataStore('mockql', $datastore);
 
-    $u           = new MockQlDao();
-    $u->username = 'Test';
-    $u->display  = 'Test One';
+    $username = uniqid('TEST');
+    $u = new MockQlDao();
+    $u->username = $username;
+    $u->display = 'Test One';
     $u->save();
     // save again to ensure no query is made
     $u->save();
-    $mocks = MockQlDao::collection(['username' => 'Test']);
+    $mocks = MockQlDao::collection(['username' => $username]);
     $this->assertCount(1, $mocks);
 
-    foreach(MockQlDao::each(['username' => 'Test']) as $usr)
+    foreach(MockQlDao::each(['username' => $username]) as $usr)
     {
       $this->assertInstanceOf(MockQlDao::class, $usr);
     }
 
-    $preloaded = MockQlDao::loadWhere(['username' => 'Test']);
+    $preloaded = MockQlDao::loadWhere(['username' => $username]);
     $this->assertCount(1, $preloaded);
 
-    $u2           = new MockQlDao();
+    $u2 = new MockQlDao();
     $u2->username = 'Tester';
-    $u2->display  = 'Test One';
+    $u2->display = 'Test One';
     $u2->save();
 
     try

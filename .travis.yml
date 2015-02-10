@@ -24,8 +24,8 @@ before_script:
               ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;'
   - mysql -e 'CREATE TABLE `packaged_dal`.`mock_counter_daos` (
                 `id` varchar(50) NOT NULL,
-                `c1` int(11) unsigned DEFAULT NULL,
-                `c2` int(11) unsigned DEFAULT NULL,
+                `c1` int(11) DEFAULT NULL,
+                `c2` int(11) DEFAULT NULL,
                 PRIMARY KEY (`id`)
               ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;'
 

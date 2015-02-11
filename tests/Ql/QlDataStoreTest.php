@@ -70,10 +70,10 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     $this->assertTrue($datastore->exists($dao));
     $datastore->load($dao);
     $this->assertEquals(
-      'SELECT * FROM `mock_ql_daos` WHERE `id` = ? LIMIT 2',
+      'SELECT * FROM `mock_ql_daos` WHERE `id` = ? LIMIT ?',
       $connection->getExecutedQuery()
     );
-    $this->assertEquals([3], $connection->getExecutedQueryValues());
+    $this->assertEquals([3, 2], $connection->getExecutedQueryValues());
 
     $dao = new MockMultiKeyQlDao();
     $dao->id = 2;
@@ -83,11 +83,11 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     $this->assertEquals('y', $dao->display);
     $this->assertEquals(
       'SELECT * FROM `mock_multi_key_ql_daos` '
-      . 'WHERE `id` = ? AND `username` = ? LIMIT 2',
+      . 'WHERE `id` = ? AND `username` = ? LIMIT ?',
       $connection->getExecutedQuery()
     );
     $this->assertEquals(
-      [2, "test@example.com"],
+      [2, "test@example.com", 2],
       $connection->getExecutedQueryValues()
     );
   }

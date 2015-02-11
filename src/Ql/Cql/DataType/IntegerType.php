@@ -14,7 +14,7 @@ class IntegerType extends CassandraType
 
   public static function unpack($data)
   {
-    if($data === null)
+    if($data === null || $data === '')
     {
       return null;
     }

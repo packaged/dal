@@ -217,13 +217,20 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $dao->setTtl(100);
     $datastore->save($dao);
     $this->assertEquals(
-      'INSERT INTO "mock_ql_daos" ("id", "username") VALUES (?, ?) USING TTL ?',
+      'INSERT INTO "mock_ql_daos" ("id", "username", "display", "intVal", "bigintVal", "doubleVal", "floatVal", "boolVal") '
+      . 'VALUES (?, ?, ?, ?, ?, ?, ?, ?) USING TTL ?',
       $connection->getExecutedQuery()
     );
     $this->assertEquals(
       [
         $dao->getPropertySerialized('id', $dao->id),
         'testuser',
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
         100
       ],
       $connection->getExecutedQueryValues()
@@ -235,13 +242,20 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $dao->setTtl(null);
     $datastore->save($dao);
     $this->assertEquals(
-      'INSERT INTO "mock_ql_daos" ("id", "username") VALUES (?, ?)',
+      'INSERT INTO "mock_ql_daos" ("id", "username", "display", "intVal", "bigintVal", "doubleVal", "floatVal", "boolVal") '
+      . 'VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
       $connection->getExecutedQuery()
     );
     $this->assertEquals(
       [
         $dao->getPropertySerialized('id', $dao->id),
         'testuser',
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
       ],
       $connection->getExecutedQueryValues()
     );

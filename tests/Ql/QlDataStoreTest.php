@@ -213,12 +213,12 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     $dao->display = 'John Smith';
     $datastore->save($dao);
     $this->assertEquals(
-      'INSERT INTO `mock_ql_daos` (`username`, `display`) '
-      . 'VALUES (?, ?)',
+      'INSERT INTO `mock_ql_daos` (`id`, `username`, `display`, `boolTest`) '
+      . 'VALUES (?, ?, ?, ?)',
       $connection->getExecutedQuery()
     );
     $this->assertEquals(
-      ["username", "John Smith"],
+      [null, "username", "John Smith", null],
       $connection->getExecutedQueryValues()
     );
 
@@ -244,13 +244,13 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     $dao->boolTest = false;
     $datastore->save($dao);
     $this->assertEquals(
-      'INSERT INTO `mock_ql_daos` (`id`, `display`, `boolTest`) '
-      . 'VALUES (?, ?, ?) '
+      'INSERT INTO `mock_ql_daos` (`id`, `username`, `display`, `boolTest`) '
+      . 'VALUES (?, ?, ?, ?) '
       . 'ON DUPLICATE KEY UPDATE `display` = ?, `boolTest` = ?',
       $connection->getExecutedQuery()
     );
     $this->assertEquals(
-      [3, 'John Smith', 0, 'John Smith', 0],
+      [3, null, 'John Smith', 0, 'John Smith', 0],
       $connection->getExecutedQueryValues()
     );
   }

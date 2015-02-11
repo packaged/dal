@@ -77,7 +77,10 @@ abstract class CqlDao extends QlDao
         $this->_addCustomSerializer(
           $property,
           'type',
-          function ($d) { return $d === null ? null : (string)$d; },
+          function ($d)
+          {
+            return $d === null ? null : (is_scalar($d) ? (string)$d : $d);
+          },
           function ($d) { return $d; }
         );
       }

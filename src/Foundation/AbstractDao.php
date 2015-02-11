@@ -24,12 +24,6 @@ abstract class AbstractDao implements IDao
    * @var array[property] = value
    */
   protected $_savedData = [];
-  /**
-   * A copy of the data from a newly initialised object
-   *
-   * @var array[property] = value
-   */
-  protected $_initialData = [];
 
   /**
    * Cache of public properties and their default values
@@ -87,7 +81,6 @@ abstract class AbstractDao implements IDao
     $this->hydrateDao(static::$_properties[$this->_calledClass]);
 
     $this->markDaoDatasetAsSaved();
-    $this->_initialData = $this->_savedData;
 
     //Run any specific constructor
     $this->_construct(...$constructArgs);
@@ -313,7 +306,7 @@ abstract class AbstractDao implements IDao
     $this->_isLoaded = $isLoaded;
     if(!$isLoaded)
     {
-      $this->_savedData = $this->_initialData;
+      $this->_savedData = static::$_properties[$this->_calledClass];
     }
     return $this;
   }

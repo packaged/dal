@@ -37,15 +37,16 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     );
     self::$_connection->runQuery(
       'CREATE TABLE packaged_dal.mock_ql_daos ('
-      . '"id" varchar PRIMARY KEY,'
+      . '"id" varchar,'
+      . '"id2" int,'
       . '"username" varchar,'
       . '"display" varchar,'
       . '"intVal" int,'
       . '"bigintVal" bigint,'
       . '"doubleVal" double,'
       . '"floatVal" float,'
-      . '"boolVal" boolean'
-      . ');'
+      . '"boolVal" boolean,'
+      . ' PRIMARY KEY ((id), id2));'
     );
     self::$_connection->runQuery(
       'DROP TABLE IF EXISTS packaged_dal.mock_counter_daos'
@@ -69,6 +70,7 @@ class CqlTest extends \PHPUnit_Framework_TestCase
 
     $dao = new MockCqlDao();
     $dao->id = 'test2';
+    $dao->id2 = 9876;
     $dao->username = 'daotest';
     $datastore->save($dao);
     $this->assertTrue($datastore->exists($dao));
@@ -115,6 +117,8 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $connection->connect();
 
     $dao = new MockCqlDao();
+    $dao->id = uniqid('daotest');
+    $dao->id2 = 12345;
     $dao->username = time() . 'user';
     $dao->display = 'User ' . date("Y-m-d");
     $dao->intVal = 123456;
@@ -139,7 +143,7 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $datastore->delete($dao);
 
     $this->assertEquals(
-      $dao->getPropertySerialized('id', $dao->id),
+      ['id' => $dao->id, 'id2' => $dao->getPropertySerialized('id2', 12345)],
       $dao->getId()
     );
   }
@@ -187,13 +191,14 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $datastore->setConnection($connection);
 
     $dao = new MockCqlDao();
-    $dao->id = 1;
+    $dao->id = 'test1';
+    $dao->id2 = 5555;
     $dao->username = 'testuser';
     $datastore->save($dao);
 
     $eq = new EqualPredicate();
     $eq->setField('id');
-    $eq->setExpression(ValueExpression::create(1));
+    $eq->setExpression(ValueExpression::create('test1'));
     $d = $datastore->getData(
       QueryBuilder::select()->from($dao->getTableName())->where($eq)
     );
@@ -213,50 +218,33 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $datastore->setConnection($connection);
     $dao = new MockCqlDao();
     $dao->id = 3;
+    $dao->id2 = 1234;
     $dao->username = 'testuser';
     $dao->setTtl(100);
     $datastore->save($dao);
     $this->assertEquals(
-      'INSERT INTO "mock_ql_daos" ("id", "username", "display", "intVal", "bigintVal", "doubleVal", "floatVal", "boolVal") '
-      . 'VALUES (?, ?, ?, ?, ?, ?, ?, ?) USING TTL ?',
+      'INSERT INTO "mock_ql_daos" ("id", "id2", "username", "display", "intVal", "bigintVal", "doubleVal", "floatVal", "boolVal") '
+      . 'VALUES (3, 1234, \'testuser\', NULL, NULL, NULL, NULL, NULL, NULL) USING TTL 100',
       $connection->getExecutedQuery()
     );
     $this->assertEquals(
-      [
-        $dao->getPropertySerialized('id', $dao->id),
-        'testuser',
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        100
-      ],
+      [],
       $connection->getExecutedQueryValues()
     );
 
     $dao = new MockCqlDao();
-    $dao->id = 4;
+    $dao->id = 'test4';
+    $dao->id2 = 4321;
     $dao->username = 'testuser';
     $dao->setTtl(null);
     $datastore->save($dao);
     $this->assertEquals(
-      'INSERT INTO "mock_ql_daos" ("id", "username", "display", "intVal", "bigintVal", "doubleVal", "floatVal", "boolVal") '
-      . 'VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO "mock_ql_daos" ("id", "id2", "username", "display", "intVal", "bigintVal", "doubleVal", "floatVal", "boolVal") '
+      . 'VALUES (\'test4\', 4321, \'testuser\', NULL, NULL, NULL, NULL, NULL, NULL)',
       $connection->getExecutedQuery()
     );
     $this->assertEquals(
-      [
-        $dao->getPropertySerialized('id', $dao->id),
-        'testuser',
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-      ],
+      [],
       $connection->getExecutedQueryValues()
     );
 
@@ -265,11 +253,11 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $dao->username = "test";
     $datastore->save($dao);
     $this->assertEquals(
-      'UPDATE "mock_ql_daos" USING TTL ? AND TIMESTAMP ? SET "username" = ? WHERE "id" = ?',
+      'UPDATE "mock_ql_daos" USING TTL 101 AND TIMESTAMP 123456 SET "username" = \'test\' WHERE "id" = \'test4\' AND "id2" = 4321',
       $connection->getExecutedQuery()
     );
     $this->assertEquals(
-      [101, 123456, "test", $dao->getPropertySerialized('id', $dao->id)],
+      [],
       $connection->getExecutedQueryValues()
     );
 
@@ -355,6 +343,10 @@ class MockCqlDao extends CqlDao
   protected $_timestamp;
 
   public $id;
+  /**
+   * @int
+   */
+  public $id2;
   public $username;
   public $display;
   /**
@@ -379,6 +371,11 @@ class MockCqlDao extends CqlDao
   public $boolVal;
 
   protected $_dataStore;
+
+  public function getDaoIDProperties()
+  {
+    return ['id', 'id2'];
+  }
 
   public function getTableName()
   {

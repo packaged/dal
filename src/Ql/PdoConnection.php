@@ -137,21 +137,7 @@ class PdoConnection
    */
   public function runQuery($query, array $values = null)
   {
-    try
-    {
-      $statement = $this->_connection->prepare($query);
-      $statement->execute($values);
-    }
-    catch(\PDOException $e)
-    {
-      if(isset($e->errorInfo[2]))
-      {
-        throw new ConnectionException($e->errorInfo[2], $e->errorInfo[1]);
-      }
-      throw new ConnectionException($e->getMessage(), $e->getCode());
-    }
-
-    return $statement->rowCount();
+    return $this->_runQuery($query, $values)->rowCount();
   }
 
   /**
@@ -166,11 +152,16 @@ class PdoConnection
    */
   public function fetchQueryResults($query, array $values = null)
   {
+    return $this->_runQuery($query, $values)->fetchAll(\PDO::FETCH_ASSOC);
+  }
+
+  protected function _runQuery($query, array $values = null)
+  {
     try
     {
       $statement = $this->_connection->prepare($query);
-      $statement->execute($values);
-      $results = $statement->fetchAll(\PDO::FETCH_ASSOC);
+      $this->_bindValues($statement, $values);
+      $statement->execute();
     }
     catch(\PDOException $e)
     {
@@ -180,7 +171,35 @@ class PdoConnection
       }
       throw new ConnectionException($e->getMessage(), $e->getCode());
     }
-    return (array)$results;
+    return $statement;
+  }
+
+  protected function _bindValues(\PDOStatement $statement, $values)
+  {
+    if(!empty($values))
+    {
+      foreach($values as $k => $value)
+      {
+        if(is_null($value))
+        {
+          $type = \PDO::PARAM_NULL;
+        }
+        else if(is_bool($value))
+        {
+          $type = \PDO::PARAM_INT;
+          $value = $value ? 1 : 0;
+        }
+        else if(is_int($value))
+        {
+          $type = \PDO::PARAM_INT;
+        }
+        else
+        {
+          $type = \PDO::PARAM_STR;
+        }
+        $statement->bindValue($k + 1, $value, $type);
+      }
+    }
   }
 
   /**

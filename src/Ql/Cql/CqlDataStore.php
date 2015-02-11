@@ -107,6 +107,6 @@ class CqlDataStore extends QlDataStore
 
   protected function _assemble(IStatement $statement, $forPrepare = true)
   {
-    return new CqlAssembler($statement, $forPrepare);
+    return new CqlAssembler($statement, false);
   }
 }

@@ -32,7 +32,7 @@ abstract class CqlDao extends QlDao
         $this->_addCustomSerializer(
           $property,
           'type',
-          function ($d) { return $d; },
+          function ($d) { return $d === null ? null : (int)$d; },
           [IntegerType::class, 'unpack']
         );
       }
@@ -41,7 +41,7 @@ abstract class CqlDao extends QlDao
         $this->_addCustomSerializer(
           $property,
           'type',
-          function ($d) { return $d; },
+          function ($d) { return $d === null ? null : (double)$d; },
           [DoubleType::class, 'unpack']
         );
       }
@@ -50,7 +50,7 @@ abstract class CqlDao extends QlDao
         $this->_addCustomSerializer(
           $property,
           'type',
-          function ($d) { return $d; },
+          function ($d) { return $d === null ? null : (int)$d; },
           [LongType::class, 'unpack']
         );
       }
@@ -59,7 +59,7 @@ abstract class CqlDao extends QlDao
         $this->_addCustomSerializer(
           $property,
           'type',
-          function ($d) { return $d; },
+          function ($d) { return $d === null ? null : (float)$d; },
           [FloatType::class, 'unpack']
         );
       }
@@ -68,8 +68,17 @@ abstract class CqlDao extends QlDao
         $this->_addCustomSerializer(
           $property,
           'type',
-          function ($d) { return $d; },
+          function ($d) { return $d === null ? null : (bool)$d; },
           [BooleanType::class, 'unpack']
+        );
+      }
+      else
+      {
+        $this->_addCustomSerializer(
+          $property,
+          'type',
+          function ($d) { return $d === null ? null : (string)$d; },
+          function ($d) { return $d; }
         );
       }
     }

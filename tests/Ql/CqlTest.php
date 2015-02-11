@@ -119,7 +119,7 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $dao = new MockCqlDao();
     $dao->id = uniqid('daotest');
     $dao->id2 = 12345;
-    $dao->username = time() . 'user';
+    $dao->username = time();
     $dao->display = 'User ' . date("Y-m-d");
     $dao->intVal = 123456;
     $dao->bigintVal = -123456;
@@ -224,7 +224,7 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $datastore->save($dao);
     $this->assertEquals(
       'INSERT INTO "mock_ql_daos" ("id", "id2", "username", "display", "intVal", "bigintVal", "doubleVal", "floatVal", "boolVal") '
-      . 'VALUES (3, 1234, \'testuser\', NULL, NULL, NULL, NULL, NULL, NULL) USING TTL 100',
+      . 'VALUES (\'3\', 1234, \'testuser\', NULL, NULL, NULL, NULL, NULL, NULL) USING TTL 100',
       $connection->getExecutedQuery()
     );
     $this->assertEquals(

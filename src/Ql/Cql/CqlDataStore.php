@@ -3,7 +3,6 @@ namespace Packaged\Dal\Ql\Cql;
 
 use Packaged\Dal\DataTypes\Counter;
 use Packaged\Dal\Exceptions\DataStore\DataStoreException;
-use Packaged\Dal\Helpers\Phid;
 use Packaged\Dal\IDao;
 use Packaged\Dal\Ql\QlDao;
 use Packaged\Dal\Ql\QlDataStore;
@@ -78,14 +77,7 @@ class CqlDataStore extends QlDataStore
   public function save(IDao $dao)
   {
     $dao = $this->_verifyDao($dao);
-    if($dao->getId(false, false) === null) //TODO: Check for ID Type
-    {
-      foreach($dao->getDaoIDProperties() as $key)
-      {
-        $dao->setDaoProperty($key, Phid::generate($dao));
-      }
-    }
-    return parent::save($dao);
+    parent::save($dao);
   }
 
   protected function _prepareQuery(IStatement $stmt, QlDao $dao)

@@ -100,10 +100,17 @@ abstract class CqlDao extends QlDao
   }
 
   /**
+   * @param string|object|null $class
+   *
    * @return CqlDaoCollection
    */
-  protected static function _createCollection()
+  protected static function _createCollection($class = null)
   {
-    return CqlDaoCollection::create(get_called_class());
+    if($class === null)
+    {
+      $class = get_called_class();
+    }
+
+    return CqlDaoCollection::create($class);
   }
 }

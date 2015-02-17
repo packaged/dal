@@ -58,14 +58,22 @@ class DaoCollection implements IDaoCollection
   /**
    * Create a new collection based on a DAO class
    *
-   * @param string $daoClass
+   * @param string|object $daoClass
    *
    * @return static
    */
   public static function create($daoClass)
   {
-    $collection            = new static;
-    $collection->_daoClass = $daoClass;
+    $collection = new static;
+    if(is_object($daoClass))
+    {
+      $collection->_dao = $daoClass;
+      $collection->_daoClass = get_class($collection->_dao);
+    }
+    else
+    {
+      $collection->_daoClass = $daoClass;
+    }
     $collection->_init();
     return $collection;
   }
@@ -169,7 +177,7 @@ class DaoCollection implements IDaoCollection
     $result = [];
     foreach((array)$this->_daos as $i => $dao)
     {
-      $key          = idp($dao, $keyProperty, $i);
+      $key = idp($dao, $keyProperty, $i);
       $result[$key] = [];
       foreach($properties as $property)
       {

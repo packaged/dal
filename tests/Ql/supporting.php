@@ -18,6 +18,12 @@ class MockQlDao extends QlDao
   public $username;
   public $display;
   public $boolTest;
+
+  public function setTableName($table)
+  {
+    $this->_tableName = $table;
+    return $this;
+  }
 }
 
 class MockMultiKeyQlDao extends QlDao

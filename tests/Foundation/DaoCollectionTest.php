@@ -22,6 +22,14 @@ class DaoCollectionTest extends \PHPUnit_Framework_TestCase
     $collection->createNewDao();
   }
 
+  public function testCreateDao()
+  {
+    $dao = new MockAbstractDao();
+    $dao->email = 'email';
+    $collection = DaoCollection::create($dao);
+    $this->assertSame($dao, $collection->createNewDao(false));
+  }
+
   public function testEach()
   {
     $collection = new MockDaoCollection();
@@ -161,8 +169,8 @@ class DaoCollectionTest extends \PHPUnit_Framework_TestCase
     $this->assertFalse(isset($collection[8]));
     $collection[8] = $removal;
     $this->assertTrue(isset($collection[8]));
-    $new          = new \stdClass();
-    $new->name    = 'Brooke';
+    $new = new \stdClass();
+    $new->name = 'Brooke';
     $collection[] = $new;
     /**
      * @var $collection DaoCollection
@@ -203,16 +211,16 @@ class MockDaoCollection extends DaoCollection
 
   public function setDummyData()
   {
-    $this->_daos    = [];
+    $this->_daos = [];
     $this->_daos[1] = ValueAs::obj(['name' => 'Test', 'id' => 1]);
     $this->_daos[2] = ValueAs::obj(['name' => 'Test', 'id' => 2]);
-    $user           = new MockUsr();
-    $user->name     = 'User';
-    $user->id       = 5;
+    $user = new MockUsr();
+    $user->name = 'User';
+    $user->id = 5;
     $this->_daos[5] = $user;
-    $mock           = new MockAbstractDao();
-    $mock->name     = 'Testing';
-    $mock->id       = 8;
+    $mock = new MockAbstractDao();
+    $mock->name = 'Testing';
+    $mock->id = 8;
     $this->_daos[8] = $mock;
   }
 }

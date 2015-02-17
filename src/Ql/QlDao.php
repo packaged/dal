@@ -25,8 +25,8 @@ abstract class QlDao extends AbstractSanitizableDao
     if($this->_tableName === null)
     {
       $class = get_called_class();
-      $ns    = get_namespace($class);
-      $dirs  = $this->getTableNameExcludeDirs();
+      $ns = get_namespace($class);
+      $dirs = $this->getTableNameExcludeDirs();
       foreach($dirs as $dir)
       {
         $ns = ltrim(string_from($ns, $dir), '\\');
@@ -55,7 +55,7 @@ abstract class QlDao extends AbstractSanitizableDao
    */
   public static function loadWhere(...$params)
   {
-    $collection = QlDaoCollection::create(get_called_class());
+    $collection = static::_createCollection();
     if(func_num_args() > 0)
     {
       $collection->loadWhere(...$params);
@@ -64,11 +64,18 @@ abstract class QlDao extends AbstractSanitizableDao
   }
 
   /**
+   * @param string|object|null $class
+   *
    * @return QlDaoCollection
    */
-  protected static function _createCollection()
+  protected static function _createCollection($class = null)
   {
-    return QlDaoCollection::create(get_called_class());
+    if($class === null)
+    {
+      $class = get_called_class();
+    }
+
+    return QlDaoCollection::create($class);
   }
 
   /**
@@ -79,6 +86,21 @@ abstract class QlDao extends AbstractSanitizableDao
   public static function collection(...$params)
   {
     $collection = static::_createCollection();
+    if(func_num_args() > 0)
+    {
+      $collection->where(...$params);
+    }
+    return $collection;
+  }
+
+  /**
+   * @param $params
+   *
+   * @return QlDaoCollection
+   */
+  public function getCollection(...$params)
+  {
+    $collection = static::_createCollection($this);
     if(func_num_args() > 0)
     {
       $collection->where(...$params);

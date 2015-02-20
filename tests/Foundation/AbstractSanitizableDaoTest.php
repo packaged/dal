@@ -7,11 +7,12 @@ class AbstractSanitizableDaoTest extends \PHPUnit_Framework_TestCase
 {
   public function testSerialize()
   {
-    $value    = new \stdClass();
+    $value = new \stdClass();
     $value->a = 'B';
     $value->c = 'd';
 
     $mock = new MockSanitizableDao();
+    $mock->id = ['idtest', 'test2'];
     $mock->addSerializer('json');
 
     $jsonSerialized = $mock->getPropertySerialized('json', $value);
@@ -31,6 +32,10 @@ class AbstractSanitizableDaoTest extends \PHPUnit_Framework_TestCase
       ['json' => $jsonSerialized, 'php' => $phpSerialized],
       true
     );
+
+    $mock->addSerializer('id');
+    $this->assertEquals(['idtest', 'test2'], $mock->getId(false, false));
+    $this->assertEquals('["idtest","test2"]', $mock->getId(false, true));
 
     $this->assertEquals($value, $mock->php);
     $this->assertEquals($value, $mock->json);
@@ -53,7 +58,7 @@ class AbstractSanitizableDaoTest extends \PHPUnit_Framework_TestCase
       function ($value) { return strrev($value); }
     );
 
-    $value            = 'forward';
+    $value = 'forward';
     $customSerialized = $mock->getPropertySerialized('cereal', $value);
     $this->assertEquals('drawrof', $customSerialized);
     $this->assertEquals(
@@ -76,7 +81,7 @@ class AbstractSanitizableDaoTest extends \PHPUnit_Framework_TestCase
       MockSanitizableDao::SERIALIZATION_PHP
     );
 
-    $value       = new \stdClass();
+    $value = new \stdClass();
     $value->mock = 'hat';
     $value->prop = 'stand';
 
@@ -194,7 +199,7 @@ class AbstractSanitizableDaoTest extends \PHPUnit_Framework_TestCase
 
   public function testIsValid()
   {
-    $mock        = new MockSanitizableDao();
+    $mock = new MockSanitizableDao();
     $mock->lower = 'lower string';
     $mock->upper = 'UPPER TEXT';
     $this->assertTrue($mock->isValid());
@@ -217,7 +222,7 @@ class AbstractSanitizableDaoTest extends \PHPUnit_Framework_TestCase
   {
     $mock = new MockSanitizableDao();
     $mock->addSerializer('json');
-    $mock->json       = new \stdClass();
+    $mock->json = new \stdClass();
     $mock->json->name = 'test';
 
     $this->assertEquals($mock->json, $mock->getDaoPropertyData(false)['json']);
@@ -242,6 +247,7 @@ class AbstractSanitizableDaoTest extends \PHPUnit_Framework_TestCase
  */
 class MockSanitizableDao extends AbstractSanitizableDao
 {
+  public $id;
   public $json;
   public $php;
   public $filtration;

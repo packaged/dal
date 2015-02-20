@@ -170,13 +170,16 @@ class QlDaoCollection extends DaoCollection
     {
       return parent::first($default);
     }
-    $limit = $this->getClause('LIMIT');
-    $this->limit(1);
-    $this->load();
-    $this->removeClause('LIMIT');
-    if($limit !== null)
+    if(!$this->_isLoaded)
     {
-      $this->_query->addClause($limit);
+      $limit = $this->getClause('LIMIT');
+      $this->limit(1);
+      $this->load();
+      $this->removeClause('LIMIT');
+      if($limit !== null)
+      {
+        $this->_query->addClause($limit);
+      }
     }
     if(!$this->isEmpty())
     {

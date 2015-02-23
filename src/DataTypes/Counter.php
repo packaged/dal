@@ -1,7 +1,7 @@
 <?php
 namespace Packaged\Dal\DataTypes;
 
-class Counter implements IDataType
+class Counter implements IDataType, \JsonSerializable
 {
   public function __construct($original)
   {
@@ -78,5 +78,10 @@ class Counter implements IDataType
   public function __toString()
   {
     return (string)$this->_value;
+  }
+
+  function jsonSerialize()
+  {
+    return (string)$this;
   }
 }

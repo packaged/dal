@@ -44,6 +44,9 @@ class CounterTest extends \PHPUnit_Framework_TestCase
 
     $dao = MockCounterDao::loadById('test1');
     $this->assertEquals(500, $dao->c1->calculated());
+
+    $json = json_encode($dao);
+    $this->assertEquals('{"id":"test1","c1":"500","c2":"-2"}', $json);
   }
 }
 

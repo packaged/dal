@@ -39,7 +39,7 @@ class CqlDataStore extends QlDataStore
       {
         if($value->isIncrement())
         {
-          $data[$field] = IncrementExpression::create($field)->setExpression(
+          $data[$field] = IncrementExpression::create($field)->setValue(
             ValueExpression::create(
               $dao->getPropertySerialized($field, $value->getIncrement())
             )
@@ -47,7 +47,7 @@ class CqlDataStore extends QlDataStore
         }
         elseif($value->isDecrement())
         {
-          $data[$field] = DecrementExpression::create($field)->setExpression(
+          $data[$field] = DecrementExpression::create($field)->setValue(
             ValueExpression::create(
               $dao->getPropertySerialized($field, $value->getDecrement())
             )

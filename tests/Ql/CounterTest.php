@@ -31,9 +31,15 @@ class CounterTest extends \PHPUnit_Framework_TestCase
     $dao->c2->decrement(3);
     $datastore->save($dao);
 
+    $dao = new MockCounterDao();
+    $dao->id = 'test1';
+    $dao->c2->increment(1);
+    $dao->c2->decrement(3);
+    $datastore->save($dao);
+
     $dao = MockCounterDao::loadById('test1');
     $this->assertEquals(5, $dao->c1->calculated());
-    $this->assertEquals(-2, $dao->c2->calculated());
+    $this->assertEquals(-4, $dao->c2->calculated());
 
     $dao->c1 = 100;
     $dao->save();
@@ -48,7 +54,16 @@ class CounterTest extends \PHPUnit_Framework_TestCase
     $this->assertEquals(500, $dao->c1->calculated());
 
     $json = json_encode($dao);
-    $this->assertEquals('{"id":"test1","c1":"500","c2":"-2"}', $json);
+    $this->assertEquals('{"id":"test1","c1":"500","c2":"-4"}', $json);
+
+    $dao = new MockCounterDao();
+    $dao->id = 'test1';
+    $dao->c1->setValue(6);
+    $dao->c2->setValue(-8);
+    $datastore->save($dao);
+
+    $json = json_encode($dao);
+    $this->assertEquals('{"id":"test1","c1":"6","c2":"-8"}', $json);
   }
 }
 

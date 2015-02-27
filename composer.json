@@ -12,13 +12,13 @@
     "php": ">=5.6.0",
     "packaged/helpers": "~0.0",
     "packaged/docblock": "~0.0",
-    "packaged/querybuilder": "~0.8",
+    "packaged/querybuilder": "~0.9",
     "packaged/config": "~0.0",
     "packaged/cassandrathrift": "~20.0",
     "doctrine/inflector": "~1.0"
   },
   "require-dev": {
-    "phpunit/phpunit": "~4.0"
+    "phpunit/phpunit": "~4.5"
   },
   "autoload": {
     "psr-4": {

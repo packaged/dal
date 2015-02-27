@@ -20,6 +20,8 @@ class CounterTest extends \PHPUnit_Framework_TestCase
     $resolver->boot();
     Dao::getDalResolver()->addDataStore('mockql', $datastore);
 
+    $datastore->getConnection()->runQuery('TRUNCATE TABLE mock_counter_daos');
+
     $dao = new MockCounterDao();
     $dao->id = 'test1';
     $dao->c1->increment(10);
@@ -49,7 +51,6 @@ class CounterTest extends \PHPUnit_Framework_TestCase
     $this->assertEquals('{"id":"test1","c1":"500","c2":"-2"}', $json);
   }
 }
-
 
 class MockCounterDao extends QlDao
 {

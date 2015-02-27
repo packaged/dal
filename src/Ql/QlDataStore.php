@@ -3,6 +3,7 @@ namespace Packaged\Dal\Ql;
 
 use Packaged\Config\ConfigurableInterface;
 use Packaged\Config\ConfigurableTrait;
+use Packaged\Dal\DataTypes\Counter;
 use Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException;
 use Packaged\Dal\Exceptions\DataStore\DaoNotFoundException;
 use Packaged\Dal\Exceptions\DataStore\DataStoreException;
@@ -11,6 +12,9 @@ use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\IDao;
 use Packaged\QueryBuilder\Assembler\MySQL\MySQLAssembler;
 use Packaged\QueryBuilder\Builder\QueryBuilder;
+use Packaged\QueryBuilder\Expression\DecrementExpression;
+use Packaged\QueryBuilder\Expression\IncrementExpression;
+use Packaged\QueryBuilder\Expression\NumericExpression;
 use Packaged\QueryBuilder\SelectExpression\AllSelectExpression;
 use Packaged\QueryBuilder\Statement\IStatement;
 
@@ -114,6 +118,27 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
       {
         foreach($this->_getDaoChanges($dao, false) as $field => $value)
         {
+          if($dao->$field instanceof Counter)
+          {
+            if($dao->$field->isIncrement())
+            {
+              $value = IncrementExpression::create(
+                $field,
+                $dao->$field->getIncrement()
+              );
+            }
+            elseif($dao->$field->isDecrement())
+            {
+              $value = DecrementExpression::create(
+                $field,
+                $dao->$field->getDecrement()
+              );
+            }
+            elseif($dao->$field->isFixedValue())
+            {
+              $value = NumericExpression::create($dao->$field->calculated());
+            }
+          }
           $statement->onDuplicate($field, $value);
         }
       }

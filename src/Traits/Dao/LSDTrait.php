@@ -1,6 +1,7 @@
 <?php
 namespace Packaged\Dal\Traits\Dao;
 
+use Packaged\Dal\Exceptions\DataStore\DaoNotFoundException;
 use Packaged\Dal\Foundation\AbstractDao;
 use Packaged\Dal\IDao;
 use Packaged\Dal\IDataStore;
@@ -12,7 +13,7 @@ trait LSDTrait
 {
   /**
    * @return IDao
-   * @throws \Packaged\Dal\Exceptions\DataStore\DaoNotFoundException
+   * @throws DaoNotFoundException
    */
   public function load()
   {
@@ -28,6 +29,7 @@ trait LSDTrait
    * @param ...$id
    *
    * @return static
+   * @throws DaoNotFoundException
    */
   public static function loadById(...$id)
   {
@@ -41,6 +43,30 @@ trait LSDTrait
      */
     $dao->load();
     return $dao;
+  }
+
+  /**
+   * Load a dao by id, or return a new dao
+   *
+   * @param ...$id
+   *
+   * @return static
+   */
+  public static function loadOrNew(...$id)
+  {
+    try
+    {
+      return static::loadById(...$id);
+    }
+    catch(DaoNotFoundException $e)
+    {
+      $dao = new static;
+      /**
+       * @var $dao AbstractDao
+       */
+      $dao->hydrateDao(array_combine($dao->getDaoIDProperties(), $id));
+      return $dao;
+    }
   }
 
   /**

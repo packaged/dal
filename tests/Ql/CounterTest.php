@@ -22,8 +22,7 @@ class CounterTest extends \PHPUnit_Framework_TestCase
 
     $datastore->getConnection()->runQuery('TRUNCATE TABLE mock_counter_daos');
 
-    $dao = new MockCounterDao();
-    $dao->id = 'test1';
+    $dao = MockCounterDao::loadOrNew('test1');
     $dao->c1->increment(10);
     $dao->c1->decrement(5);
     $datastore->save($dao);
@@ -37,7 +36,7 @@ class CounterTest extends \PHPUnit_Framework_TestCase
     $dao->c2->decrement(3);
     $datastore->save($dao);
 
-    $dao = MockCounterDao::loadById('test1');
+    $dao = MockCounterDao::loadOrNew('test1');
     $this->assertEquals(5, $dao->c1->calculated());
     $this->assertEquals(-4, $dao->c2->calculated());
 

@@ -1,5 +1,8 @@
 <?php
 
+use Packaged\Dal\DalResolver;
+use Packaged\Dal\Exceptions\DalException;
+
 class ConnectionResolverTest extends PHPUnit_Framework_TestCase
 {
   public function testGetInvalidConnection()
@@ -14,7 +17,7 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
   public function testSetAndGetConnection()
   {
     $interface = '\Packaged\Dal\IDataConnection';
-    $resolver  = new \Packaged\Dal\DalResolver();
+    $resolver = new \Packaged\Dal\DalResolver();
     $resolver->addConnection('test', $this->getMock($interface));
     $this->assertInstanceOf($interface, $resolver->getConnection('test'));
   }
@@ -31,7 +34,7 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
   public function testSetAndGetDataStore()
   {
     $interface = '\Packaged\Dal\IDataStore';
-    $resolver  = new \Packaged\Dal\DalResolver();
+    $resolver = new \Packaged\Dal\DalResolver();
     $resolver->addDataStore('test', $this->getMock($interface));
     $this->assertInstanceOf($interface, $resolver->getDataStore('test'));
   }
@@ -112,10 +115,10 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
     $connectionConfig = new \Packaged\Config\Provider\Ini\IniConfigProvider(
       build_path(__DIR__, 'resources', 'connections.ini')
     );
-    $datastoreConfig  = new \Packaged\Config\Provider\Ini\IniConfigProvider(
+    $datastoreConfig = new \Packaged\Config\Provider\Ini\IniConfigProvider(
       build_path(__DIR__, 'resources', 'datastores.ini')
     );
-    $resolver         = new \Packaged\Dal\DalResolver(
+    $resolver = new \Packaged\Dal\DalResolver(
       $connectionConfig,
       $datastoreConfig
     );
@@ -190,6 +193,35 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
     $dataStore = $resolver->getDataStore('datastore_test');
     $this->assertInstanceOf(ConfigurableDataStore::class, $dataStore);
     $this->assertEquals($unique, $dataStore->getConfig()->getItem('unique'));
+  }
+
+  public function testPerformanceMetrics()
+  {
+    $dal = new DalResolver();
+    $this->assertFalse($dal->isCollectingPerformanceMetrics());
+    $dal->enablePerformanceMetrics();
+    $this->assertTrue($dal->isCollectingPerformanceMetrics());
+    $dal->disablePerformanceMetrics();
+    $this->assertFalse($dal->isCollectingPerformanceMetrics());
+    $dal->enablePerformanceMetrics();
+
+    $id = $dal->startPerformanceMetric('test', DalResolver::MODE_READ, 'SLEEP');
+    sleep(1);
+    $dal->closePerformanceMetric($id);
+
+    $perfData = $dal->getPerformanceMetrics();
+    $this->assertCount(1, $perfData);
+    $perfData = head($perfData);
+    $this->assertEquals('test', $perfData['c']);
+    $this->assertEquals('SLEEP', $perfData['q']);
+    $this->assertEquals(DalResolver::MODE_READ, $perfData['m']);
+    $this->assertGreaterThan(1000, $perfData['t']);
+
+    $this->setExpectedException(
+      DalException::class,
+      "You cannot close performance metrics that are not open"
+    );
+    $dal->closePerformanceMetric($id);
   }
 }
 

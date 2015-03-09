@@ -6,6 +6,7 @@ use Packaged\Config\ConfigSectionInterface;
 use Packaged\Config\ConfigurableInterface;
 use Packaged\Config\Provider\ConfigSection;
 use Packaged\Config\Provider\Test\TestConfigProvider;
+use Packaged\Dal\Exceptions\DalException;
 use Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException;
 use Packaged\Dal\Exceptions\DalResolver\DataStoreNotFoundException;
 use Packaged\Dal\Foundation\Dao;
@@ -20,6 +21,12 @@ class DalResolver implements IConnectionResolver
    */
   protected $_config;
   protected $_confed;
+  protected $_perfData = [];
+  protected $_currentPerf = [];
+  protected $_storePerformanceData = false;
+
+  const MODE_READ = 'r';
+  const MODE_WRITE = 'w';
 
   public function __construct(
     ConfigProviderInterface $connectionConfig = null,
@@ -383,5 +390,74 @@ class DalResolver implements IConnectionResolver
       return true;
     }
     return false;
+  }
+
+  public function enablePerformanceMetrics()
+  {
+    $this->_storePerformanceData = true;
+    return $this;
+  }
+
+  public function disablePerformanceMetrics()
+  {
+    $this->_storePerformanceData = false;
+    return $this;
+  }
+
+  public function isCollectingPerformanceMetrics()
+  {
+    return (bool)$this->_storePerformanceData;
+  }
+
+  public function startPerformanceMetric($connection, $mode, $query = null)
+  {
+    $time = microtime(true);
+    $this->_currentPerf[$time] = [
+      'c' => $connection,
+      'm' => $mode,
+      'q' => $query,
+      's' => $time
+    ];
+    return $time;
+  }
+
+  public function closePerformanceMetric($uniqueid)
+  {
+    if(isset($this->_currentPerf[$uniqueid]))
+    {
+      $perf = $this->_currentPerf[$uniqueid];
+      $this->writePerformanceMetric(
+        $perf['c'],
+        microtime(true) - $perf['s'],
+        $perf['m'],
+        $perf['q']
+      );
+      unset($this->_currentPerf[$uniqueid]);
+      return true;
+    }
+    throw new DalException(
+      "You cannot close performance metrics that are not open"
+    );
+  }
+
+  public function writePerformanceMetric(
+    $connection, $processTime, $mode = self::MODE_READ, $query = null
+  )
+  {
+    if($this->_storePerformanceData)
+    {
+      $this->_perfData[] = [
+        't' => $processTime * 1000,
+        'q' => $query,
+        'c' => $connection,
+        'm' => $mode
+      ];
+    }
+    return $this;
+  }
+
+  public function getPerformanceMetrics()
+  {
+    return $this->_perfData;
   }
 }

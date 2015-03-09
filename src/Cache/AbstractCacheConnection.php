@@ -3,11 +3,14 @@ namespace Packaged\Dal\Cache;
 
 use Packaged\Config\ConfigurableInterface;
 use Packaged\Config\ConfigurableTrait;
+use Packaged\Dal\IResolverAware;
+use Packaged\Dal\Traits\ResolverAwareTrait;
 
 abstract class AbstractCacheConnection
-  implements ICacheConnection, ConfigurableInterface
+  implements ICacheConnection, ConfigurableInterface, IResolverAware
 {
   use ConfigurableTrait;
+  use ResolverAwareTrait;
 
   /**
    * Returns a traversable set of cache items.

@@ -4,12 +4,16 @@ namespace Packaged\Dal\Ql;
 use Packaged\Config\ConfigurableInterface;
 use Packaged\Config\ConfigurableTrait;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
+use Packaged\Dal\IResolverAware;
+use Packaged\Dal\Traits\ResolverAwareTrait;
 use Packaged\Helpers\ValueAs;
 
 class PdoConnection
-  implements IQLDataConnection, ConfigurableInterface, ILastInsertId
+  implements IQLDataConnection, ConfigurableInterface, ILastInsertId,
+             IResolverAware
 {
   use ConfigurableTrait;
+  use ResolverAwareTrait;
 
   /**
    * @var \PDO

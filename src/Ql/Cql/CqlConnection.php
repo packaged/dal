@@ -14,16 +14,20 @@ use Packaged\Config\ConfigurableInterface;
 use Packaged\Config\ConfigurableTrait;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
 use Packaged\Dal\Exceptions\Connection\CqlException;
+use Packaged\Dal\IResolverAware;
 use Packaged\Dal\Ql\IQLDataConnection;
+use Packaged\Dal\Traits\ResolverAwareTrait;
 use Packaged\Helpers\ValueAs;
 use Thrift\Exception\TException;
 use Thrift\Protocol\TBinaryProtocolAccelerated;
 use Thrift\Transport\TFramedTransport;
 use Thrift\Transport\TSocketPool;
 
-class CqlConnection implements IQLDataConnection, ConfigurableInterface
+class CqlConnection
+  implements IQLDataConnection, ConfigurableInterface, IResolverAware
 {
   use ConfigurableTrait;
+  use ResolverAwareTrait;
 
   /**
    * @var CassandraClient
@@ -36,6 +40,7 @@ class CqlConnection implements IQLDataConnection, ConfigurableInterface
   /**
    * @var TFramedTransport
    */
+
   protected $_transport;
   /**
    * @var TBinaryProtocolAccelerated

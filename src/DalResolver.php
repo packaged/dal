@@ -113,6 +113,12 @@ class DalResolver implements IConnectionResolver
         $this->_connections[$name] = $this->_connections[$name]();
       }
 
+      if($this->_connections[$name] instanceof IResolverAware)
+      {
+        $this->_connections[$name] = $this->_connections[$name]
+          ->setResolver($this);
+      }
+
       if($this->_connections[$name] instanceof IDataConnection)
       {
         return $this->_configureDSC(

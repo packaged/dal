@@ -18,6 +18,7 @@ class CounterTest extends \PHPUnit_Framework_TestCase
     $connection->connect();
     $resolver = new DalResolver();
     $resolver->boot();
+    $connection->setResolver($resolver);
     Dao::getDalResolver()->addDataStore('mockql', $datastore);
 
     $datastore->getConnection()->runQuery('TRUNCATE TABLE mock_counter_daos');

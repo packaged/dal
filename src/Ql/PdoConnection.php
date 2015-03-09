@@ -3,6 +3,7 @@ namespace Packaged\Dal\Ql;
 
 use Packaged\Config\ConfigurableInterface;
 use Packaged\Config\ConfigurableTrait;
+use Packaged\Dal\DalResolver;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
 use Packaged\Dal\IResolverAware;
 use Packaged\Dal\Traits\ResolverAwareTrait;
@@ -141,7 +142,14 @@ class PdoConnection
    */
   public function runQuery($query, array $values = null)
   {
-    return $this->_runQuery($query, $values)->rowCount();
+    $perfId = $this->getResolver()->startPerformanceMetric(
+      $this,
+      DalResolver::MODE_WRITE,
+      $query
+    );
+    $result = $this->_runQuery($query, $values)->rowCount();
+    $this->getResolver()->closePerformanceMetric($perfId);
+    return $result;
   }
 
   /**
@@ -156,7 +164,14 @@ class PdoConnection
    */
   public function fetchQueryResults($query, array $values = null)
   {
-    return $this->_runQuery($query, $values)->fetchAll(\PDO::FETCH_ASSOC);
+    $perfId = $this->getResolver()->startPerformanceMetric(
+      $this,
+      DalResolver::MODE_READ,
+      $query
+    );
+    $result = $this->_runQuery($query, $values)->fetchAll(\PDO::FETCH_ASSOC);
+    $this->getResolver()->closePerformanceMetric($perfId);
+    return $result;
   }
 
   protected function _runQuery($query, array $values = null)

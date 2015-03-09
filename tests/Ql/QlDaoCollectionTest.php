@@ -35,6 +35,8 @@ class QlDaoCollectionTest extends \PHPUnit_Framework_TestCase
     $datastore->setConnection($connection);
     MockQlDao::getDalResolver()->addDataStore('mockql', $datastore);
 
+    $connection->setResolver(MockQlDao::getDalResolver());
+
     $u = new MockQlDao();
     $datastore->getConnection()
       ->connect()

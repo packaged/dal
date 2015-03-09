@@ -12,6 +12,7 @@ use cassandra\CqlResultType;
 use cassandra\CqlRow;
 use Packaged\Config\ConfigurableInterface;
 use Packaged\Config\ConfigurableTrait;
+use Packaged\Dal\DalResolver;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
 use Packaged\Dal\Exceptions\Connection\CqlException;
 use Packaged\Dal\IResolverAware;
@@ -169,12 +170,18 @@ class CqlConnection
    */
   public function runQuery($query, array $values = [])
   {
+    $perfId = $this->getResolver()->startPerformanceMetric(
+      $this,
+      DalResolver::MODE_WRITE,
+      $query
+    );
     $prep = $this->prepare($query);
     $this->execute(
       $prep,
       $values,
       $this->_config()->getItem('write_consistency', ConsistencyLevel::QUORUM)
     );
+    $this->getResolver()->closePerformanceMetric($perfId);
     return 1;
   }
 
@@ -188,12 +195,18 @@ class CqlConnection
    */
   public function fetchQueryResults($query, array $values = [])
   {
+    $perfId = $this->getResolver()->startPerformanceMetric(
+      $this,
+      DalResolver::MODE_READ,
+      $query
+    );
     $prep = $this->prepare($query);
     $results = $this->execute(
       $prep,
       $values,
       $this->_config()->getItem('write_consistency', ConsistencyLevel::QUORUM)
     );
+    $this->getResolver()->closePerformanceMetric($perfId);
     return $results;
   }
 

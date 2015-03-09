@@ -452,6 +452,11 @@ class DalResolver implements IConnectionResolver
   {
     if($this->_storePerformanceData)
     {
+      if(!is_scalar($connection))
+      {
+        $conn = array_search($connection, (array)$this->_connections, true);
+        $connection = !$conn ? get_class($connection) : $conn;
+      }
       $this->_perfData[] = [
         't' => $processTime * 1000,
         'q' => $query,

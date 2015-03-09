@@ -27,6 +27,7 @@ class CqlTest extends \PHPUnit_Framework_TestCase
   public static function setUpBeforeClass()
   {
     self::$_connection = new CqlConnection();
+    self::$_connection->setResolver(new DalResolver());
     self::$_connection->connect();
     self::$_connection->runQuery(
       "CREATE KEYSPACE IF NOT EXISTS packaged_dal WITH REPLICATION = "
@@ -67,6 +68,7 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $connection->connect();
     $connection->setConfig('keyspace', 'packaged_dal');
     $datastore->setConnection($connection);
+    $connection->setResolver(new DalResolver());
 
     $dao = new MockCqlDao();
     $dao->id = 'test2';
@@ -87,6 +89,7 @@ class CqlTest extends \PHPUnit_Framework_TestCase
   public function testConnection()
   {
     $connection = new CqlConnection();
+    $connection->setResolver(new DalResolver());
     $this->_configureConnection($connection);
     $this->assertFalse($connection->isConnected());
     $connection->connect();
@@ -115,6 +118,7 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $this->_configureConnection($connection);
     $datastore->setConnection($connection);
     $connection->connect();
+    $connection->setResolver(new DalResolver());
 
     $dao = new MockCqlDao();
     $dao->id = uniqid('daotest');
@@ -189,6 +193,7 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $datastore = new MockCqlDataStore();
     $connection = new MockCqlConnection();
     $datastore->setConnection($connection);
+    $connection->setResolver(new DalResolver());
 
     $dao = new MockCqlDao();
     $dao->id = 'test1';
@@ -274,7 +279,9 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $this->assertInstanceOf(CqlDaoCollection::class, MockCqlDao::collection());
 
     $dataStore = new MockCqlDataStore();
-    $dataStore->setConnection(new CqlConnection());
+    $connection = new CqlConnection();
+    $dataStore->setConnection($connection);
+    $connection->setResolver(new DalResolver());
     $mockDao = new MockCqlDao();
     $mockDao->setDataStore($dataStore);
     $collection = MockCqlCollection::createFromDao($mockDao);
@@ -292,6 +299,7 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $connection->connect();
     $resolver = new DalResolver();
     $resolver->boot();
+    $connection->setResolver($resolver);
     Dao::getDalResolver()->addDataStore('mockcql', $datastore);
 
     $dao = new MockCounterCqlDao();

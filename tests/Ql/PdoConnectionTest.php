@@ -4,6 +4,7 @@ namespace Ql;
 use Packaged\Config\Provider\ConfigSection;
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
+use Packaged\Dal\Exceptions\DalException;
 
 require_once 'supporting.php';
 
@@ -23,7 +24,7 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
   public function testConnectionException()
   {
     $connection = new MockPdoConnection();
-    $config     = $connection->config();
+    $config = $connection->config();
     $config->addItem('hostname', '255.255.255.255');
     $connection->configure($config);
 
@@ -36,7 +37,7 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
   public function testIsConnected()
   {
     $connection = new CorruptablePdoConnection();
-    $config     = new ConfigSection();
+    $config = new ConfigSection();
     $connection->configure($config);
     $connection->connect();
     $this->assertTrue($connection->isConnected());
@@ -46,17 +47,18 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
 
   public function testAutoConnect()
   {
-    $datastore  = new MockQlDataStore();
+    $datastore = new MockQlDataStore();
     $connection = new MockPdoConnection();
     $connection->config();
+    $connection->setResolver(new DalResolver());
     $datastore->setConnection($connection);
 
-    $dao           = new MockQlDao();
+    $dao = new MockQlDao();
     $dao->username = time() . 'user';
-    $dao->display  = 'User ' . date("Y-m-d");
+    $dao->display = 'User ' . date("Y-m-d");
     $datastore->save($dao);
     $datastore->getConnection()->disconnect();
-    $new     = new MockQlDao();
+    $new = new MockQlDao();
     $new->id = $dao->id;
     $datastore->load($new);
     $this->assertEquals($dao->username, $new->username);
@@ -69,6 +71,7 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
     $connection = new MockPdoConnection();
     $connection->config();
     $connection->connect();
+    $connection->setResolver(new DalResolver());
     $this->setExpectedException(ConnectionException::class);
     $connection->runQuery("SELECT * FROM `made_up_table_r43i`", []);
   }
@@ -78,15 +81,17 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
     $connection = new MockPdoConnection();
     $connection->config();
     $connection->connect();
+    $connection->setResolver(new DalResolver());
     $this->setExpectedException(ConnectionException::class);
     $connection->fetchQueryResults("SELECT * FROM `made_up_table_r43i`", []);
   }
 
   public function testNativeErrorFormat_runQuery()
   {
-    $pdo        = new PrepareErrorPdoConnection('My Exception Message', 1234);
+    $pdo = new PrepareErrorPdoConnection('My Exception Message', 1234);
     $connection = new MockPdoConnection();
     $connection->setConnection($pdo);
+    $connection->setResolver(new DalResolver());
     $this->setExpectedException(
       ConnectionException::class,
       'My Exception Message',
@@ -97,8 +102,9 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
 
   public function testNativeErrorFormat_fetchQueryResults()
   {
-    $pdo        = new PrepareErrorPdoConnection('My Exception Message', 1234);
+    $pdo = new PrepareErrorPdoConnection('My Exception Message', 1234);
     $connection = new MockPdoConnection();
+    $connection->setResolver(new DalResolver());
     $connection->setConnection($pdo);
     $this->setExpectedException(
       ConnectionException::class,
@@ -110,7 +116,7 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
 
   public function testLsd()
   {
-    $datastore  = new MockQlDataStore();
+    $datastore = new MockQlDataStore();
     $connection = new MockPdoConnection();
     $connection->config();
     $datastore->setConnection($connection);
@@ -119,14 +125,17 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
     $resolver = new DalResolver();
     $resolver->addDataStore('mockql', $datastore);
     $resolver->boot();
+    $resolver->enablePerformanceMetrics();
 
-    $dao           = new MockQlDao();
+    $connection->setResolver($resolver);
+
+    $dao = new MockQlDao();
     $dao->username = time() . 'user';
-    $dao->display  = 'User ' . date("Y-m-d");
+    $dao->display = 'User ' . date("Y-m-d");
     $dao->boolTest = true;
     $datastore->save($dao);
     $dao->username = 'test 1';
-    $dao->display  = 'Brooke';
+    $dao->display = 'Brooke';
     $dao->boolTest = false;
     $datastore->save($dao);
     $dao->username = 'test 2';
@@ -141,7 +150,21 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
 
     $datastore->delete($dao);
 
+    $metrics = $resolver->getPerformanceMetrics();
+    $resolver->disablePerformanceMetrics();
+    $this->assertCount(6, $metrics);
+
     $resolver->shutdown();
+  }
+
+  public function testNoResolver()
+  {
+    $this->setExpectedException(
+      DalException::class,
+      "Connection running without the resolver being defined"
+    );
+    $connection = new MockPdoConnection();
+    $connection->fetchQueryResults("SELECT", []);
   }
 }
 

@@ -29,6 +29,8 @@ class QlDaoTest extends \PHPUnit_Framework_TestCase
     $resolver->boot();
     $resolver->addDataStore('mockql', $datastore);
 
+    $connection->setResolver($resolver);
+
     $username = uniqid('TEST');
     $u = new MockQlDao();
     $u->username = $username;

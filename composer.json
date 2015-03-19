@@ -13,7 +13,7 @@
     "packaged/helpers": "~0.0",
     "packaged/docblock": "~0.0",
     "packaged/querybuilder": "~0.9",
-    "packaged/config": "~0.0",
+    "packaged/config": "~1.0",
     "packaged/cassandrathrift": "~20.0",
     "doctrine/inflector": "~1.0"
   },

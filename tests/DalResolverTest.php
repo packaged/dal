@@ -187,6 +187,21 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
       $resolver->getDataStoreConfig('datastore_test')
     );
 
+    $config2 = new \Packaged\Config\Provider\ConfigSection('datastore_test');
+    $config2->addItem('construct_class', ConfigurableDataStore::class);
+    $unique = uniqid();
+    $config2->addItem('unique', $unique);
+    $resolver->addDataStoreConfig($config2);
+
+    $this->assertNotSame(
+      $config,
+      $resolver->getDataStoreConfig('datastore_test')
+    );
+    $this->assertSame(
+      $config2,
+      $resolver->getDataStoreConfig('datastore_test')
+    );
+
     /**
      * @var $dataStore ConfigurableDataStore
      */

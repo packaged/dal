@@ -1,7 +1,6 @@
 <?php
 namespace Ql;
 
-use Packaged\Dal\IDataConnection;
 use Packaged\Dal\Ql\IQLDataConnection;
 use Packaged\Dal\Ql\PdoConnection;
 use Packaged\Dal\Ql\QlDao;
@@ -44,11 +43,6 @@ class MockMultiKeyQlDao extends QlDao
 
 class MockQlDataStore extends QlDataStore
 {
-  public function setConnection(IDataConnection $connection)
-  {
-    $this->_connection = $connection;
-    return $this;
-  }
 }
 
 class MockAbstractQlDataConnection implements IQLDataConnection

@@ -16,6 +16,9 @@ use Packaged\Dal\Foundation\Dao;
  */
 class DalResolver implements IConnectionResolver
 {
+  const TYPE_CONNECTION = 'connection';
+  const TYPE_DATASTORE = 'datastore';
+
   /**
    * @var ConfigProviderInterface[]
    */
@@ -35,27 +38,27 @@ class DalResolver implements IConnectionResolver
   {
     if($connectionConfig !== null)
     {
-      $this->_config['connection'] = $connectionConfig;
+      $this->_config[self::TYPE_CONNECTION] = $connectionConfig;
     }
     else
     {
-      $this->_config['connection'] = new TestConfigProvider();
+      $this->_config[self::TYPE_CONNECTION] = new TestConfigProvider();
     }
 
     if($datastoreConfig !== null)
     {
-      $this->_config['datastore'] = $datastoreConfig;
+      $this->_config[self::TYPE_DATASTORE] = $datastoreConfig;
     }
     else
     {
-      $this->_config['datastore'] = new TestConfigProvider();
+      $this->_config[self::TYPE_DATASTORE] = new TestConfigProvider();
     }
 
-    $this->_confed = ['connection' => [], 'datastore' => []];
+    $this->_confed = [self::TYPE_CONNECTION => [], self::TYPE_DATASTORE => []];
 
-    if(!$this->_config['datastore']->sectionExists('filesystem'))
+    if(!$this->_config[self::TYPE_DATASTORE]->sectionExists('filesystem'))
     {
-      $this->_config['datastore']->addSection(
+      $this->_config[self::TYPE_DATASTORE]->addSection(
         new ConfigSection(
           'filesystem',
           ['construct_class' => '\Packaged\Dal\FileSystem\FileSystemDataStore']
@@ -77,15 +80,10 @@ class DalResolver implements IConnectionResolver
     Dao::unsetDalResolver();
   }
 
-  /**
-   * @var IDataConnection[]|callable[]
-   */
-  protected $_connections;
-
-  /**
-   * @var IDataStore[]|callable[]
-   */
-  protected $_datastores;
+  protected $_objectCache = [
+    self::TYPE_CONNECTION => [],
+    self::TYPE_DATASTORE  => [],
+  ];
 
   /**
    * Retrieve a connection from the resolver by name
@@ -98,33 +96,35 @@ class DalResolver implements IConnectionResolver
    */
   public function getConnection($name)
   {
-    if(!isset($this->_connections[$name]))
+    if(!isset($this->_objectCache[self::TYPE_CONNECTION][$name]))
     {
-      $this->_connections[$name] = $this->_fromConfiguration(
-        'connection',
+      $this->_objectCache[self::TYPE_CONNECTION][$name] = $this->_fromConfiguration(
+        self::TYPE_CONNECTION,
         $name
       );
     }
 
-    if(isset($this->_connections[$name]))
+    if(isset($this->_objectCache[self::TYPE_CONNECTION][$name]))
     {
-      if(is_callable($this->_connections[$name]))
+      if(is_callable($this->_objectCache[self::TYPE_CONNECTION][$name]))
       {
-        $this->_connections[$name] = $this->_connections[$name]();
+        $this->_objectCache[self::TYPE_CONNECTION][$name]
+          = $this->_objectCache[self::TYPE_CONNECTION][$name]();
       }
 
-      if($this->_connections[$name] instanceof IResolverAware)
+      if($this->_objectCache[self::TYPE_CONNECTION][$name] instanceof IResolverAware)
       {
-        $this->_connections[$name] = $this->_connections[$name]
+        $this->_objectCache[self::TYPE_CONNECTION][$name]
+          = $this->_objectCache[self::TYPE_CONNECTION][$name]
           ->setResolver($this);
       }
 
-      if($this->_connections[$name] instanceof IDataConnection)
+      if($this->_objectCache[self::TYPE_CONNECTION][$name] instanceof IDataConnection)
       {
         return $this->_configureDSC(
           $name,
-          $this->_connections[$name],
-          'connection'
+          $this->_objectCache[self::TYPE_CONNECTION][$name],
+          self::TYPE_CONNECTION
         );
       }
     }
@@ -144,8 +144,8 @@ class DalResolver implements IConnectionResolver
    */
   public function addConnection($name, IDataConnection $connection)
   {
-    $this->_unsetConfigured('connection', $name);
-    $this->_connections[$name] = $connection;
+    $this->_unsetConfigured(self::TYPE_CONNECTION, $name);
+    $this->_objectCache[self::TYPE_CONNECTION][$name] = $connection;
     return $this;
   }
 
@@ -159,9 +159,61 @@ class DalResolver implements IConnectionResolver
    */
   public function addConnectionCallable($name, callable $connection)
   {
-    $this->_unsetConfigured('connection', $name);
-    $this->_connections[$name] = $connection;
+    $this->_unsetConfigured(self::TYPE_CONNECTION, $name);
+    $this->_objectCache[self::TYPE_CONNECTION][$name] = $connection;
     return $this;
+  }
+
+  /**
+   * Add a config section to the resolver as a connection
+   *
+   * @param ConfigSectionInterface $config
+   */
+  public function addConnectionConfig(ConfigSectionInterface $config)
+  {
+    $this->_unsetConfigured(self::TYPE_CONNECTION, $config->getName());
+    $this->_config[self::TYPE_CONNECTION]->removeSection($config);
+    $this->_config[self::TYPE_CONNECTION]->addSection($config);
+  }
+
+  /**
+   * Get a connection config
+   *
+   * @param $name
+   *
+   * @return ConfigSectionInterface
+   */
+  public function getConnectionConfig($name)
+  {
+    if($this->_config[self::TYPE_CONNECTION]->sectionExists($name))
+    {
+      return $this->_config[self::TYPE_CONNECTION]->getSection($name);
+    }
+    return null;
+  }
+
+  /**
+   * Check to see if a connection is defined by name
+   *
+   * @param $name
+   *
+   * @return bool
+   */
+  public function hasConnection($name)
+  {
+    if(!isset($this->_objectCache[self::TYPE_CONNECTION][$name]))
+    {
+      $this->_objectCache[self::TYPE_CONNECTION][$name] = $this->_fromConfiguration(
+        self::TYPE_CONNECTION,
+        $name
+      );
+    }
+
+    if(isset($this->_objectCache[self::TYPE_CONNECTION][$name]))
+    {
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -175,24 +227,28 @@ class DalResolver implements IConnectionResolver
    */
   public function getDataStore($name)
   {
-    if(!isset($this->_datastores[$name]))
+    if(!isset($this->_objectCache[self::TYPE_DATASTORE][$name]))
     {
-      $this->_datastores[$name] = $this->_fromConfiguration('datastore', $name);
+      $this->_objectCache[self::TYPE_DATASTORE][$name] = $this->_fromConfiguration(
+        self::TYPE_DATASTORE,
+        $name
+      );
     }
 
-    if(isset($this->_datastores[$name]))
+    if(isset($this->_objectCache[self::TYPE_DATASTORE][$name]))
     {
-      if(is_callable($this->_datastores[$name]))
+      if(is_callable($this->_objectCache[self::TYPE_DATASTORE][$name]))
       {
-        $this->_datastores[$name] = $this->_datastores[$name]();
+        $this->_objectCache[self::TYPE_DATASTORE][$name] = $this->_objectCache[self::TYPE_DATASTORE][$name](
+        );
       }
 
-      if($this->_datastores[$name] instanceof IDataStore)
+      if($this->_objectCache[self::TYPE_DATASTORE][$name] instanceof IDataStore)
       {
         return $this->_configureDSC(
           $name,
-          $this->_datastores[$name],
-          'datastore'
+          $this->_objectCache[self::TYPE_DATASTORE][$name],
+          self::TYPE_DATASTORE
         );
       }
     }
@@ -212,8 +268,8 @@ class DalResolver implements IConnectionResolver
    */
   public function addDataStore($name, IDataStore $dataStore)
   {
-    $this->_unsetConfigured('datastore', $name);
-    $this->_datastores[$name] = $dataStore;
+    $this->_unsetConfigured(self::TYPE_DATASTORE, $name);
+    $this->_objectCache[self::TYPE_DATASTORE][$name] = $dataStore;
     return $this;
   }
 
@@ -227,36 +283,9 @@ class DalResolver implements IConnectionResolver
    */
   public function addDataStoreCallable($name, callable $dataStore)
   {
-    $this->_unsetConfigured('datastore', $name);
-    $this->_datastores[$name] = $dataStore;
+    $this->_unsetConfigured(self::TYPE_DATASTORE, $name);
+    $this->_objectCache[self::TYPE_DATASTORE][$name] = $dataStore;
     return $this;
-  }
-
-  /**
-   * Add a config section to the resolver as a connection
-   *
-   * @param ConfigSectionInterface $config
-   */
-  public function addConnectionConfig(ConfigSectionInterface $config)
-  {
-    $this->_config['connection']->removeSection($config);
-    $this->_config['connection']->addSection($config);
-  }
-
-  /**
-   * Get a connection config
-   *
-   * @param $name
-   *
-   * @return ConfigSectionInterface
-   */
-  public function getConnectionConfig($name)
-  {
-    if($this->_config['connection']->sectionExists($name))
-    {
-      return $this->_config['connection']->getSection($name);
-    }
-    return null;
   }
 
   /**
@@ -266,8 +295,9 @@ class DalResolver implements IConnectionResolver
    */
   public function addDataStoreConfig(ConfigSectionInterface $config)
   {
-    $this->_config['datastore']->removeSection($config);
-    $this->_config['datastore']->addSection($config);
+    $this->_unsetConfigured(self::TYPE_DATASTORE, $config->getName());
+    $this->_config[self::TYPE_DATASTORE]->removeSection($config);
+    $this->_config[self::TYPE_DATASTORE]->addSection($config);
   }
 
   /**
@@ -279,11 +309,35 @@ class DalResolver implements IConnectionResolver
    */
   public function getDataStoreConfig($name)
   {
-    if($this->_config['datastore']->sectionExists($name))
+    if($this->_config[self::TYPE_DATASTORE]->sectionExists($name))
     {
-      return $this->_config['datastore']->getSection($name);
+      return $this->_config[self::TYPE_DATASTORE]->getSection($name);
     }
     return null;
+  }
+
+  /**
+   * Check to see if a datastore is defined by name
+   *
+   * @param $name
+   *
+   * @return bool
+   */
+  public function hasDatastore($name)
+  {
+    if(!isset($this->_objectCache[self::TYPE_DATASTORE][$name]))
+    {
+      $this->_objectCache[self::TYPE_DATASTORE][$name] = $this->_fromConfiguration(
+        self::TYPE_DATASTORE,
+        $name
+      );
+    }
+
+    if(isset($this->_objectCache[self::TYPE_DATASTORE][$name]))
+    {
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -293,7 +347,7 @@ class DalResolver implements IConnectionResolver
    * @param        $item
    * @param string $type
    */
-  protected function _configureDSC($name, $item, $type = 'connection')
+  protected function _configureDSC($name, $item, $type)
   {
     //Do not configure items multiple times
     if(!isset($this->_confed[$type][$name]) && $item instanceof ConfigurableInterface)
@@ -320,6 +374,7 @@ class DalResolver implements IConnectionResolver
   protected function _unsetConfigured($type, $name)
   {
     unset($this->_confed[$type][$name]);
+    unset($this->_objectCache[$type][$name]);
   }
 
   /**
@@ -353,51 +408,6 @@ class DalResolver implements IConnectionResolver
       }
     }
     return null;
-  }
-
-  /**
-   * Check to see if a datastore is defined by name
-   *
-   * @param $name
-   *
-   * @return bool
-   */
-  public function hasDatastore($name)
-  {
-    if(!isset($this->_datastores[$name]))
-    {
-      $this->_datastores[$name] = $this->_fromConfiguration('datastore', $name);
-    }
-
-    if(isset($this->_datastores[$name]))
-    {
-      return true;
-    }
-    return false;
-  }
-
-  /**
-   * Check to see if a connection is defined by name
-   *
-   * @param $name
-   *
-   * @return bool
-   */
-  public function hasConnection($name)
-  {
-    if(!isset($this->_connections[$name]))
-    {
-      $this->_connections[$name] = $this->_fromConfiguration(
-        'connection',
-        $name
-      );
-    }
-
-    if(isset($this->_connections[$name]))
-    {
-      return true;
-    }
-    return false;
   }
 
   public function enablePerformanceMetrics()
@@ -456,7 +466,11 @@ class DalResolver implements IConnectionResolver
     {
       if(!is_scalar($connection))
       {
-        $conn = array_search($connection, (array)$this->_connections, true);
+        $conn = array_search(
+          $connection,
+          (array)$this->_objectCache[self::TYPE_CONNECTION],
+          true
+        );
         $connection = !$conn ? get_class($connection) : $conn;
       }
       $this->_perfData[] = [

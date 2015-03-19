@@ -139,7 +139,7 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
               $value = NumericExpression::create($dao->$field->calculated());
             }
           }
-          $statement->onDuplicate($field, $value);
+          $statement->onDuplicateKeyUpdate($field, $value);
         }
       }
     }
@@ -341,8 +341,22 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
           "No connection has been configured on this datastore"
         );
       }
-      $this->_connection = Dao::getDalResolver()->getConnection($conn);
+      return Dao::getDalResolver()->getConnection($conn);
     }
     return $this->_connection;
+  }
+
+  /**
+   * Force this datastore to use a specific connection,
+   * instead of looking up from dal resolver
+   *
+   * @param IQLDataConnection $connection
+   *
+   * @return $this
+   */
+  public function setConnection(IQLDataConnection $connection)
+  {
+    $this->_connection = $connection;
+    return $this;
   }
 }

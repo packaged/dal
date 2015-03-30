@@ -23,6 +23,10 @@ class DaoCollection implements IDaoCollection
    */
   protected $_daoClass;
 
+  final private function __construct()
+  {
+  }
+
   protected function _prepareDaos()
   {
   }

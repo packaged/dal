@@ -13,7 +13,7 @@ class QlDaoCollectionTest extends \PHPUnit_Framework_TestCase
 {
   public function testHydrated()
   {
-    $collection = new MockQlDaoCollection();
+    $collection = MockQlDaoCollection::create();
     $collection->setDummyData();
     $this->assertEquals(4, $collection->count());
     $this->assertEquals(1, $collection->min('id'));
@@ -103,6 +103,12 @@ class QlDaoCollectionTest extends \PHPUnit_Framework_TestCase
     $first = $col->first();
     $this->assertInstanceOf(MockQlDao::class, $first);
 
+    $countCollection = MockQlDao::collection();
+    $countCollection->limit(1);
+    $this->assertEquals(1, $countCollection->count());
+    $countCollection->limit(0);
+    $this->assertEquals(0, $countCollection->count());
+
     $datastore->getConnection()->runQuery("TRUNCATE " . $u->getTableName());
 
     Dao::unsetDalResolver();
@@ -126,7 +132,6 @@ class QlDaoCollectionTest extends \PHPUnit_Framework_TestCase
     );
   }
 }
-
 
 class MockQlDaoCollection extends QlDaoCollection
 {
@@ -155,5 +160,19 @@ class MockQlDaoCollection extends QlDaoCollection
     $mock->id = 8;
     $this->_daos[8] = $mock;
     $this->_isLoaded = true;
+  }
+
+  /**
+   * @param null $daoClass
+   *
+   * @return static
+   */
+  public static function create($daoClass = null)
+  {
+    if($daoClass === null)
+    {
+      $daoClass = MockQlDao::class;
+    }
+    return parent::create($daoClass);
   }
 }

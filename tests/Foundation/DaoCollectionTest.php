@@ -3,6 +3,7 @@ namespace Foundation;
 
 use Packaged\Dal\Foundation\DaoCollection;
 use Packaged\Helpers\ValueAs;
+use Ql\MockCqlDao;
 
 class DaoCollectionTest extends \PHPUnit_Framework_TestCase
 {
@@ -32,7 +33,7 @@ class DaoCollectionTest extends \PHPUnit_Framework_TestCase
 
   public function testEach()
   {
-    $collection = new MockDaoCollection();
+    $collection = MockDaoCollection::create();
     $collection->setDummyData();
     $collection->each(
       function ($data)
@@ -44,7 +45,7 @@ class DaoCollectionTest extends \PHPUnit_Framework_TestCase
 
   public function testFirst()
   {
-    $collection = new MockDaoCollection();
+    $collection = MockDaoCollection::create();
     $this->assertEquals('test', $collection->first('test'));
     $collection->setDummyData();
     $this->assertEquals(
@@ -55,7 +56,7 @@ class DaoCollectionTest extends \PHPUnit_Framework_TestCase
 
   public function testEmpty()
   {
-    $collection = new MockDaoCollection();
+    $collection = MockDaoCollection::create();
     $this->assertTrue($collection->isEmpty());
     $collection->setDummyData();
     $this->assertFalse($collection->isEmpty());
@@ -63,7 +64,7 @@ class DaoCollectionTest extends \PHPUnit_Framework_TestCase
 
   public function testDistinct()
   {
-    $collection = new MockDaoCollection();
+    $collection = MockDaoCollection::create();
     $this->assertEquals([], $collection->distinct('name'));
     $collection->setDummyData();
     $this->assertEquals(
@@ -74,7 +75,7 @@ class DaoCollectionTest extends \PHPUnit_Framework_TestCase
 
   public function testPPull()
   {
-    $collection = new MockDaoCollection();
+    $collection = MockDaoCollection::create();
     $this->assertEquals([], $collection->ppull('name'));
     $collection->setDummyData();
     $this->assertEquals(
@@ -89,7 +90,7 @@ class DaoCollectionTest extends \PHPUnit_Framework_TestCase
 
   public function testApull()
   {
-    $collection = new MockDaoCollection();
+    $collection = MockDaoCollection::create();
     $this->assertEquals([], $collection->apull(['name', 'id']));
     $collection->setDummyData();
     $this->assertEquals(
@@ -114,7 +115,7 @@ class DaoCollectionTest extends \PHPUnit_Framework_TestCase
 
   public function testAggregates()
   {
-    $collection = new MockDaoCollection();
+    $collection = MockDaoCollection::create();
     $this->assertNull($collection->min('id'));
     $this->assertNull($collection->max('id'));
     $this->assertNull($collection->avg('id'));
@@ -123,7 +124,7 @@ class DaoCollectionTest extends \PHPUnit_Framework_TestCase
 
   public function testCount()
   {
-    $collection = new MockDaoCollection();
+    $collection = MockDaoCollection::create();
     $this->assertEquals(0, $collection->count());
     $collection->setDummyData();
     $this->assertEquals(4, $collection->count());
@@ -131,7 +132,7 @@ class DaoCollectionTest extends \PHPUnit_Framework_TestCase
 
   public function testJsonSerialize()
   {
-    $collection = new MockDaoCollection();
+    $collection = MockDaoCollection::create();
     $this->assertEquals([], $collection->jsonSerialize());
     $collection->setDummyData();
     $this->assertEquals(
@@ -147,7 +148,7 @@ class DaoCollectionTest extends \PHPUnit_Framework_TestCase
 
   public function testToString()
   {
-    $collection = new MockDaoCollection();
+    $collection = MockDaoCollection::create();
     $this->assertEquals("[]", (string)$collection);
     $collection->setDummyData();
     $this->assertEquals(
@@ -161,7 +162,7 @@ class DaoCollectionTest extends \PHPUnit_Framework_TestCase
 
   public function testArrayUsage()
   {
-    $collection = new MockDaoCollection();
+    $collection = MockDaoCollection::create();
     $collection->setDummyData();
     $this->assertTrue(isset($collection[8]));
     $removal = $collection[8];
@@ -180,7 +181,7 @@ class DaoCollectionTest extends \PHPUnit_Framework_TestCase
 
   public function testIterator()
   {
-    $collection = new MockDaoCollection();
+    $collection = MockDaoCollection::create();
     $collection->setDummyData();
     $this->assertEquals(
       new \ArrayIterator($collection->getDaos()),
@@ -190,7 +191,7 @@ class DaoCollectionTest extends \PHPUnit_Framework_TestCase
 
   public function testGetRaw()
   {
-    $collection = new MockDaoCollection();
+    $collection = MockDaoCollection::create();
     $collection->setDummyData();
     $this->assertEquals($collection->getDaos(), $collection->getRawArray());
   }
@@ -222,6 +223,20 @@ class MockDaoCollection extends DaoCollection
     $mock->name = 'Testing';
     $mock->id = 8;
     $this->_daos[8] = $mock;
+  }
+
+  /**
+   * @param null $daoClass
+   *
+   * @return static
+   */
+  public static function create($daoClass = null)
+  {
+    if($daoClass === null)
+    {
+      $daoClass = MockCqlDao::class;
+    }
+    return parent::create($daoClass);
   }
 }
 

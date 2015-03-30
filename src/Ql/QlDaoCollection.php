@@ -16,13 +16,14 @@ use Packaged\QueryBuilder\SelectExpression\CountSelectExpression;
 use Packaged\QueryBuilder\SelectExpression\ISelectExpression;
 use Packaged\QueryBuilder\SelectExpression\MaxSelectExpression;
 use Packaged\QueryBuilder\SelectExpression\MinSelectExpression;
+use Packaged\QueryBuilder\SelectExpression\SubQuerySelectExpression;
 use Packaged\QueryBuilder\SelectExpression\SumSelectExpression;
 use Packaged\QueryBuilder\Statement\IStatement;
 use Packaged\QueryBuilder\Statement\IStatementSegment;
 use Packaged\QueryBuilder\Statement\QueryStatement;
 
 /**
- * @method QlDao createNewDao
+ * @method QlDao createNewDao($fresh = true)
  */
 class QlDaoCollection extends DaoCollection
   implements IAggregateDaoCollection, IStatement
@@ -51,13 +52,21 @@ class QlDaoCollection extends DaoCollection
    */
   public function resetQuery()
   {
-    $this->_query = new QueryStatement();
+    $this->_query = $this->_getNewStatement();
     $dao = $this->createNewDao(false);
     $select = new SelectClause();
     $select->addExpression(AllSelectExpression::create($dao->getTableName()));
     $this->_query->addClause($select);
     $this->_query->from($dao->getTableName());
     return $this;
+  }
+
+  /**
+   * @return QueryStatement
+   */
+  protected function _getNewStatement()
+  {
+    return new QueryStatement();
   }
 
   /**
@@ -124,6 +133,8 @@ class QlDaoCollection extends DaoCollection
   }
 
   /**
+   * @param mixed ...$params expressions to pass to where clause
+   *
    * @return $this
    */
   public function loadWhere(...$params)
@@ -224,19 +235,21 @@ class QlDaoCollection extends DaoCollection
 
   public function count()
   {
-    return $this->_getAggregate(__FUNCTION__, new CountSelectExpression());
+    return (int)$this->_getAggregate(__FUNCTION__, new CountSelectExpression());
   }
 
   protected function _getAggregate($method, ISelectExpression $expression)
   {
     if($this->isEmpty() && !$this->_isLoaded)
     {
-      $originalClause = $this->_query->getClause('SELECT');
-      $this->_query->addClause(
+      $aggregateQuery = $this->_getNewStatement();
+      $aggregateQuery->addClause(
         (new SelectClause())->addExpression($expression)
       );
-      $result = head(head($this->_getDataStore()->getData($this->_query)));
-      $this->_query->addClause($originalClause);
+      $aggregateQuery->from(
+        SubQuerySelectExpression::create($this->_query, '_')
+      );
+      $result = head(head($this->_getDataStore()->getData($aggregateQuery)));
       return $result;
     }
     return parent::$method();

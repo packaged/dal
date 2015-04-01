@@ -6,7 +6,6 @@ use cassandra\CassandraClient;
 use cassandra\Column;
 use cassandra\Compression;
 use cassandra\ConsistencyLevel;
-use cassandra\CqlPreparedResult;
 use cassandra\CqlResult;
 use cassandra\CqlResultType;
 use cassandra\CqlRow;
@@ -217,7 +216,7 @@ class CqlConnection
    * @param int    $compression
    * @param int    $retries
    *
-   * @return CqlPreparedResult
+   * @return CqlStatement
    * @throws CqlException
    */
   public function prepare(
@@ -230,10 +229,9 @@ class CqlConnection
     }
     try
     {
-      return $this->_client->prepare_cql3_query(
-        $query,
-        $compression
-      );
+      $stmt = new CqlStatement($this->_client, $query, $compression);
+      $stmt->prepare();
+      return $stmt;
     }
     catch(\Exception $sourceException)
     {
@@ -254,17 +252,17 @@ class CqlConnection
   }
 
   /**
-   * @param CqlPreparedResult $statement
-   * @param array             $parameters
-   * @param int               $consistency
-   * @param int               $retries
+   * @param CqlStatement $statement
+   * @param array        $parameters
+   * @param int          $consistency
+   * @param int          $retries
    *
    * @return array|mixed
    * @throws CqlException
    * @throws \Exception
    */
   public function execute(
-    CqlPreparedResult $statement, array $parameters = [],
+    CqlStatement $statement, array $parameters = [],
     $consistency = ConsistencyLevel::QUORUM, $retries = null
   )
   {
@@ -276,7 +274,7 @@ class CqlConnection
     try
     {
       $result = $this->_client->execute_prepared_cql3_query(
-        $statement->itemId,
+        $statement->getStatement()->itemId,
         $parameters,
         $consistency
       );
@@ -309,6 +307,11 @@ class CqlConnection
     {
       if($this->_isTimeoutException($e) && $retries > 0)
       {
+        // re-prepare statement as timeout appears to evict it from cache
+        $statement = $this->prepare(
+          $statement->getQuery(),
+          $statement->getCompression()
+        );
         return $this->execute(
           $statement,
           $parameters,

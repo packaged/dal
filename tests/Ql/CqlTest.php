@@ -1,6 +1,7 @@
 <?php
 namespace Ql;
 
+use cassandra\CassandraClient;
 use cassandra\Compression;
 use cassandra\ConsistencyLevel;
 use cassandra\CqlPreparedResult;
@@ -14,6 +15,7 @@ use Packaged\Dal\Ql\Cql\CqlConnection;
 use Packaged\Dal\Ql\Cql\CqlDao;
 use Packaged\Dal\Ql\Cql\CqlDaoCollection;
 use Packaged\Dal\Ql\Cql\CqlDataStore;
+use Packaged\Dal\Ql\Cql\CqlStatement;
 use Packaged\Dal\Ql\IQLDataConnection;
 use Packaged\QueryBuilder\Builder\QueryBuilder;
 use Packaged\QueryBuilder\Expression\ValueExpression;
@@ -190,7 +192,9 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $this->setExpectedException(
       '\Packaged\Dal\Exceptions\Connection\CqlException'
     );
-    $connection->execute(new CqlPreparedResult());
+    $stmt = new MockCqlStatement(new CassandraClient(null), null, null);
+    $stmt->setStatement(new CqlPreparedResult());
+    $connection->execute($stmt);
   }
 
   public function testGetData()
@@ -324,7 +328,7 @@ class CqlTest extends \PHPUnit_Framework_TestCase
   public function testRetries()
   {
     $connection = new MockCqlConnection();
-    $connection->setClient(new MockCassandraClient());
+    $connection->setClient(new FailPrepareClient(null));
 
     try
     {
@@ -335,9 +339,11 @@ class CqlTest extends \PHPUnit_Framework_TestCase
       $this->assertEquals(3, $connection->getPrepareCount());
     }
 
+    $connection->setClient(new FailExecuteClient(null));
+    $stmt = $connection->prepare('test');
     try
     {
-      $connection->execute(new CqlPreparedResult());
+      $connection->execute($stmt);
     }
     catch(CqlException $e)
     {
@@ -353,6 +359,15 @@ class MockCqlCollection extends CqlDaoCollection
     $collection = parent::create(get_class($dao));
     $collection->_dao = $dao;
     return $collection;
+  }
+}
+
+class MockCqlStatement extends CqlStatement
+{
+  public function setStatement($stmt)
+  {
+    $this->_isPrepared = true;
+    $this->_rawStatement = $stmt;
   }
 }
 
@@ -372,7 +387,7 @@ class MockCqlConnection extends CqlConnection
   }
 
   public function execute(
-    CqlPreparedResult $statement, array $parameters = [],
+    CqlStatement $statement, array $parameters = [],
     $consistency = ConsistencyLevel::QUORUM, $retries = null
   )
   {
@@ -551,14 +566,24 @@ class MockCounterCqlDao extends CqlDao
   }
 }
 
-class MockCassandraClient
+class FailPrepareClient extends CassandraClient
 {
-  public function execute_prepared_cql3_query()
+  public function prepare_cql3_query($query, $compression)
   {
     throw new TimedOutException();
   }
+}
 
-  public function prepare_cql3_query()
+class FailExecuteClient extends CassandraClient
+{
+  public function prepare_cql3_query($query, $compression)
+  {
+    return new CqlPreparedResult();
+  }
+
+  public function execute_prepared_cql3_query(
+    $itemId, array $values, $consistency
+  )
   {
     throw new TTransportException('Class: timed out reading 123 bytes');
   }

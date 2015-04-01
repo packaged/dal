@@ -228,19 +228,17 @@ class CqlConnection
         $compression
       );
     }
-    catch(\Exception $e)
+    catch(\Exception $sourceException)
     {
-      $exception = CqlException::from($e);
-      if(starts_with(
-          $exception->getMessage(),
-          'No keyspace has been specified.'
-        ) && ($keyspace = $this->_config()->getItem('keyspace'))
+      $e = CqlException::from($sourceException);
+      if(starts_with($e->getMessage(), 'No keyspace has been specified.')
+        && $this->_config()->has('keyspace')
       )
       {
-        $this->_client->set_keyspace($keyspace);
+        $this->_client->set_keyspace($this->_config()->getItem('keyspace'));
         return $this->prepare($query, $compression);
       }
-      throw $exception;
+      throw $e;
     }
   }
 

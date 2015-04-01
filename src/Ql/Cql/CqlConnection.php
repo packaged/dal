@@ -21,6 +21,7 @@ use Packaged\Dal\Ql\IQLDataConnection;
 use Packaged\Dal\Traits\ResolverAwareTrait;
 use Packaged\Helpers\ValueAs;
 use Thrift\Exception\TException;
+use Thrift\Exception\TTransportException;
 use Thrift\Protocol\TBinaryProtocolAccelerated;
 use Thrift\Transport\TFramedTransport;
 use Thrift\Transport\TSocketPool;
@@ -214,14 +215,19 @@ class CqlConnection
   /**
    * @param string $query
    * @param int    $compression
+   * @param int    $retries
    *
    * @return CqlPreparedResult
    * @throws CqlException
    */
   public function prepare(
-    $query, $compression = Compression::NONE
+    $query, $compression = Compression::NONE, $retries = null
   )
   {
+    if($retries === null)
+    {
+      $retries = (int)$this->_config()->getItem('retries', 2);
+    }
     try
     {
       return $this->_client->prepare_cql3_query(
@@ -231,13 +237,17 @@ class CqlConnection
     }
     catch(\Exception $sourceException)
     {
+      if($this->_isTimeoutException($sourceException) && $retries > 0)
+      {
+        return $this->prepare($query, $compression, $retries - 1);
+      }
       $e = CqlException::from($sourceException);
       if(starts_with($e->getMessage(), 'No keyspace has been specified.')
         && $this->_config()->has('keyspace')
       )
       {
         $this->_client->set_keyspace($this->_config()->getItem('keyspace'));
-        return $this->prepare($query, $compression);
+        return $this->prepare($query, $compression, $retries);
       }
       throw $e;
     }
@@ -297,7 +307,7 @@ class CqlConnection
     }
     catch(\Exception $e)
     {
-      if($e instanceof TimedOutException && $retries > 0)
+      if($this->_isTimeoutException($e) && $retries > 0)
       {
         return $this->execute(
           $statement,
@@ -309,6 +319,26 @@ class CqlConnection
       throw CqlException::from($e);
     }
     return $return;
+  }
+
+  /**
+   * @param \Exception $e
+   *
+   * @return bool
+   */
+  private function _isTimeoutException(\Exception $e)
+  {
+    if($e instanceof TimedOutException)
+    {
+      return true;
+    }
+    if($e instanceof TTransportException
+      && str_contains($e->getMessage(), 'timed out reading')
+    )
+    {
+      return true;
+    }
+    return false;
   }
 
   /**

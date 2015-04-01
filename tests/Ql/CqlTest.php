@@ -1,6 +1,7 @@
 <?php
 namespace Ql;
 
+use cassandra\Compression;
 use cassandra\ConsistencyLevel;
 use cassandra\CqlPreparedResult;
 use cassandra\TimedOutException;
@@ -17,6 +18,7 @@ use Packaged\Dal\Ql\IQLDataConnection;
 use Packaged\QueryBuilder\Builder\QueryBuilder;
 use Packaged\QueryBuilder\Expression\ValueExpression;
 use Packaged\QueryBuilder\Predicate\EqualPredicate;
+use Thrift\Exception\TTransportException;
 
 require_once 'supporting.php';
 
@@ -323,20 +325,23 @@ class CqlTest extends \PHPUnit_Framework_TestCase
   {
     $connection = new MockCqlConnection();
     $connection->setClient(new MockCassandraClient());
+
+    try
+    {
+      $connection->prepare('SOME QUERY');
+    }
+    catch(CqlException $e)
+    {
+      $this->assertEquals(3, $connection->getPrepareCount());
+    }
+
     try
     {
       $connection->execute(new CqlPreparedResult());
     }
     catch(CqlException $e)
     {
-      if($e->getPrevious() instanceof TimedOutException)
-      {
-        $this->assertEquals(3, $connection->getExecuteCount());
-      }
-      else
-      {
-        throw $e;
-      }
+      $this->assertEquals(3, $connection->getExecuteCount());
     }
   }
 }
@@ -354,6 +359,7 @@ class MockCqlCollection extends CqlDaoCollection
 class MockCqlConnection extends CqlConnection
 {
   protected $_executeCount = 0;
+  protected $_prepareCount = 0;
 
   public function getConfig($item)
   {
@@ -377,6 +383,19 @@ class MockCqlConnection extends CqlConnection
   public function getExecuteCount()
   {
     return $this->_executeCount;
+  }
+
+  public function prepare(
+    $query, $compression = Compression::NONE, $retries = null
+  )
+  {
+    $this->_prepareCount++;
+    return parent::prepare($query, $compression, $retries);
+  }
+
+  public function getPrepareCount()
+  {
+    return $this->_prepareCount;
   }
 }
 
@@ -537,5 +556,10 @@ class MockCassandraClient
   public function execute_prepared_cql3_query()
   {
     throw new TimedOutException();
+  }
+
+  public function prepare_cql3_query()
+  {
+    throw new TTransportException('Class: timed out reading 123 bytes');
   }
 }

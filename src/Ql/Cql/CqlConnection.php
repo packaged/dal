@@ -233,13 +233,13 @@ class CqlConnection
       $stmt->prepare();
       return $stmt;
     }
-    catch(\Exception $sourceException)
+    catch(\Exception $exception)
     {
-      if($this->_isTimeoutException($sourceException) && $retries > 0)
+      $e = CqlException::from($exception);
+      if($this->_isTimeoutException($e) && $retries > 0)
       {
         return $this->prepare($query, $compression, $retries - 1);
       }
-      $e = CqlException::from($sourceException);
       if(starts_with($e->getMessage(), 'No keyspace has been specified.')
         && $this->_config()->has('keyspace')
       )
@@ -303,39 +303,52 @@ class CqlConnection
         $return[] = $resultRow;
       }
     }
-    catch(\Exception $e)
+    catch(\Exception $exception)
     {
-      if($this->_isTimeoutException($e) && $retries > 0)
+      $e = CqlException::from($exception);
+      if($retries > 0)
       {
-        // re-prepare statement as timeout appears to evict it from cache
-        $statement = $this->prepare(
-          $statement->getQuery(),
-          $statement->getCompression()
-        );
-        return $this->execute(
-          $statement,
-          $parameters,
-          $consistency,
-          $retries - 1
-        );
+        if($this->_isTimeoutException($e))
+        {
+          return $this->execute(
+            $statement,
+            $parameters,
+            $consistency,
+            $retries - 1
+          );
+        }
+        if(starts_with($e->getMessage(), 'Prepared query with ID'))
+        {
+          // re-prepare statement
+          $statement = $this->prepare(
+            $statement->getQuery(),
+            $statement->getCompression()
+          );
+          return $this->execute(
+            $statement,
+            $parameters,
+            $consistency,
+            $retries - 1
+          );
+        }
       }
-      throw CqlException::from($e);
+      throw $e;
     }
     return $return;
   }
 
   /**
-   * @param \Exception $e
+   * @param CqlException $e
    *
    * @return bool
    */
-  private function _isTimeoutException(\Exception $e)
+  private function _isTimeoutException(CqlException $e)
   {
-    if($e instanceof TimedOutException)
+    if($e->getPrevious() instanceof TimedOutException)
     {
       return true;
     }
-    if($e instanceof TTransportException
+    if($e->getPrevious() instanceof TTransportException
       && str_contains($e->getMessage(), 'timed out reading')
     )
     {

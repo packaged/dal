@@ -332,21 +332,38 @@ class CqlTest extends \PHPUnit_Framework_TestCase
 
     try
     {
+      $connection->resetCounts();
       $connection->prepare('SOME QUERY');
     }
     catch(CqlException $e)
     {
       $this->assertEquals(3, $connection->getPrepareCount());
+      $this->assertEquals(0, $connection->getExecuteCount());
     }
 
     $connection->setClient(new FailExecuteClient(null));
-    $stmt = $connection->prepare('test');
     try
     {
+      $connection->resetCounts();
+      $stmt = $connection->prepare('test');
       $connection->execute($stmt);
     }
     catch(CqlException $e)
     {
+      $this->assertEquals(1, $connection->getPrepareCount());
+      $this->assertEquals(3, $connection->getExecuteCount());
+    }
+
+    $connection->setClient(new UnpreparedClient(null));
+    try
+    {
+      $connection->resetCounts();
+      $stmt = $connection->prepare('test');
+      $connection->execute($stmt);
+    }
+    catch(CqlException $e)
+    {
+      $this->assertEquals(3, $connection->getPrepareCount());
       $this->assertEquals(3, $connection->getExecuteCount());
     }
   }
@@ -411,6 +428,12 @@ class MockCqlConnection extends CqlConnection
   public function getPrepareCount()
   {
     return $this->_prepareCount;
+  }
+
+  public function resetCounts()
+  {
+    $this->_prepareCount = 0;
+    $this->_executeCount = 0;
   }
 }
 
@@ -586,5 +609,22 @@ class FailExecuteClient extends CassandraClient
   )
   {
     throw new TTransportException('Class: timed out reading 123 bytes');
+  }
+}
+
+class UnpreparedClient extends CassandraClient
+{
+  public function prepare_cql3_query($query, $compression)
+  {
+    return new CqlPreparedResult();
+  }
+
+  public function execute_prepared_cql3_query(
+    $itemId, array $values, $consistency
+  )
+  {
+    throw new \Exception(
+      'Prepared query with ID 1 not found (either the query was not prepared on this host (maybe the host has been restarted?) or you have prepared too many queries and it has been evicted from the internal cache)'
+    );
   }
 }

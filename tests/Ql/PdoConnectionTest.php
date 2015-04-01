@@ -4,6 +4,7 @@ namespace Ql;
 use Packaged\Config\Provider\ConfigSection;
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
+use Packaged\Dal\Exceptions\Connection\PdoException;
 use Packaged\Dal\Exceptions\DalException;
 
 require_once 'supporting.php';
@@ -165,6 +166,30 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
     );
     $connection = new MockPdoConnection();
     $connection->fetchQueryResults("SELECT", []);
+  }
+
+  public function testRetries()
+  {
+    $resolver = new DalResolver();
+    $connection = new MockPdoConnection();
+    $connection->setResolver($resolver);
+    $connection->setConnection(new FailingRawConnection());
+    try
+    {
+      $connection->runQuery('my query');
+    }
+    catch(PdoException $e)
+    {
+    }
+    $this->assertEquals(3, $connection->getRunCount());
+  }
+}
+
+class FailingRawConnection
+{
+  public function prepare($query)
+  {
+    throw new \PDOException($query);
   }
 }
 

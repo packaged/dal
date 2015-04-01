@@ -10,7 +10,7 @@ use cassandra\SchemaDisagreementException;
 use cassandra\TimedOutException;
 use cassandra\UnavailableException;
 
-class CqlException extends \Exception
+class CqlException extends ConnectionException
 {
   public function __construct($msg = "", $code = 0, \Exception $previous = null)
   {

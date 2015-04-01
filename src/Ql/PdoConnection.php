@@ -5,6 +5,7 @@ use Packaged\Config\ConfigurableInterface;
 use Packaged\Config\ConfigurableTrait;
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
+use Packaged\Dal\Exceptions\Connection\PdoException;
 use Packaged\Dal\IResolverAware;
 use Packaged\Dal\Traits\ResolverAwareTrait;
 use Packaged\Helpers\ValueAs;
@@ -174,21 +175,25 @@ class PdoConnection
     return $result;
   }
 
-  protected function _runQuery($query, array $values = null)
+  protected function _runQuery($query, array $values = null, $retries = null)
   {
+    if($retries === null)
+    {
+      $retries = (int)$this->_config()->getItem('retries', 2);
+    }
     try
     {
       $statement = $this->_connection->prepare($query);
       $this->_bindValues($statement, $values);
       $statement->execute();
     }
-    catch(\PDOException $e)
+    catch(\PDOException $sourceException)
     {
-      if(isset($e->errorInfo[2]))
+      if($retries > 0)
       {
-        throw new ConnectionException($e->errorInfo[2], $e->errorInfo[1]);
+        return $this->_runQuery($query, $values, $retries - 1);
       }
-      throw new ConnectionException($e->getMessage(), $e->getCode());
+      throw PdoException::from($sourceException);
     }
     return $statement;
   }

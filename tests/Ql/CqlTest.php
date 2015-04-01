@@ -1,10 +1,13 @@
 <?php
 namespace Ql;
 
+use cassandra\ConsistencyLevel;
 use cassandra\CqlPreparedResult;
+use cassandra\TimedOutException;
 use Packaged\Config\Provider\ConfigSection;
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\DataTypes\Counter;
+use Packaged\Dal\Exceptions\Connection\CqlException;
 use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\Ql\Cql\CqlConnection;
 use Packaged\Dal\Ql\Cql\CqlDao;
@@ -315,6 +318,27 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $this->assertEquals(5, $loaded->c1->calculated());
     $this->assertEquals(-2, $loaded->c2->calculated());
   }
+
+  public function testRetries()
+  {
+    $connection = new MockCqlConnection();
+    $connection->setClient(new MockCassandraClient());
+    try
+    {
+      $connection->execute(new CqlPreparedResult());
+    }
+    catch(CqlException $e)
+    {
+      if($e->getPrevious() instanceof TimedOutException)
+      {
+        $this->assertEquals(3, $connection->getExecuteCount());
+      }
+      else
+      {
+        throw $e;
+      }
+    }
+  }
 }
 
 class MockCqlCollection extends CqlDaoCollection
@@ -329,9 +353,30 @@ class MockCqlCollection extends CqlDaoCollection
 
 class MockCqlConnection extends CqlConnection
 {
+  protected $_executeCount = 0;
+
   public function getConfig($item)
   {
     return $this->_config()->getItem($item);
+  }
+
+  public function setClient($client)
+  {
+    $this->_client = $client;
+  }
+
+  public function execute(
+    CqlPreparedResult $statement, array $parameters = [],
+    $consistency = ConsistencyLevel::QUORUM, $retries = null
+  )
+  {
+    $this->_executeCount++;
+    return parent::execute($statement, $parameters, $consistency, $retries);
+  }
+
+  public function getExecuteCount()
+  {
+    return $this->_executeCount;
   }
 }
 
@@ -484,5 +529,13 @@ class MockCounterCqlDao extends CqlDao
       return parent::getDataStore();
     }
     return $this->_dataStore;
+  }
+}
+
+class MockCassandraClient
+{
+  public function execute_prepared_cql3_query()
+  {
+    throw new TimedOutException();
   }
 }

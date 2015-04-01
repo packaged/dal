@@ -10,6 +10,7 @@ use cassandra\CqlPreparedResult;
 use cassandra\CqlResult;
 use cassandra\CqlResultType;
 use cassandra\CqlRow;
+use cassandra\TimedOutException;
 use Packaged\Config\ConfigurableInterface;
 use Packaged\Config\ConfigurableTrait;
 use Packaged\Dal\DalResolver;
@@ -246,6 +247,7 @@ class CqlConnection
    * @param CqlPreparedResult $statement
    * @param array             $parameters
    * @param int               $consistency
+   * @param int               $retries
    *
    * @return array|mixed
    * @throws CqlException
@@ -253,9 +255,13 @@ class CqlConnection
    */
   public function execute(
     CqlPreparedResult $statement, array $parameters = [],
-    $consistency = ConsistencyLevel::QUORUM
+    $consistency = ConsistencyLevel::QUORUM, $retries = null
   )
   {
+    if($retries === null)
+    {
+      $retries = (int)$this->_config()->getItem('retries', 2);
+    }
     $return = [];
     try
     {
@@ -291,6 +297,15 @@ class CqlConnection
     }
     catch(\Exception $e)
     {
+      if($e instanceof TimedOutException && $retries > 0)
+      {
+        return $this->execute(
+          $statement,
+          $parameters,
+          $consistency,
+          $retries - 1
+        );
+      }
       throw CqlException::from($e);
     }
     return $return;

@@ -238,11 +238,11 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $datastore->save($dao);
     $this->assertEquals(
       'INSERT INTO "mock_ql_daos" ("id", "id2", "username", "display", "intVal", "bigintVal", "doubleVal", "floatVal", "boolVal") '
-      . 'VALUES (\'3\', 1234, \'testuser\', NULL, NULL, NULL, NULL, NULL, NULL) USING TTL 100',
+      . 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) USING TTL ?',
       $connection->getExecutedQuery()
     );
     $this->assertEquals(
-      [],
+      ['3', 1234, 'testuser', null, null, null, null, null, null, 100],
       $connection->getExecutedQueryValues()
     );
 
@@ -254,11 +254,11 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $datastore->save($dao);
     $this->assertEquals(
       'INSERT INTO "mock_ql_daos" ("id", "id2", "username", "display", "intVal", "bigintVal", "doubleVal", "floatVal", "boolVal") '
-      . 'VALUES (\'test4\', 4321, \'testuser\', NULL, NULL, NULL, NULL, NULL, NULL)',
+      . 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
       $connection->getExecutedQuery()
     );
     $this->assertEquals(
-      [],
+      ['test4', 4321, 'testuser', null, null, null, null, null, null],
       $connection->getExecutedQueryValues()
     );
 
@@ -267,11 +267,11 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $dao->username = "test";
     $datastore->save($dao);
     $this->assertEquals(
-      'UPDATE "mock_ql_daos" USING TTL 101 AND TIMESTAMP 123456 SET "username" = \'test\' WHERE "id" = \'test4\' AND "id2" = 4321',
+      'UPDATE "mock_ql_daos" USING TTL ? AND TIMESTAMP ? SET "username" = ? WHERE "id" = ? AND "id2" = ?',
       $connection->getExecutedQuery()
     );
     $this->assertEquals(
-      [],
+      [101, 123456, 'test', 'test4', 4321],
       $connection->getExecutedQueryValues()
     );
 

@@ -273,9 +273,17 @@ class CqlConnection
     $return = [];
     try
     {
+      $packedParameters = [];
+      foreach($parameters as $k => $value)
+      {
+        $packedParameters[] = CqlDataType::pack(
+          $statement->getStatement()->variable_types[$k],
+          $value
+        );
+      }
       $result = $this->_client->execute_prepared_cql3_query(
         $statement->getStatement()->itemId,
-        $parameters,
+        $packedParameters,
         $consistency
       );
       /**
@@ -297,7 +305,10 @@ class CqlConnection
           /**
            * @var $column Column
            */
-          $resultRow[$column->name] = $column->value;
+          $resultRow[$column->name] = CqlDataType::unpack(
+            $result->schema->value_types[$column->name],
+            $column->value
+          );
         }
 
         $return[] = $resultRow;

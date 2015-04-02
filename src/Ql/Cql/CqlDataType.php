@@ -2,6 +2,7 @@
 namespace Packaged\Dal\Ql\Cql;
 
 use Packaged\Dal\Ql\Cql\DataType\BooleanType;
+use Packaged\Dal\Ql\Cql\DataType\DecimalType;
 use Packaged\Dal\Ql\Cql\DataType\DoubleType;
 use Packaged\Dal\Ql\Cql\DataType\FloatType;
 use Packaged\Dal\Ql\Cql\DataType\ICassandraType;
@@ -15,9 +16,11 @@ class CqlDataType
     'org.apache.cassandra.db.marshal.Int32Type'         => IntegerType::class,
     'org.apache.cassandra.db.marshal.IntegerType'       => IntegerType::class,
     'org.apache.cassandra.db.marshal.FloatType'         => FloatType::class,
+    'org.apache.cassandra.db.marshal.DecimalType'       => DecimalType::class,
     'org.apache.cassandra.db.marshal.DoubleType'        => DoubleType::class,
     'org.apache.cassandra.db.marshal.LongType'          => LongType::class,
     'org.apache.cassandra.db.marshal.CounterColumnType' => LongType::class,
+    'org.apache.cassandra.db.marshal.TimestampType'     => LongType::class,
   ];
 
   /**

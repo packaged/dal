@@ -12,12 +12,18 @@ use Packaged\Dal\Ql\Cql\DataType\LongType;
 class CqlDataType
 {
   private static $_types = [
+    // Boolean
     'org.apache.cassandra.db.marshal.BooleanType'       => BooleanType::class,
+    // Integer
     'org.apache.cassandra.db.marshal.Int32Type'         => IntegerType::class,
     'org.apache.cassandra.db.marshal.IntegerType'       => IntegerType::class,
+    // Float
     'org.apache.cassandra.db.marshal.FloatType'         => FloatType::class,
+    // Decimal
     'org.apache.cassandra.db.marshal.DecimalType'       => DecimalType::class,
+    // Double
     'org.apache.cassandra.db.marshal.DoubleType'        => DoubleType::class,
+    // Long
     'org.apache.cassandra.db.marshal.LongType'          => LongType::class,
     'org.apache.cassandra.db.marshal.CounterColumnType' => LongType::class,
     'org.apache.cassandra.db.marshal.TimestampType'     => LongType::class,

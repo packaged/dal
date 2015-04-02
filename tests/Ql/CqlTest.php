@@ -53,6 +53,8 @@ class CqlTest extends \PHPUnit_Framework_TestCase
       . '"bigintVal" bigint,'
       . '"doubleVal" double,'
       . '"floatVal" float,'
+      . '"decimalVal" decimal,'
+      . '"timestampVal" timestamp,'
       . '"boolVal" boolean,'
       . ' PRIMARY KEY ((id), id2));'
     );
@@ -136,6 +138,8 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $dao->bigintVal = -123456;
     $dao->doubleVal = 123456;
     $dao->floatVal = 12.3456;
+    $dao->decimalVal = 654.321;
+    $dao->timestampVal = strtotime('2015-04-02');
     $dao->boolVal = true;
     $datastore->save($dao);
     $dao->username = 'test 1';
@@ -148,6 +152,8 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $this->assertEquals(-123456, $dao->bigintVal);
     $this->assertEquals(123456, $dao->doubleVal);
     $this->assertEquals(12.3456, $dao->floatVal, '', 0.00001);
+    $this->assertEquals(654.321, $dao->decimalVal);
+    $this->assertEquals(strtotime('2015-04-02'), $dao->timestampVal);
     $this->assertTrue($dao->boolVal);
     $dao->display = 'Save 2';
     $datastore->save($dao);
@@ -237,12 +243,25 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $dao->setTtl(100);
     $datastore->save($dao);
     $this->assertEquals(
-      'INSERT INTO "mock_ql_daos" ("id", "id2", "username", "display", "intVal", "bigintVal", "doubleVal", "floatVal", "boolVal") '
-      . 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) USING TTL ?',
+      'INSERT INTO "mock_ql_daos" ("id", "id2", "username", "display", "intVal", "bigintVal", "doubleVal", "floatVal", "decimalVal", "timestampVal", "boolVal") '
+      . 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) USING TTL ?',
       $connection->getExecutedQuery()
     );
     $this->assertEquals(
-      ['3', 1234, 'testuser', null, null, null, null, null, null, 100],
+      [
+        '3',
+        1234,
+        'testuser',
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        100
+      ],
       $connection->getExecutedQueryValues()
     );
 
@@ -253,12 +272,24 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $dao->setTtl(null);
     $datastore->save($dao);
     $this->assertEquals(
-      'INSERT INTO "mock_ql_daos" ("id", "id2", "username", "display", "intVal", "bigintVal", "doubleVal", "floatVal", "boolVal") '
-      . 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO "mock_ql_daos" ("id", "id2", "username", "display", "intVal", "bigintVal", "doubleVal", "floatVal", "decimalVal", "timestampVal", "boolVal") '
+      . 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       $connection->getExecutedQuery()
     );
     $this->assertEquals(
-      ['test4', 4321, 'testuser', null, null, null, null, null, null],
+      [
+        'test4',
+        4321,
+        'testuser',
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
       $connection->getExecutedQueryValues()
     );
 
@@ -453,31 +484,15 @@ class MockCqlDao extends CqlDao
   protected $_timestamp;
 
   public $id;
-  /**
-   * @int
-   */
   public $id2;
   public $username;
   public $display;
-  /**
-   * @int
-   */
   public $intVal;
-  /**
-   * @bigint
-   */
   public $bigintVal;
-  /**
-   * @double
-   */
   public $doubleVal;
-  /**
-   * @float
-   */
   public $floatVal;
-  /**
-   * @bool
-   */
+  public $decimalVal;
+  public $timestampVal;
   public $boolVal;
 
   protected $_dataStore;

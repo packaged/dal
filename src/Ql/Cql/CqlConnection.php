@@ -180,7 +180,7 @@ class CqlConnection
     $this->execute(
       $prep,
       $values,
-      $this->_config()->getItem('write_consistency', ConsistencyLevel::QUORUM)
+      $this->_config()->getItem('write_consistency', ConsistencyLevel::ONE)
     );
     $this->getResolver()->closePerformanceMetric($perfId);
     return 1;
@@ -205,7 +205,7 @@ class CqlConnection
     $results = $this->execute(
       $prep,
       $values,
-      $this->_config()->getItem('write_consistency', ConsistencyLevel::QUORUM)
+      $this->_config()->getItem('read_consistency', ConsistencyLevel::ONE)
     );
     $this->getResolver()->closePerformanceMetric($perfId);
     return $results;
@@ -263,7 +263,7 @@ class CqlConnection
    */
   public function execute(
     CqlStatement $statement, array $parameters = [],
-    $consistency = ConsistencyLevel::QUORUM, $retries = null
+    $consistency = ConsistencyLevel::ONE, $retries = null
   )
   {
     if($retries === null)

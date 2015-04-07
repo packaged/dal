@@ -331,6 +331,10 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $mockDao->setDataStore($dataStore);
     $collection = MockCqlCollection::createFromDao($mockDao);
     $data = $collection->loadWhere()->getRawArray();
+
+    $collection->clear();
+    $this->assertEquals(count($data), $collection->count());
+
     $this->assertNotEmpty($data);
     $this->assertInstanceOf(MockCqlDao::class, $data[0]);
   }

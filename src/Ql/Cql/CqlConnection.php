@@ -240,24 +240,26 @@ class CqlConnection
     catch(\Exception $exception)
     {
       $e = CqlException::from($exception);
-      if($this->_isTimeoutException($e) && $retries > 0)
+      if($retries > 0)
       {
-        return $this->prepare($query, $compression, $retries - 1);
-      }
-      if(starts_with($e->getMessage(), 'No keyspace has been specified.')
-        && $this->_config()->has('keyspace')
-      )
-      {
-        $this->_client->set_keyspace($this->_config()->getItem('keyspace'));
-        return $this->prepare($query, $compression, $retries - 1);
-      }
-      if(starts_with($e->getMessage(), 'Prepared query with ID')
-        && $retries > 0
-      )
-      {
-        // re-prepare statement
-        $this->disconnect()->connect();
-        return $this->prepare($query, $compression, $retries - 1);
+        if(starts_with($e->getMessage(), 'No keyspace has been specified.')
+          && $this->_config()->has('keyspace')
+        )
+        {
+          $this->_client->set_keyspace($this->_config()->getItem('keyspace'));
+          return $this->prepare($query, $compression, $retries - 1);
+        }
+
+        $this->disconnect();
+        if($this->_isTimeoutException($e))
+        {
+          return $this->prepare($query, $compression, $retries - 1);
+        }
+        if(starts_with($e->getMessage(), 'Prepared query with ID'))
+        {
+          // re-prepare statement
+          return $this->prepare($query, $compression, $retries - 1);
+        }
       }
       throw $e;
     }
@@ -298,6 +300,7 @@ class CqlConnection
         $packedParameters,
         $consistency
       );
+
       /**
        * @var $result CqlResult
        */
@@ -331,6 +334,7 @@ class CqlConnection
       $e = CqlException::from($exception);
       if($retries > 0)
       {
+        $this->disconnect();
         if($this->_isTimeoutException($e))
         {
           return $this->execute(
@@ -340,12 +344,9 @@ class CqlConnection
             $retries - 1
           );
         }
-        if(starts_with($e->getMessage(), 'Prepared query with ID')
-          && $retries > 0
-        )
+        if(starts_with($e->getMessage(), 'Prepared query with ID'))
         {
           // re-prepare statement
-          $this->disconnect()->connect();
           $statement = $this->prepare(
             $statement->getQuery(),
             $statement->getCompression()

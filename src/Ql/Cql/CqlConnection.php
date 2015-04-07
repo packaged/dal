@@ -247,6 +247,12 @@ class CqlConnection
         $this->_client->set_keyspace($this->_config()->getItem('keyspace'));
         return $this->prepare($query, $compression, $retries);
       }
+      if(starts_with($e->getMessage(), 'Prepared query with ID'))
+      {
+        // re-prepare statement
+        $this->disconnect()->connect();
+        return $this->prepare($query, $compression);
+      }
       throw $e;
     }
   }
@@ -331,6 +337,7 @@ class CqlConnection
         if(starts_with($e->getMessage(), 'Prepared query with ID'))
         {
           // re-prepare statement
+          $this->disconnect()->connect();
           $statement = $this->prepare(
             $statement->getQuery(),
             $statement->getCompression()

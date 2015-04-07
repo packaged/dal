@@ -9,7 +9,8 @@ use cassandra\ConsistencyLevel;
 use cassandra\CqlResult;
 use cassandra\CqlResultType;
 use cassandra\CqlRow;
-use cassandra\TimedOutException;
+use cassandra\InvalidRequestException;
+use cassandra\NotFoundException;
 use Packaged\Config\ConfigurableInterface;
 use Packaged\Config\ConfigurableTrait;
 use Packaged\Dal\DalResolver;
@@ -20,7 +21,6 @@ use Packaged\Dal\Ql\IQLDataConnection;
 use Packaged\Dal\Traits\ResolverAwareTrait;
 use Packaged\Helpers\ValueAs;
 use Thrift\Exception\TException;
-use Thrift\Exception\TTransportException;
 use Thrift\Protocol\TBinaryProtocolAccelerated;
 use Thrift\Transport\TFramedTransport;
 use Thrift\Transport\TSocketPool;
@@ -240,26 +240,18 @@ class CqlConnection
     catch(\Exception $exception)
     {
       $e = CqlException::from($exception);
-      if($retries > 0)
+      if(starts_with($e->getMessage(), 'No keyspace has been specified.')
+        && $this->_config()->has('keyspace')
+      )
       {
-        if(starts_with($e->getMessage(), 'No keyspace has been specified.')
-          && $this->_config()->has('keyspace')
-        )
-        {
-          $this->_client->set_keyspace($this->_config()->getItem('keyspace'));
-          return $this->prepare($query, $compression, $retries - 1);
-        }
+        $this->_client->set_keyspace($this->_config()->getItem('keyspace'));
+        return $this->prepare($query, $compression, $retries - 1);
+      }
 
+      if($retries > 0 && $this->_isRecoverableException($e))
+      {
         $this->disconnect();
-        if($this->_isTimeoutException($e))
-        {
-          return $this->prepare($query, $compression, $retries - 1);
-        }
-        if(starts_with($e->getMessage(), 'Prepared query with ID'))
-        {
-          // re-prepare statement
-          return $this->prepare($query, $compression, $retries - 1);
-        }
+        return $this->prepare($query, $compression, $retries - 1);
       }
       throw $e;
     }
@@ -332,18 +324,9 @@ class CqlConnection
     catch(\Exception $exception)
     {
       $e = CqlException::from($exception);
-      if($retries > 0)
+      if($retries > 0 && $this->_isRecoverableException($e))
       {
         $this->disconnect();
-        if($this->_isTimeoutException($e))
-        {
-          return $this->execute(
-            $statement,
-            $parameters,
-            $consistency,
-            $retries - 1
-          );
-        }
         if(starts_with($e->getMessage(), 'Prepared query with ID'))
         {
           // re-prepare statement
@@ -351,13 +334,13 @@ class CqlConnection
             $statement->getQuery(),
             $statement->getCompression()
           );
-          return $this->execute(
-            $statement,
-            $parameters,
-            $consistency,
-            $retries - 1
-          );
         }
+        return $this->execute(
+          $statement,
+          $parameters,
+          $consistency,
+          $retries - 1
+        );
       }
       throw $e;
     }
@@ -369,19 +352,15 @@ class CqlConnection
    *
    * @return bool
    */
-  private function _isTimeoutException(CqlException $e)
+  private function _isRecoverableException(CqlException $e)
   {
-    if($e->getPrevious() instanceof TimedOutException)
-    {
-      return true;
-    }
-    if($e->getPrevious() instanceof TTransportException
-      && str_contains($e->getMessage(), 'timed out reading')
+    if(($e->getPrevious() instanceof InvalidRequestException)
+      || ($e->getPrevious() instanceof NotFoundException)
     )
     {
-      return true;
+      return false;
     }
-    return false;
+    return true;
   }
 
   /**

@@ -5,6 +5,7 @@ use cassandra\CassandraClient;
 use cassandra\Compression;
 use cassandra\ConsistencyLevel;
 use cassandra\CqlPreparedResult;
+use cassandra\InvalidRequestException;
 use cassandra\TimedOutException;
 use Packaged\Config\Provider\ConfigSection;
 use Packaged\Dal\DalResolver;
@@ -86,6 +87,24 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $dao->username = 'daotest';
     $datastore->save($dao);
     $this->assertTrue($datastore->exists($dao));
+  }
+
+  public function testInvalidRequestException()
+  {
+    $connection = new MockCqlConnection();
+    $connection->connect();
+    $connection->setConfig('keyspace', 'packaged_dal');
+    try
+    {
+      $connection->prepare('SELECT * FROM mock_ql_daos where not_found = 1');
+    }
+    catch(CqlException $e)
+    {
+      $this->assertInstanceOf(
+        InvalidRequestException::class,
+        $e->getPrevious()
+      );
+    }
   }
 
   protected function _configureConnection(CqlConnection $conn)

@@ -354,7 +354,8 @@ class CqlConnection
    */
   private function _isRecoverableException(CqlException $e)
   {
-    if(($e->getPrevious() instanceof InvalidRequestException)
+    if(($e->getPrevious() instanceof InvalidRequestException
+        && !starts_with($e->getMessage(), 'Prepared query with ID'))
       || ($e->getPrevious() instanceof NotFoundException)
     )
     {

@@ -390,7 +390,19 @@ class CqlTest extends \PHPUnit_Framework_TestCase
       $this->assertEquals(3, $connection->getExecuteCount());
     }
 
-    $connection->setClient(new UnpreparedClient(null));
+    $connection->setClient(new UnpreparedPrepareClient(null));
+    try
+    {
+      $connection->resetCounts();
+      $connection->prepare('test');
+    }
+    catch(CqlException $e)
+    {
+      $this->assertEquals(3, $connection->getPrepareCount());
+      $this->assertEquals(0, $connection->getExecuteCount());
+    }
+
+    $connection->setClient(new UnpreparedExecuteClient(null));
     try
     {
       $connection->resetCounts();
@@ -429,14 +441,25 @@ class MockCqlConnection extends CqlConnection
   protected $_executeCount = 0;
   protected $_prepareCount = 0;
 
+  protected $_newClient = null;
+
   public function getConfig($item)
   {
     return $this->_config()->getItem($item);
   }
 
+  public function connect()
+  {
+    if($this->_newClient)
+    {
+      $this->_client = $this->_newClient;
+    }
+    return parent::connect();
+  }
+
   public function setClient($client)
   {
-    $this->_client = $client;
+    $this->_newClient = $client;
   }
 
   public function execute(
@@ -633,7 +656,7 @@ class FailExecuteClient extends CassandraClient
   }
 }
 
-class UnpreparedClient extends CassandraClient
+class UnpreparedExecuteClient extends CassandraClient
 {
   public function prepare_cql3_query($query, $compression)
   {
@@ -643,6 +666,16 @@ class UnpreparedClient extends CassandraClient
   public function execute_prepared_cql3_query(
     $itemId, array $values, $consistency
   )
+  {
+    throw new \Exception(
+      'Prepared query with ID 1 not found (either the query was not prepared on this host (maybe the host has been restarted?) or you have prepared too many queries and it has been evicted from the internal cache)'
+    );
+  }
+}
+
+class UnpreparedPrepareClient extends CassandraClient
+{
+  public function prepare_cql3_query($query, $compression)
   {
     throw new \Exception(
       'Prepared query with ID 1 not found (either the query was not prepared on this host (maybe the host has been restarted?) or you have prepared too many queries and it has been evicted from the internal cache)'

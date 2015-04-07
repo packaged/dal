@@ -24,6 +24,7 @@ use Thrift\Exception\TTransportException;
 use Thrift\Protocol\TBinaryProtocolAccelerated;
 use Thrift\Transport\TFramedTransport;
 use Thrift\Transport\TSocketPool;
+use Thrift\Transport\TTransport;
 
 class CqlConnection
   implements IQLDataConnection, ConfigurableInterface, IResolverAware
@@ -154,7 +155,10 @@ class CqlConnection
   public function disconnect()
   {
     $this->_client = null;
-    $this->_transport->close();
+    if($this->_transport instanceof TTransport)
+    {
+      $this->_transport->close();
+    }
     $this->_transport = null;
     $this->_protocol = null;
     $this->_connected = false;
@@ -229,7 +233,7 @@ class CqlConnection
     }
     try
     {
-      $stmt = new CqlStatement($this->_client, $query, $compression);
+      $stmt = new CqlStatement($this->connect()->_client, $query, $compression);
       $stmt->prepare();
       return $stmt;
     }
@@ -245,13 +249,15 @@ class CqlConnection
       )
       {
         $this->_client->set_keyspace($this->_config()->getItem('keyspace'));
-        return $this->prepare($query, $compression, $retries);
+        return $this->prepare($query, $compression, $retries - 1);
       }
-      if(starts_with($e->getMessage(), 'Prepared query with ID'))
+      if(starts_with($e->getMessage(), 'Prepared query with ID')
+        && $retries > 0
+      )
       {
         // re-prepare statement
         $this->disconnect()->connect();
-        return $this->prepare($query, $compression);
+        return $this->prepare($query, $compression, $retries - 1);
       }
       throw $e;
     }
@@ -287,7 +293,7 @@ class CqlConnection
           $value
         );
       }
-      $result = $this->_client->execute_prepared_cql3_query(
+      $result = $this->connect()->_client->execute_prepared_cql3_query(
         $statement->getStatement()->itemId,
         $packedParameters,
         $consistency
@@ -334,7 +340,9 @@ class CqlConnection
             $retries - 1
           );
         }
-        if(starts_with($e->getMessage(), 'Prepared query with ID'))
+        if(starts_with($e->getMessage(), 'Prepared query with ID')
+          && $retries > 0
+        )
         {
           // re-prepare statement
           $this->disconnect()->connect();

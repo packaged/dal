@@ -11,6 +11,7 @@ use Packaged\Config\Provider\ConfigSection;
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\DataTypes\Counter;
 use Packaged\Dal\Exceptions\Connection\CqlException;
+use Packaged\Dal\Exceptions\DalException;
 use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\Ql\Cql\CqlConnection;
 use Packaged\Dal\Ql\Cql\CqlDao;
@@ -117,6 +118,36 @@ class CqlTest extends \PHPUnit_Framework_TestCase
         $e->getPrevious()
       );
     }
+  }
+
+  public function testDeletes()
+  {
+    $connection = new MockCqlConnection();
+    $connection->connect();
+    $connection->setConfig('keyspace', 'packaged_dal');
+
+    $datastore = new MockCqlDataStore();
+    $datastore->setConnection($connection);
+
+    $resolver = new DalResolver();
+    $resolver->addDataStore('mockcql', $datastore);
+    Dao::setDalResolver($resolver);
+    $connection->setResolver($resolver);
+
+    $coll = MockCqlDao::collection();
+    $count = $coll->count();
+    $first = $coll->first();
+    /**
+     * @var $first MockCqlDao
+     */
+    MockCqlDao::collection(['id' => $first->id])->delete();
+    $this->assertNotEquals($count, $coll->count());
+
+    $this->setExpectedException(
+      DalException::class,
+      'Truncate is not supported'
+    );
+    $coll->delete();
   }
 
   protected function _configureConnection(CqlConnection $conn)

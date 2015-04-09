@@ -2,7 +2,9 @@
 namespace Packaged\Dal\Ql;
 
 use Packaged\Dal\Collections\IAggregateDaoCollection;
+use Packaged\Dal\Exceptions\DalException;
 use Packaged\Dal\Foundation\DaoCollection;
+use Packaged\QueryBuilder\Builder\QueryBuilder;
 use Packaged\QueryBuilder\Builder\Traits\HavingTrait;
 use Packaged\QueryBuilder\Builder\Traits\JoinTrait;
 use Packaged\QueryBuilder\Builder\Traits\LimitTrait;
@@ -52,21 +54,20 @@ class QlDaoCollection extends DaoCollection
    */
   public function resetQuery()
   {
-    $this->_query = $this->_getNewStatement();
+    $builder = $this->_getQueryBuilder();
     $dao = $this->createNewDao(false);
-    $select = new SelectClause();
-    $select->addExpression(AllSelectExpression::create($dao->getTableName()));
-    $this->_query->addClause($select);
-    $this->_query->from($dao->getTableName());
+    $this->_query = $builder::select(
+      AllSelectExpression::create($dao->getTableName())
+    )->from($dao->getTableName());
     return $this;
   }
 
   /**
-   * @return QueryStatement
+   * @return QueryBuilder
    */
-  protected function _getNewStatement()
+  protected function _getQueryBuilder()
   {
-    return new QueryStatement();
+    return QueryBuilder::class;
   }
 
   /**
@@ -168,6 +169,21 @@ class QlDaoCollection extends DaoCollection
     return $this;
   }
 
+  public function delete()
+  {
+    $dao = $this->createNewDao(false);
+    $where = $this->getClause('WHERE');
+    if($where)
+    {
+      $builder = $this->_getQueryBuilder();
+      $query = $builder::deleteFrom($dao->getTableName())
+        ->addClause($where);
+      $dao->getDataStore()->execute($query);
+      return $this;
+    }
+    throw new DalException('Truncate is not supported');
+  }
+
   /**
    * Retrieve the first available dao
    *
@@ -242,13 +258,9 @@ class QlDaoCollection extends DaoCollection
   {
     if($this->isEmpty() && !$this->_isLoaded)
     {
-      $aggregateQuery = $this->_getNewStatement();
-      $aggregateQuery->addClause(
-        (new SelectClause())->addExpression($expression)
-      );
-      $aggregateQuery->from(
-        SubQuerySelectExpression::create($this->_query, '_')
-      );
+      $builder = $this->_getQueryBuilder();
+      $aggregateQuery = $builder::select($expression)
+        ->from(SubQuerySelectExpression::create($this->_query, '_'));
       $result = head(head($this->_getDataStore()->getData($aggregateQuery)));
       return $result;
     }

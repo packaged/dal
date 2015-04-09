@@ -2,9 +2,9 @@
 namespace Packaged\Dal\Ql\Cql;
 
 use Packaged\Dal\Ql\QlDaoCollection;
+use Packaged\QueryBuilder\Builder\CQL\CqlQueryBuilder;
 use Packaged\QueryBuilder\Clause\SelectClause;
 use Packaged\QueryBuilder\SelectExpression\ISelectExpression;
-use Packaged\QueryBuilder\Statement\CQL\CqlQueryStatement;
 
 /**
  * @method CqlDao createNewDao($fresh = true)
@@ -12,11 +12,11 @@ use Packaged\QueryBuilder\Statement\CQL\CqlQueryStatement;
 class CqlDaoCollection extends QlDaoCollection
 {
   /**
-   * @return CqlQueryStatement
+   * @return CqlQueryBuilder
    */
-  protected function _getNewStatement()
+  protected function _getQueryBuilder()
   {
-    return new CqlQueryStatement();
+    return CqlQueryBuilder::class;
   }
 
   protected function _getAggregate($method, ISelectExpression $expression)

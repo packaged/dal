@@ -66,7 +66,7 @@ class CqlConnection
   {
     if($this->_client === null)
     {
-      $this->_socket = new TSocketPool(
+      $this->_socket = new DalSocketPool(
         ValueAs::arr($this->_config()->getItem('hosts', 'localhost')),
         (int)$this->_config()->getItem('port', 9160),
         ValueAs::bool($this->_config()->getItem('persist', false))

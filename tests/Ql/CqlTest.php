@@ -89,6 +89,18 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $this->assertTrue($datastore->exists($dao));
   }
 
+  /**
+   * @expectedException \Packaged\Dal\Exceptions\Connection\CqlException
+   * @expectedExceptionMessage Keyspace 'broken_keyspace' does not exist
+   */
+  public function testBrokenKeyspace()
+  {
+    $connection = new MockCqlConnection();
+    $connection->connect();
+    $connection->setConfig('keyspace', 'broken_keyspace');
+    $connection->prepare('select * from bad_table');
+  }
+
   public function testInvalidRequestException()
   {
     $connection = new MockCqlConnection();

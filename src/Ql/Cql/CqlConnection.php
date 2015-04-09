@@ -118,7 +118,7 @@ class CqlConnection
         $keyspace = $this->_config()->getItem('keyspace');
         if($keyspace)
         {
-          $this->_client->set_keyspace($keyspace);
+          $this->_setKeyspace($keyspace);
         }
       }
       catch(TException $e)
@@ -163,6 +163,18 @@ class CqlConnection
     $this->_protocol = null;
     $this->_connected = false;
     return $this;
+  }
+
+  protected function _setKeyspace($keyspace)
+  {
+    try
+    {
+      $this->connect()->_client->set_keyspace($keyspace);
+    }
+    catch(\Exception $e)
+    {
+      throw CqlException::from($e);
+    }
   }
 
   /**
@@ -244,7 +256,7 @@ class CqlConnection
         && $this->_config()->has('keyspace')
       )
       {
-        $this->_client->set_keyspace($this->_config()->getItem('keyspace'));
+        $this->_setKeyspace($this->_config()->getItem('keyspace'));
         return $this->prepare($query, $compression, $retries - 1);
       }
 

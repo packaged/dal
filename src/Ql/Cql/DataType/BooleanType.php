@@ -9,7 +9,7 @@ class BooleanType extends CassandraType
     {
       return null;
     }
-    return pack('C', (bool)$value);
+    return $value ? 1 : 0;
   }
 
   public static function unpack($data)
@@ -18,6 +18,6 @@ class BooleanType extends CassandraType
     {
       return null;
     }
-    return current(unpack('C', $data)) === 1;
+    return (bool)$data;
   }
 }

@@ -229,6 +229,7 @@ class CqlTest extends \PHPUnit_Framework_TestCase
   {
     $datastore = new MockCqlDataStore();
     $connection = new MockCqlConnection();
+    $connection->setConfig('keyspace', 'packaged_dal');
     $datastore->setConnection($connection);
     $connection->setResolver(new DalResolver());
 
@@ -344,6 +345,7 @@ class CqlTest extends \PHPUnit_Framework_TestCase
 
     $dataStore = new MockCqlDataStore();
     $connection = new CqlConnection();
+    $connection->setConfig('keyspace', 'packaged_dal');
     $dataStore->setConnection($connection);
     $connection->setResolver(new DalResolver());
     $mockDao = new MockCqlDao();

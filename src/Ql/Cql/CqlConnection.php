@@ -69,7 +69,7 @@ class CqlConnection
       $this->_socket = new TSocketPool(
         ValueAs::arr($this->_config()->getItem('hosts', 'localhost')),
         (int)$this->_config()->getItem('port', 9160),
-        $this->_config()->getItem('persist', 'false')
+        ValueAs::bool($this->_config()->getItem('persist', false))
       );
 
       $this->_socket->setSendTimeout(

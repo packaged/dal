@@ -21,11 +21,15 @@ abstract class AbstractSanitizableDao extends AbstractDao
     'serializers' => []
   ];
 
-  protected $_hasCounter = false;
+  protected static $_counters = [];
 
   public function hasCounter()
   {
-    return $this->_hasCounter;
+    if(isset(static::$_counters[$this->_calledClass]))
+    {
+      return count(static::$_counters[$this->_calledClass]) > 0;
+    }
+    return false;
   }
 
   public function resetCounters()
@@ -61,12 +65,10 @@ abstract class AbstractSanitizableDao extends AbstractDao
   protected function _configure()
   {
     parent::_configure();
-    foreach($this->getDaoProperties() as $property)
+    if($this->hasCounter())
     {
-      $docblock = DocBlockParser::fromProperty($this, $property);
-      if($docblock->hasTag('counter'))
+      foreach(static::$_counters[$this->_calledClass] as $property)
       {
-        $this->_hasCounter = true;
         $this->_addCustomSerializer(
           $property,
           'counter',
@@ -77,6 +79,17 @@ abstract class AbstractSanitizableDao extends AbstractDao
     }
   }
 
+  protected function _postStartup()
+  {
+    foreach($this->getDaoProperties() as $property)
+    {
+      $docblock = DocBlockParser::fromProperty($this, $property);
+      if($docblock->hasTag('counter'))
+      {
+        static::$_counters[$this->_calledClass][] = $property;
+      }
+    }
+  }
 
   /**
    * Set the value of a property, and filter when setting
@@ -307,10 +320,9 @@ abstract class AbstractSanitizableDao extends AbstractDao
   {
     parent::postHydrateDao();
 
-    foreach($this->getDaoProperties() as $property)
+    if($this->hasCounter())
     {
-      $docblock = DocBlockParser::fromProperty($this, $property);
-      if($docblock->hasTag('counter'))
+      foreach(static::$_counters[get_called_class()] as $property)
       {
         $this->$property = $this->_unserializeCounter($this->$property);
       }

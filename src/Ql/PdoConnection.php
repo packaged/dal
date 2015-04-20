@@ -22,6 +22,8 @@ class PdoConnection
    */
   protected $_connection;
 
+  protected $_prepareCache = [];
+
   /**
    * Open the connection
    *
@@ -31,51 +33,54 @@ class PdoConnection
    */
   public function connect()
   {
-    $dsn = $this->_config()->getItem('dsn', null);
-
-    if($dsn === null)
+    if(!$this->isConnected())
     {
-      $dsn = sprintf(
-        "mysql:host=%s;dbname=%s;port=%d",
-        $this->_config()->getItem('hostname', '127.0.0.1'),
-        $this->_config()->getItem('database'),
-        $this->_config()->getItem('port', 3306)
-      );
-    }
+      $this->_prepareCache = [];
 
-    try
-    {
-      $options = array_replace(
-        $this->_defaultOptions(),
-        ValueAs::arr($this->_config()->getItem('options'))
-      );
-
-      $this->_connection = new \PDO(
-        $dsn,
-        $this->_config()->getItem('username', 'root'),
-        $this->_config()->getItem('password', ''),
-        $options
-      );
-
-      if(!isset($options[\PDO::ATTR_EMULATE_PREPARES]))
+      $dsn = $this->_config()->getItem('dsn', null);
+      if($dsn === null)
       {
-        $serverVersion = $this->_connection->getAttribute(
-          \PDO::ATTR_SERVER_VERSION
+        $dsn = sprintf(
+          "mysql:host=%s;dbname=%s;port=%d",
+          $this->_config()->getItem('hostname', '127.0.0.1'),
+          $this->_config()->getItem('database'),
+          $this->_config()->getItem('port', 3306)
         );
-        $this->_connection->setAttribute(
-          \PDO::ATTR_EMULATE_PREPARES,
-          version_compare($serverVersion, '5.1.17', '<')
+      }
+
+      try
+      {
+        $options = array_replace(
+          $this->_defaultOptions(),
+          ValueAs::arr($this->_config()->getItem('options'))
+        );
+
+        $this->_connection = new \PDO(
+          $dsn,
+          $this->_config()->getItem('username', 'root'),
+          $this->_config()->getItem('password', ''),
+          $options
+        );
+
+        if(!isset($options[\PDO::ATTR_EMULATE_PREPARES]))
+        {
+          $serverVersion = $this->_connection->getAttribute(
+            \PDO::ATTR_SERVER_VERSION
+          );
+          $this->_connection->setAttribute(
+            \PDO::ATTR_EMULATE_PREPARES,
+            version_compare($serverVersion, '5.1.17', '<')
+          );
+        }
+      }
+      catch(\Exception $e)
+      {
+        throw new ConnectionException(
+          "Failed to connect to PDO: " . $e->getMessage(),
+          $e->getCode(), $e
         );
       }
     }
-    catch(\Exception $e)
-    {
-      throw new ConnectionException(
-        "Failed to connect to PDO: " . $e->getMessage(),
-        $e->getCode(), $e
-      );
-    }
-
     return $this;
   }
 
@@ -128,6 +133,7 @@ class PdoConnection
   public function disconnect()
   {
     $this->_connection = null;
+    $this->_prepareCache = [];
     return $this;
   }
 
@@ -175,6 +181,42 @@ class PdoConnection
     return $result;
   }
 
+  /**
+   * @param $query
+   *
+   * @return string
+   */
+  protected function _cacheKey($query)
+  {
+    return md5($query) . sha1($query);
+  }
+
+  /**
+   * @param $query
+   *
+   * @return bool
+   */
+  protected function _isCached($query)
+  {
+    return isset($this->_prepareCache[$this->_cacheKey($query)]);
+  }
+
+  /**
+   * @param $query
+   *
+   * @return \PDOStatement
+   */
+  protected function _getStatement($query)
+  {
+    if($this->_isCached($query))
+    {
+      return $this->_prepareCache[$this->_cacheKey($query)];
+    }
+    $stmt = $this->_connection->prepare($query);
+    $this->_prepareCache[$this->_cacheKey($query)] = $stmt;
+    return $this->_prepareCache[$this->_cacheKey($query)];
+  }
+
   protected function _runQuery($query, array $values = null, $retries = null)
   {
     if($retries === null)
@@ -183,9 +225,8 @@ class PdoConnection
     }
     try
     {
-      $statement = $this->_connection->prepare($query);
-      $this->_bindValues($statement, $values);
-      $statement->execute();
+      $stmt = $this->_getStatement($query);
+      $stmt->execute($values);
     }
     catch(\PDOException $sourceException)
     {
@@ -195,35 +236,7 @@ class PdoConnection
       }
       throw PdoException::from($sourceException);
     }
-    return $statement;
-  }
-
-  protected function _bindValues(\PDOStatement $statement, $values)
-  {
-    if(!empty($values))
-    {
-      foreach($values as $k => $value)
-      {
-        if(is_null($value))
-        {
-          $type = \PDO::PARAM_NULL;
-        }
-        else if(is_bool($value))
-        {
-          $type = \PDO::PARAM_INT;
-          $value = $value ? 1 : 0;
-        }
-        else if(is_int($value))
-        {
-          $type = \PDO::PARAM_INT;
-        }
-        else
-        {
-          $type = \PDO::PARAM_STR;
-        }
-        $statement->bindValue($k + 1, $value, $type);
-      }
-    }
+    return $stmt;
   }
 
   /**

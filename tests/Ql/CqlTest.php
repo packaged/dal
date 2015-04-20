@@ -528,6 +528,7 @@ class MockCqlConnection extends CqlConnection
   public function setClient($client)
   {
     $this->_newClient = $client;
+    $this->disconnect()->connect();
   }
 
   public function execute(

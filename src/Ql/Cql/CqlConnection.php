@@ -55,6 +55,8 @@ class CqlConnection
    */
   protected $_connected = false;
 
+  protected $_prepareCache = [];
+
   /**
    * Open the connection
    *
@@ -66,6 +68,7 @@ class CqlConnection
   {
     if($this->_client === null)
     {
+      $this->_prepareCache = [];
       $this->_socket = new DalSocketPool(
         ValueAs::arr($this->_config()->getItem('hosts', 'localhost')),
         (int)$this->_config()->getItem('port', 9160),
@@ -161,6 +164,7 @@ class CqlConnection
     }
     $this->_transport = null;
     $this->_protocol = null;
+    $this->_prepareCache = [];
     $this->_connected = false;
     return $this;
   }
@@ -169,7 +173,7 @@ class CqlConnection
   {
     try
     {
-      $this->connect()->_client->set_keyspace($keyspace);
+      $this->_client->set_keyspace($keyspace);
     }
     catch(\Exception $e)
     {
@@ -228,6 +232,45 @@ class CqlConnection
   }
 
   /**
+   * @param $query
+   * @param $compression
+   *
+   * @return string
+   */
+  protected function _cacheKey($query, $compression)
+  {
+    return md5($query . $compression) . sha1($query . $compression);
+  }
+
+  /**
+   * @param $query
+   * @param $compression
+   *
+   * @return bool
+   */
+  protected function _isCached($query, $compression)
+  {
+    return isset($this->_prepareCache[$this->_cacheKey($query, $compression)]);
+  }
+
+  /**
+   * @param $query
+   * @param $compression
+   *
+   * @return CqlStatement
+   */
+  protected function _getStatement($query, $compression)
+  {
+    if($this->_isCached($query, $compression))
+    {
+      return $this->_prepareCache[$this->_cacheKey($query, $compression)];
+    }
+    $stmt = new CqlStatement($this->_client, $query, $compression);
+    $this->_prepareCache[$this->_cacheKey($query, $compression)] = $stmt;
+    return $this->_prepareCache[$this->_cacheKey($query, $compression)];
+  }
+
+  /**
    * @param string $query
    * @param int    $compression
    * @param int    $retries
@@ -245,9 +288,7 @@ class CqlConnection
     }
     try
     {
-      $stmt = new CqlStatement($this->connect()->_client, $query, $compression);
-      $stmt->prepare();
-      return $stmt;
+      return $this->_getStatement($query, $compression)->prepare();
     }
     catch(\Exception $exception)
     {
@@ -262,7 +303,7 @@ class CqlConnection
 
       if($retries > 0 && $this->_isRecoverableException($e))
       {
-        $this->disconnect();
+        $this->disconnect()->connect();
         return $this->prepare($query, $compression, $retries - 1);
       }
       throw $e;
@@ -299,7 +340,7 @@ class CqlConnection
           $value
         );
       }
-      $result = $this->connect()->_client->execute_prepared_cql3_query(
+      $result = $this->_client->execute_prepared_cql3_query(
         $statement->getStatement()->itemId,
         $packedParameters,
         $consistency
@@ -338,7 +379,7 @@ class CqlConnection
       $e = CqlException::from($exception);
       if($retries > 0 && $this->_isRecoverableException($e))
       {
-        $this->disconnect();
+        $this->disconnect()->connect();
         if(starts_with($e->getMessage(), 'Prepared query with ID'))
         {
           // re-prepare statement

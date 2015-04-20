@@ -49,5 +49,6 @@ class CqlStatement
       );
       $this->_isPrepared = true;
     }
+    return $this;
   }
 }

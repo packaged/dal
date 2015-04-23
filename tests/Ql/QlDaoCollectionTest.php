@@ -94,7 +94,7 @@ class QlDaoCollectionTest extends \PHPUnit_Framework_TestCase
     $limit = $col->getClause('LIMIT');
     if($limit instanceof LimitClause)
     {
-      $this->assertEquals(10, $limit->getLimit());
+      $this->assertEquals(10, $limit->getLimit()->getValue());
     }
     $this->assertInstanceOf(MockQlDao::class, $first);
 

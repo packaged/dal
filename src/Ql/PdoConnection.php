@@ -231,6 +231,7 @@ class PdoConnection
     try
     {
       $stmt = $this->_getStatement($query);
+      $values = $this->_prepareValues($values);
       $stmt->execute($values);
     }
     catch(\PDOException $sourceException)
@@ -261,6 +262,21 @@ class PdoConnection
       return false;
     }
     return true;
+  }
+
+  protected function _prepareValues($values)
+  {
+    if(is_array($values))
+    {
+      foreach($values as $k => $value)
+      {
+        if(is_bool($value))
+        {
+          $values[$k] = $value ? 1 : 0;
+        }
+      }
+    }
+    return $values;
   }
 
   /**

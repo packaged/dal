@@ -270,6 +270,11 @@ class CqlConnection
     return $this->_prepareCache[$this->_cacheKey($query, $compression)];
   }
 
+  protected function _clearCache($query, $compression)
+  {
+    unset($this->_prepareCache[$this->_cacheKey($query, $compression)]);
+  }
+
   /**
    * @param string $query
    * @param int    $compression
@@ -292,6 +297,7 @@ class CqlConnection
     }
     catch(\Exception $exception)
     {
+      $this->_clearCache($query, $compression);
       $e = CqlException::from($exception);
       if(starts_with($e->getMessage(), 'No keyspace has been specified.')
         && $this->_config()->has('keyspace')
@@ -379,6 +385,7 @@ class CqlConnection
     }
     catch(\Exception $exception)
     {
+      $this->_clearCache($statement->getQuery(), $statement->getCompression());
       $e = CqlException::from($exception);
       if($retries > 0 && $this->_isRecoverableException($e))
       {

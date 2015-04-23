@@ -217,6 +217,11 @@ class PdoConnection
     return $this->_prepareCache[$this->_cacheKey($query)];
   }
 
+  protected function _clearCache($query)
+  {
+    unset($this->_prepareCache[$this->_cacheKey($query)]);
+  }
+
   protected function _runQuery($query, array $values = null, $retries = null)
   {
     if($retries === null)

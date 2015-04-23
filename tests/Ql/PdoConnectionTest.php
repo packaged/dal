@@ -84,7 +84,7 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
     $connection->connect();
     $connection->setResolver(new DalResolver());
     $this->setExpectedException(ConnectionException::class);
-    $connection->fetchQueryResults("SELECT * FROM `made_up_table_r43i`", []);
+    $connection->fetchQueryResults("SELECT * FROM `made_up_table_r44i`", []);
   }
 
   public function testNativeErrorFormat_runQuery()
@@ -98,7 +98,7 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
       'My Exception Message',
       1234
     );
-    $connection->runQuery("SELECT * FROM `made_up_table_r43i`", []);
+    $connection->runQuery("SELECT * FROM `made_up_table_r45i`", []);
   }
 
   public function testNativeErrorFormat_fetchQueryResults()
@@ -112,7 +112,7 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
       'My Exception Message',
       1234
     );
-    $connection->fetchQueryResults("SELECT * FROM `made_up_table_r43i`", []);
+    $connection->fetchQueryResults("SELECT * FROM `made_up_table_r46i`", []);
   }
 
   public function testLsd()
@@ -182,6 +182,23 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
     {
     }
     $this->assertEquals(3, $connection->getRunCount());
+  }
+
+  public function testInvalidSyntax()
+  {
+    $resolver = new DalResolver();
+    $connection = new MockPdoConnection();
+    $connection->setResolver($resolver);
+    $connection->connect();
+    try
+    {
+      $connection->runQuery('my query');
+    }
+    catch(PdoException $e)
+    {
+      $this->assertEquals(42000, $e->getPrevious()->getCode());
+    }
+    $this->assertEquals(1, $connection->getRunCount());
   }
 }
 

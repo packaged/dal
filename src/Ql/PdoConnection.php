@@ -230,13 +230,32 @@ class PdoConnection
     }
     catch(\PDOException $sourceException)
     {
-      if($retries > 0)
+      $this->_clearCache($query);
+      $e = PdoException::from($sourceException);
+      if($retries > 0 && $this->_isRecoverableException($e))
       {
         return $this->_runQuery($query, $values, $retries - 1);
       }
-      throw PdoException::from($sourceException);
+      error_log(
+        'PdoConnection Error: (' . $e->getCode() . ') ' . $e->getMessage()
+      );
+      throw $e;
     }
     return $stmt;
+  }
+
+  /**
+   * @param PdoException $e
+   *
+   * @return bool
+   */
+  private function _isRecoverableException(PdoException $e)
+  {
+    if(starts_with($e->getPrevious()->getCode(), 42))
+    {
+      return false;
+    }
+    return true;
   }
 
   /**

@@ -255,19 +255,6 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $connection->prepare("INVALID");
   }
 
-  public function testExecuteException()
-  {
-    $connection = new MockCqlConnection();
-    $this->_configureConnection($connection);
-    $connection->connect();
-    $this->setExpectedException(
-      '\Packaged\Dal\Exceptions\Connection\CqlException'
-    );
-    $stmt = new MockCqlStatement(new CassandraClient(null), null, null);
-    $stmt->setStatement(new CqlPreparedResult());
-    $connection->execute($stmt);
-  }
-
   public function testGetData()
   {
     $datastore = new MockCqlDataStore();

@@ -306,6 +306,9 @@ class CqlConnection
         $this->disconnect()->connect();
         return $this->prepare($query, $compression, $retries - 1);
       }
+      error_log(
+        'CqlConnection Error: (' . $e->getCode() . ') ' . $e->getMessage()
+      );
       throw $e;
     }
   }
@@ -395,6 +398,9 @@ class CqlConnection
           $retries - 1
         );
       }
+      error_log(
+        'CqlConnection Error: (' . $e->getCode() . ') ' . $e->getMessage()
+      );
       throw $e;
     }
     return $return;

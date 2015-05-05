@@ -172,8 +172,7 @@ class DalResolver implements IConnectionResolver
   public function addConnectionConfig(ConfigSectionInterface $config)
   {
     $this->_unsetConfigured(self::TYPE_CONNECTION, $config->getName());
-    $this->_config[self::TYPE_CONNECTION]->removeSection($config);
-    $this->_config[self::TYPE_CONNECTION]->addSection($config);
+    $this->_config[self::TYPE_CONNECTION]->setSection($config);
   }
 
   /**
@@ -296,8 +295,7 @@ class DalResolver implements IConnectionResolver
   public function addDataStoreConfig(ConfigSectionInterface $config)
   {
     $this->_unsetConfigured(self::TYPE_DATASTORE, $config->getName());
-    $this->_config[self::TYPE_DATASTORE]->removeSection($config);
-    $this->_config[self::TYPE_DATASTORE]->addSection($config);
+    $this->_config[self::TYPE_DATASTORE]->setSection($config);
   }
 
   /**

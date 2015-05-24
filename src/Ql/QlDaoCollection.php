@@ -258,10 +258,37 @@ class QlDaoCollection extends DaoCollection
   {
     if($this->isEmpty() && !$this->_isLoaded)
     {
-      $builder = $this->_getQueryBuilder();
-      $aggregateQuery = $builder::select($expression)
-        ->from(SubQuerySelectExpression::create($this->_query, '_'));
-      $result = head(head($this->_getDataStore()->getData($aggregateQuery)));
+      $orderBy = $this->_query->getClause('ORDER BY');
+
+      //Remove order by for improved query performance
+      if($orderBy !== null)
+      {
+        $this->_query->removeClause('ORDER BY');
+      }
+
+      //Run a sub query if a limit is specified
+      if($this->_query->hasClause('LIMIT'))
+      {
+        $builder = $this->_getQueryBuilder();
+        $aggregateQuery = $builder::select($expression)
+          ->from(SubQuerySelectExpression::create($this->_query, '_'));
+        $result = head(head($this->_getDataStore()->getData($aggregateQuery)));
+      }
+      else
+      {
+        $originalClause = $this->_query->getClause('SELECT');
+        $this->_query->addClause(
+          (new SelectClause())->addExpression($expression)
+        );
+        $result = head(head($this->_getDataStore()->getData($this->_query)));
+        $this->_query->addClause($originalClause);
+      }
+
+      if($orderBy !== null)
+      {
+        $this->_query->addClause($orderBy);
+      }
+
       return $result;
     }
     return parent::$method();

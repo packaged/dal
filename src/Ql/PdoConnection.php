@@ -241,6 +241,15 @@ class PdoConnection
       $e = PdoException::from($sourceException);
       if($retries > 0 && $this->_isRecoverableException($e))
       {
+        if($this->_shouldReconnectAfterException($e))
+        {
+          $this->disconnect()->connect();
+        }
+        else if($this->_shouldDelayAfterException($e))
+        {
+          // Sleep for between 0.1 and 3 milliseconds
+          usleep(mt_rand(100, 3000));
+        }
         return $this->_runQuery($query, $values, $retries - 1);
       }
       error_log(
@@ -263,6 +272,32 @@ class PdoConnection
       return false;
     }
     return true;
+  }
+
+  /**
+   * Should we delay for a random time before retrying this query?
+   *
+   * @param PdoException $e
+   *
+   * @return bool
+   */
+  private function _shouldDelayAfterException(PdoException $e)
+  {
+    // Deadlock errors: MySQL error 1213, SQLSTATE code 40001
+    return in_array($e->getCode(), [1213, 40001]);
+  }
+
+  /**
+   * Should we reconnect to the database after this sort of error?
+   *
+   * @param PdoException $e
+   *
+   * @return bool
+   */
+  private function _shouldReconnectAfterException(PdoException $e)
+  {
+    // "MySQL server has gone away"
+    return $e->getCode() == 2006;
   }
 
   protected function _prepareValues($values)

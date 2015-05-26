@@ -188,17 +188,17 @@ class PdoConnection
    */
   protected function _cacheKey($query)
   {
-    return md5($query) . sha1($query);
+    return md5($query) . strlen($query);
   }
 
   /**
-   * @param $query
+   * @param $queryCacheKey
    *
    * @return bool
    */
-  protected function _isCached($query)
+  protected function _isCached($queryCacheKey)
   {
-    return isset($this->_prepareCache[$this->_cacheKey($query)]);
+    return isset($this->_prepareCache[$queryCacheKey]);
   }
 
   /**
@@ -208,18 +208,19 @@ class PdoConnection
    */
   protected function _getStatement($query)
   {
-    if($this->_isCached($query))
+    $cacheKey = $this->_cacheKey($query);
+    if($this->_isCached($cacheKey))
     {
-      return $this->_prepareCache[$this->_cacheKey($query)];
+      return $this->_prepareCache[$cacheKey];
     }
     $stmt = $this->_connection->prepare($query);
-    $this->_prepareCache[$this->_cacheKey($query)] = $stmt;
-    return $this->_prepareCache[$this->_cacheKey($query)];
+    $this->_prepareCache[$cacheKey] = $stmt;
+    return $this->_prepareCache[$cacheKey];
   }
 
-  protected function _clearCache($query)
+  protected function _clearCache($cacheKey)
   {
-    unset($this->_prepareCache[$this->_cacheKey($query)]);
+    unset($this->_prepareCache[$cacheKey]);
   }
 
   protected function _runQuery($query, array $values = null, $retries = null)
@@ -236,7 +237,7 @@ class PdoConnection
     }
     catch(\PDOException $sourceException)
     {
-      $this->_clearCache($query);
+      $this->_clearCache($this->_cacheKey($query));
       $e = PdoException::from($sourceException);
       if($retries > 0 && $this->_isRecoverableException($e))
       {
@@ -282,7 +283,8 @@ class PdoConnection
   /**
    * Retrieve the last inserted ID
    *
-   * @param string $name Name of the sequence object from which the ID should be returned.
+   * @param string $name Name of the sequence object from which the ID should
+   *                     be returned.
    *
    * @return mixed
    */

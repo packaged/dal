@@ -113,6 +113,12 @@ class MockPdoConnection extends PdoConnection
     $this->_connection = $connection;
   }
 
+  public function addConfig($key, $value)
+  {
+    $this->_config()->addItem($key, $value);
+    return $this;
+  }
+
   public function config()
   {
     $this->_config()->addItem('database', 'packaged_dal');

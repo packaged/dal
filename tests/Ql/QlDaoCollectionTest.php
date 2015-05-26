@@ -26,6 +26,24 @@ class QlDaoCollectionTest extends \PHPUnit_Framework_TestCase
     );
   }
 
+  public function testEmulatedPrepare()
+  {
+    //Skip
+    return;
+    $resolver = new DalResolver();
+    Dao::setDalResolver($resolver);
+    $datastore = new MockQlDataStore();
+    $connection = new MockPdoConnection();
+    $connection->addConfig('options', [\PDO::ATTR_EMULATE_PREPARES => true]);
+    $connection->config();
+    $connection->connect();
+    $connection->setResolver($resolver);
+    $datastore->setConnection($connection);
+    MockQlDao::getDalResolver()->addDataStore('mockql', $datastore);
+    MockQlDao::loadOneWhere(['id' => 'y']);
+    Dao::unsetDalResolver();
+  }
+
   public function testQueried()
   {
     Dao::setDalResolver(new DalResolver());

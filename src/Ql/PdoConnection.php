@@ -48,37 +48,52 @@ class PdoConnection
         );
       }
 
-      try
+      $remainingAttempts = ((int)$this->_config()->getItem('connect_retries', 3));
+
+      while(($remainingAttempts > 0) && ($this->_connection === null))
       {
-        $options = array_replace(
-          $this->_defaultOptions(),
-          ValueAs::arr($this->_config()->getItem('options'))
-        );
-
-        $this->_connection = new \PDO(
-          $dsn,
-          $this->_config()->getItem('username', 'root'),
-          $this->_config()->getItem('password', ''),
-          $options
-        );
-
-        if(!isset($options[\PDO::ATTR_EMULATE_PREPARES]))
+        try
         {
-          $serverVersion = $this->_connection->getAttribute(
-            \PDO::ATTR_SERVER_VERSION
+          $options = array_replace(
+            $this->_defaultOptions(),
+            ValueAs::arr($this->_config()->getItem('options'))
           );
-          $this->_connection->setAttribute(
-            \PDO::ATTR_EMULATE_PREPARES,
-            version_compare($serverVersion, '5.1.17', '<')
+
+          $this->_connection = new \PDO(
+            $dsn,
+            $this->_config()->getItem('username', 'root'),
+            $this->_config()->getItem('password', ''),
+            $options
           );
+
+          if(!isset($options[\PDO::ATTR_EMULATE_PREPARES]))
+          {
+            $serverVersion = $this->_connection->getAttribute(
+              \PDO::ATTR_SERVER_VERSION
+            );
+            $this->_connection->setAttribute(
+              \PDO::ATTR_EMULATE_PREPARES,
+              version_compare($serverVersion, '5.1.17', '<')
+            );
+          }
+          $remainingAttempts = 0;
         }
-      }
-      catch(\Exception $e)
-      {
-        throw new ConnectionException(
-          "Failed to connect to PDO: " . $e->getMessage(),
-          $e->getCode(), $e
-        );
+        catch(\Exception $e)
+        {
+          $remainingAttempts--;
+          $this->_connection = null;
+          if($remainingAttempts > 0)
+          {
+            usleep(mt_rand(1000, 5000));
+          }
+          else
+          {
+            throw new ConnectionException(
+              "Failed to connect to PDO: " . $e->getMessage(),
+              $e->getCode(), $e
+            );
+          }
+        }
       }
     }
     return $this;

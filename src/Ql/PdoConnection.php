@@ -23,6 +23,7 @@ class PdoConnection
   protected $_connection;
 
   protected $_prepareCache = [];
+  protected $_lastConnectTime = 0;
 
   /**
    * Open the connection
@@ -95,6 +96,7 @@ class PdoConnection
           }
         }
       }
+      $this->_lastConnectTime = time();
     }
     return $this;
   }
@@ -238,8 +240,26 @@ class PdoConnection
     unset($this->_prepareCache[$cacheKey]);
   }
 
+  protected function _recycleConnectionIfRequired()
+  {
+    if($this->_lastConnectTime > 0)
+    {
+      $recycleTime = (int)$this->_config()
+        ->getItem('connection_recycle_time', 900);
+
+      if(($recycleTime > 0)
+        && ((time() - $this->_lastConnectTime) >= $recycleTime)
+      )
+      {
+        $this->disconnect()->connect();
+      }
+    }
+  }
+
   protected function _runQuery($query, array $values = null, $retries = null)
   {
+    $this->_recycleConnectionIfRequired();
+
     if($retries === null)
     {
       $retries = (int)$this->_config()->getItem('retries', 2);

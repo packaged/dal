@@ -21,9 +21,10 @@ class PdoConnection
    * @var \PDO
    */
   protected $_connection;
-
+  protected $_prepareDelayCount = [];
   protected $_prepareCache = [];
   protected $_lastConnectTime = 0;
+  protected $_emulatedPrepares = false;
 
   /**
    * Open the connection
@@ -67,16 +68,26 @@ class PdoConnection
             $options
           );
 
-          if(!isset($options[\PDO::ATTR_EMULATE_PREPARES]))
+          if(isset($options[\PDO::ATTR_EMULATE_PREPARES]))
+          {
+            $this->_emulatedPrepares = $options[\PDO::ATTR_EMULATE_PREPARES];
+          }
+          else
           {
             $serverVersion = $this->_connection->getAttribute(
               \PDO::ATTR_SERVER_VERSION
             );
+            $this->_emulatedPrepares = version_compare(
+              $serverVersion,
+              '5.1.17',
+              '<'
+            );
             $this->_connection->setAttribute(
               \PDO::ATTR_EMULATE_PREPARES,
-              version_compare($serverVersion, '5.1.17', '<')
+              $this->_emulatedPrepares
             );
           }
+
           $remainingAttempts = 0;
         }
         catch(\Exception $e)
@@ -108,7 +119,7 @@ class PdoConnection
   protected function _defaultOptions()
   {
     return [
-      \PDO::ATTR_PERSISTENT => true,
+      \PDO::ATTR_PERSISTENT => false,
       \PDO::ATTR_ERRMODE    => \PDO::ERRMODE_EXCEPTION,
       \PDO::ATTR_TIMEOUT    => 5
     ];
@@ -149,8 +160,8 @@ class PdoConnection
    */
   public function disconnect()
   {
-    $this->_connection = null;
     $this->_prepareCache = [];
+    $this->_connection = null;
     return $this;
   }
 
@@ -218,6 +229,31 @@ class PdoConnection
     return isset($this->_prepareCache[$queryCacheKey]);
   }
 
+  protected function _getDelayedPreparesCount()
+  {
+    static $_count = null;
+    if($_count === null)
+    {
+      $value = $this->_config()->getItem('delayed_prepares', 1);
+      if(is_numeric($value))
+      {
+        $_count = (int)$value;
+      }
+      else
+      {
+        if(in_array($value, ['true', true, '1', 1], true))
+        {
+          $_count = 1;
+        }
+        else if(in_array($value, ['false', false, '0', 0], true))
+        {
+          $_count = 0;
+        }
+      }
+    }
+    return $_count;
+  }
+
   /**
    * @param $query
    *
@@ -230,9 +266,53 @@ class PdoConnection
     {
       return $this->_prepareCache[$cacheKey];
     }
-    $stmt = $this->_connection->prepare($query);
-    $this->_prepareCache[$cacheKey] = $stmt;
-    return $this->_prepareCache[$cacheKey];
+
+    $stmt = false;
+
+    // Delay preparing the statement for the configured number of calls
+    if(!$this->_emulatedPrepares)
+    {
+      $delayCount = $this->_getDelayedPreparesCount();
+
+      if($delayCount > 0)
+      {
+        if((!isset($this->_prepareDelayCount[$cacheKey]))
+          || ($this->_prepareDelayCount[$cacheKey] < $delayCount)
+        )
+        {
+          // perform an emulated prepare
+          $this->_connection->setAttribute(\PDO::ATTR_EMULATE_PREPARES, true);
+          try
+          {
+            $stmt = $this->_connection->prepare($query);
+          }
+          finally
+          {
+            $this->_connection->setAttribute(
+              \PDO::ATTR_EMULATE_PREPARES,
+              false
+            );
+          }
+          if(isset($this->_prepareDelayCount[$cacheKey]))
+          {
+            $this->_prepareDelayCount[$cacheKey]++;
+          }
+          else
+          {
+            $this->_prepareDelayCount[$cacheKey] = 1;
+          }
+        }
+      }
+    }
+
+    if(!$stmt)
+    {
+      // Do a real prepare and cache the statement
+      $stmt = $this->_connection->prepare($query);
+      $this->_prepareCache[$cacheKey] = $stmt;
+    }
+
+    return $stmt;
   }
 
   protected function _clearCache($cacheKey)

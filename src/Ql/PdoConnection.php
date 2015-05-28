@@ -25,6 +25,7 @@ class PdoConnection
   protected $_prepareCache = [];
   protected $_lastConnectTime = 0;
   protected $_emulatedPrepares = false;
+  protected $_delayedPreparesCount = null;
 
   /**
    * Open the connection
@@ -231,27 +232,26 @@ class PdoConnection
 
   protected function _getDelayedPreparesCount()
   {
-    static $_count = null;
-    if($_count === null)
+    if($this->_delayedPreparesCount === null)
     {
       $value = $this->_config()->getItem('delayed_prepares', 1);
       if(is_numeric($value))
       {
-        $_count = (int)$value;
+        $this->_delayedPreparesCount = (int)$value;
       }
       else
       {
         if(in_array($value, ['true', true, '1', 1], true))
         {
-          $_count = 1;
+          $this->_delayedPreparesCount = 1;
         }
         else if(in_array($value, ['false', false, '0', 0], true))
         {
-          $_count = 0;
+          $this->_delayedPreparesCount = 0;
         }
       }
     }
-    return $_count;
+    return $this->_delayedPreparesCount;
   }
 
   /**

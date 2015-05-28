@@ -348,7 +348,11 @@ class PdoConnection
     {
       $stmt = $this->_getStatement($query);
       $values = $this->_prepareValues($values);
-      $stmt->execute($values);
+      if($values)
+      {
+        $this->_bindValues($stmt, $values);
+      }
+      $stmt->execute();
     }
     catch(\PDOException $sourceException)
     {
@@ -428,6 +432,34 @@ class PdoConnection
       }
     }
     return $values;
+  }
+
+  protected function _bindValues(\PDOStatement $stmt, array $values)
+  {
+    $i = 1;
+    foreach($values as $value)
+    {
+      $stmt->bindValue($i, $value, $this->_pdoTypeForPhpVar($value));
+      $i++;
+    }
+  }
+
+  private function _pdoTypeForPhpVar(&$var)
+  {
+    $type = \PDO::PARAM_STR;
+    if($var === null)
+    {
+      $type = \PDO::PARAM_NULL;
+    }
+    else if(is_bool($var))
+    {
+      $type = \PDO::PARAM_BOOL;
+    }
+    else if(is_int($var))
+    {
+      $type = \PDO::PARAM_INT;
+    }
+    return $type;
   }
 
   /**

@@ -28,8 +28,6 @@ class QlDaoCollectionTest extends \PHPUnit_Framework_TestCase
 
   public function testEmulatedPrepare()
   {
-    //Skip
-    return;
     $resolver = new DalResolver();
     Dao::setDalResolver($resolver);
     $datastore = new MockQlDataStore();

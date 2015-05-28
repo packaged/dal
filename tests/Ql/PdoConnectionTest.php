@@ -208,6 +208,10 @@ class FailingRawConnection
   {
     throw new \PDOException($query);
   }
+
+  public function setAttribute($attribute, $value)
+  {
+  }
 }
 
 class CorruptablePdoConnection extends MockPdoConnection

@@ -148,11 +148,15 @@ class PrepareErrorPdoConnection extends \PDO
     $this->_errorCode = $code;
   }
 
-  function prepare($statement, $options = null)
+  public function prepare($statement, $options = null)
   {
     $exception = new \PDOException($this->_errorMessage, $this->_errorCode);
 
     $exception->errorInfo = ['SQLSTATE_CODE', $this->_errorMessage];
     throw $exception;
+  }
+
+  public function setAttribute($attribute, $value)
+  {
   }
 }

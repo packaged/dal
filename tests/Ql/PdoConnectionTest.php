@@ -200,6 +200,41 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
     }
     $this->assertEquals(1, $connection->getRunCount());
   }
+
+  /**
+   * @dataProvider delayedPreparesProvider
+   *
+   * @param int|string $setting
+   * @param int $expectedDelayCount
+   *
+   * @throws ConnectionException
+   */
+  public function testDelayedPrepares($setting, $expectedDelayCount)
+  {
+    $connection = new DelayedPreparesPdoConnection();
+    $cfg = $connection->config();
+    $cfg->addItem('delayed_prepares', $setting);
+    $connection->connect();
+    $connection->setResolver(new DalResolver());
+
+    // Run the same query 3 times
+    for($i = 0; $i < 3; $i++)
+    {
+      $res = $connection->runQuery('SELECT ?', [$i]);
+      // result is the number of affected rows
+      $this->assertEquals(1, $res);
+    }
+
+    $this->assertEquals(
+      $expectedDelayCount,
+      $connection->getLastQueryDelayCount()
+    );
+  }
+
+  public function delayedPreparesProvider()
+  {
+    return [[0, 0], [1, 1], [2, 2], ['true', 1], ['false', 0]];
+  }
 }
 
 class FailingRawConnection

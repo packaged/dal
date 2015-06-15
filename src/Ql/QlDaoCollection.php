@@ -4,6 +4,7 @@ namespace Packaged\Dal\Ql;
 use Packaged\Dal\Collections\IAggregateDaoCollection;
 use Packaged\Dal\Exceptions\DalException;
 use Packaged\Dal\Foundation\DaoCollection;
+use Packaged\Helpers\Arrays;
 use Packaged\QueryBuilder\Builder\QueryBuilder;
 use Packaged\QueryBuilder\Builder\Traits\HavingTrait;
 use Packaged\QueryBuilder\Builder\Traits\JoinTrait;
@@ -210,7 +211,7 @@ class QlDaoCollection extends DaoCollection
     }
     if(!$this->isEmpty())
     {
-      $dao = head($this->_daos);
+      $dao = reset($this->_daos);
       $this->clear();
       return $dao;
     }
@@ -272,7 +273,9 @@ class QlDaoCollection extends DaoCollection
         $builder = $this->_getQueryBuilder();
         $aggregateQuery = $builder::select($expression)
           ->from(SubQuerySelectExpression::create($this->_query, '_'));
-        $result = head(head($this->_getDataStore()->getData($aggregateQuery)));
+        $result = Arrays::first(
+          Arrays::first($this->_getDataStore()->getData($aggregateQuery))
+        );
       }
       else
       {
@@ -280,7 +283,9 @@ class QlDaoCollection extends DaoCollection
         $this->_query->addClause(
           (new SelectClause())->addExpression($expression)
         );
-        $result = head(head($this->_getDataStore()->getData($this->_query)));
+        $result = Arrays::first(
+          Arrays::first($this->_getDataStore()->getData($this->_query))
+        );
         $this->_query->addClause($originalClause);
       }
 
@@ -316,7 +321,7 @@ class QlDaoCollection extends DaoCollection
       {
         return [];
       }
-      return ipull($results, $property);
+      return Arrays::ipull($results, $property);
     }
     return parent::distinct($property);
   }

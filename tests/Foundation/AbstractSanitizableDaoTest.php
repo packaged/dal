@@ -2,6 +2,7 @@
 namespace Foundation;
 
 use Packaged\Dal\Foundation\AbstractSanitizableDao;
+use Packaged\Helpers\Strings;
 
 class AbstractSanitizableDaoTest extends \PHPUnit_Framework_TestCase
 {
@@ -165,7 +166,7 @@ class AbstractSanitizableDaoTest extends \PHPUnit_Framework_TestCase
       'starts_lower',
       function ($value)
       {
-        if(starts_with($value, 'lower'))
+        if(Strings::startsWith($value, 'lower'))
         {
           return true;
         }
@@ -269,7 +270,7 @@ class MockSanitizableDao extends AbstractSanitizableDao
       },
       function ($value)
       {
-        if(starts_with($value, 'lower'))
+        if(Strings::startsWith($value, 'lower'))
         {
           return true;
         }
@@ -280,7 +281,7 @@ class MockSanitizableDao extends AbstractSanitizableDao
     $this->_sanetizers['validators']['upper'] = [
       function ($value)
       {
-        if(starts_with($value, 'UPPER'))
+        if(Strings::startsWith($value, 'UPPER'))
         {
           return true;
         }

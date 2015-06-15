@@ -8,6 +8,7 @@ use Packaged\Dal\Exceptions\Connection\ConnectionException;
 use Packaged\Dal\Exceptions\Connection\PdoException;
 use Packaged\Dal\IResolverAware;
 use Packaged\Dal\Traits\ResolverAwareTrait;
+use Packaged\Helpers\Strings;
 use Packaged\Helpers\ValueAs;
 
 class PdoConnection
@@ -386,7 +387,7 @@ class PdoConnection
    */
   private function _isRecoverableException(PdoException $e)
   {
-    if(starts_with($e->getPrevious()->getCode(), 42))
+    if(Strings::startsWith($e->getPrevious()->getCode(), 42))
     {
       return false;
     }

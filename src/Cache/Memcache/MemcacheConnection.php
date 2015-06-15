@@ -35,8 +35,8 @@ class MemcacheConnection extends AbstractCacheConnection
     {
       $port = $cfg->getItem($alias . '.port', $cfg->getItem('port', 11211));
       $persist = $cfg->getItem(
-        $alias . '.persistent',
-        $cfg->getItem('persistent', true)
+        $alias . '.persist',
+        $cfg->getItem('persist', true)
       );
       $weight = $cfg->getItem(
         $alias . '.weight',

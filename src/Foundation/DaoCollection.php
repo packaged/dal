@@ -3,6 +3,8 @@ namespace Packaged\Dal\Foundation;
 
 use Packaged\Dal\IDao;
 use Packaged\Dal\IDaoCollection;
+use Packaged\Helpers\Arrays;
+use Packaged\Helpers\Objects;
 use Traversable;
 
 class DaoCollection implements IDaoCollection
@@ -40,7 +42,7 @@ class DaoCollection implements IDaoCollection
   {
     if($fresh || $this->_dao === null)
     {
-      $class = newv($this->_daoClass, []);
+      $class = Objects::create($this->_daoClass, []);
       if($class instanceof IDao)
       {
         if(!$fresh)
@@ -112,7 +114,7 @@ class DaoCollection implements IDaoCollection
     {
       return $default;
     }
-    return head((array)$this->_daos);
+    return Arrays::first((array)$this->_daos);
   }
 
   /**
@@ -148,7 +150,7 @@ class DaoCollection implements IDaoCollection
   public function distinct($property)
   {
     $this->_prepareDaos();
-    return array_unique(ppull((array)$this->_daos, $property));
+    return array_unique(Objects::ppull((array)$this->_daos, $property));
   }
 
   /**
@@ -163,7 +165,7 @@ class DaoCollection implements IDaoCollection
   public function ppull($property, $keyProperty = null)
   {
     $this->_prepareDaos();
-    return ppull((array)$this->_daos, $property, $keyProperty);
+    return Objects::ppull((array)$this->_daos, $property, $keyProperty);
   }
 
   /**
@@ -181,11 +183,11 @@ class DaoCollection implements IDaoCollection
     $result = [];
     foreach((array)$this->_daos as $i => $dao)
     {
-      $key = idp($dao, $keyProperty, $i);
+      $key = Objects::property($dao, $keyProperty, $i);
       $result[$key] = [];
       foreach($properties as $property)
       {
-        $result[$key][$property] = idp($dao, $property, null);
+        $result[$key][$property] = Objects::property($dao, $property, null);
       }
     }
     return $result;
@@ -195,7 +197,8 @@ class DaoCollection implements IDaoCollection
    * (PHP 5 &gt;= 5.0.0)<br/>
    * Retrieve an external iterator
    * @link http://php.net/manual/en/iteratoraggregate.getiterator.php
-   * @return Traversable An instance of an object implementing <b>Iterator</b> or
+   * @return Traversable An instance of an object implementing <b>Iterator</b>
+   *                     or
    * <b>Traversable</b>
    */
   public function getIterator()
@@ -308,7 +311,7 @@ class DaoCollection implements IDaoCollection
       }
       else
       {
-        $response[] = get_public_properties($dao);
+        $response[] = Objects::propertyValues($dao);
       }
     }
     return $response;
@@ -347,7 +350,7 @@ class DaoCollection implements IDaoCollection
     {
       return null;
     }
-    return min(ppull($this->_daos, $property));
+    return min(Objects::ppull($this->_daos, $property));
   }
 
   public function max($property = 'id')
@@ -357,7 +360,7 @@ class DaoCollection implements IDaoCollection
     {
       return null;
     }
-    return max(ppull($this->_daos, $property));
+    return max(Objects::ppull($this->_daos, $property));
   }
 
   public function avg($property = 'id')
@@ -367,7 +370,7 @@ class DaoCollection implements IDaoCollection
     {
       return null;
     }
-    $values = ppull($this->_daos, $property);
+    $values = Objects::ppull($this->_daos, $property);
     return array_sum($values) / count($values);
   }
 
@@ -378,6 +381,6 @@ class DaoCollection implements IDaoCollection
     {
       return null;
     }
-    return array_sum(ppull($this->_daos, $property));
+    return array_sum(Objects::ppull($this->_daos, $property));
   }
 }

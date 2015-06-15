@@ -2,6 +2,7 @@
 namespace Packaged\Dal\Ql\Cql;
 
 use Packaged\Dal\Ql\QlDaoCollection;
+use Packaged\Helpers\Arrays;
 use Packaged\QueryBuilder\Builder\CQL\CqlQueryBuilder;
 use Packaged\QueryBuilder\Clause\SelectClause;
 use Packaged\QueryBuilder\SelectExpression\ISelectExpression;
@@ -25,7 +26,9 @@ class CqlDaoCollection extends QlDaoCollection
     $this->_query->addClause(
       (new SelectClause())->addExpression($expression)
     );
-    $result = head(head($this->_getDataStore()->getData($this->_query)));
+    $result = Arrays::first(
+      Arrays::first($this->_getDataStore()->getData($this->_query))
+    );
     $this->_query->addClause($originalClause);
     return $result;
   }

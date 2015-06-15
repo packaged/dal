@@ -4,6 +4,8 @@ namespace Packaged\Dal\Foundation;
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\IDao;
 use Packaged\Dal\IDataStore;
+use Packaged\Helpers\Arrays;
+use Packaged\Helpers\Objects;
 
 /**
  * Foundation for all DAOs
@@ -100,8 +102,8 @@ abstract class AbstractDao implements IDao
       if($val !== $this->_savedData[$key])
       {
         $changes[$key] = [
-          'from' => idx($this->_savedData, $key),
-          'to'   => idx($current, $key)
+          'from' => Arrays::value($this->_savedData, $key),
+          'to'   => Arrays::value($current, $key)
         ];
       }
     }
@@ -144,7 +146,7 @@ abstract class AbstractDao implements IDao
   public function getDaoPropertyData()
   {
     return array_intersect_key(
-      get_public_properties($this),
+      Objects::propertyValues($this),
       array_flip($this->getDaoProperties())
     );
   }
@@ -375,6 +377,6 @@ abstract class AbstractDao implements IDao
    */
   public function jsonSerialize()
   {
-    return get_public_properties($this);
+    return Objects::propertyValues($this);
   }
 }

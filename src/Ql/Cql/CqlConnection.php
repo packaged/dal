@@ -19,6 +19,7 @@ use Packaged\Dal\Exceptions\Connection\CqlException;
 use Packaged\Dal\IResolverAware;
 use Packaged\Dal\Ql\IQLDataConnection;
 use Packaged\Dal\Traits\ResolverAwareTrait;
+use Packaged\Helpers\Strings;
 use Packaged\Helpers\ValueAs;
 use Thrift\Exception\TException;
 use Thrift\Protocol\TBinaryProtocolAccelerated;
@@ -299,7 +300,10 @@ class CqlConnection
     {
       $this->_clearCache($query, $compression);
       $e = CqlException::from($exception);
-      if(starts_with($e->getMessage(), 'No keyspace has been specified.')
+      if(Strings::startsWith(
+          $e->getMessage(),
+          'No keyspace has been specified.'
+        )
         && $this->_config()->has('keyspace')
       )
       {
@@ -390,7 +394,7 @@ class CqlConnection
       if($retries > 0 && $this->_isRecoverableException($e))
       {
         $this->disconnect()->connect();
-        if(starts_with($e->getMessage(), 'Prepared query with ID'))
+        if(Strings::startsWith($e->getMessage(), 'Prepared query with ID'))
         {
           // re-prepare statement
           $statement = $this->prepare(
@@ -421,7 +425,7 @@ class CqlConnection
   private function _isRecoverableException(CqlException $e)
   {
     if(($e->getPrevious() instanceof InvalidRequestException
-        && !starts_with($e->getMessage(), 'Prepared query with ID'))
+        && !Strings::startsWith($e->getMessage(), 'Prepared query with ID'))
       || ($e->getPrevious() instanceof NotFoundException)
     )
     {

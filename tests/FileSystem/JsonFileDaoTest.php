@@ -5,12 +5,13 @@ use Packaged\Dal\DalResolver;
 use Packaged\Dal\FileSystem\FileSystemDao;
 use Packaged\Dal\FileSystem\JsonFileDao;
 use Packaged\Dal\Foundation\Dao;
+use Packaged\Helpers\Path;
 
 class JsonFileDaoTest extends \PHPUnit_Framework_TestCase
 {
   protected function _getResourceLocation($filename)
   {
-    return build_path(dirname(__DIR__), 'resources', 'FileSystem', $filename);
+    return Path::build(dirname(__DIR__), 'resources', 'FileSystem', $filename);
   }
 
   protected function setUp()

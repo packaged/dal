@@ -7,6 +7,7 @@ use Packaged\Dal\Exceptions\DalResolver\DataStoreNotFoundException;
 use Packaged\Dal\Exceptions\Dao\MultipleDaoException;
 use Packaged\Dal\Foundation\AbstractSanitizableDao;
 use Packaged\Dal\Traits\Dao\LSDTrait;
+use Packaged\Helpers\Objects;
 use Packaged\Helpers\Strings;
 
 abstract class QlDao extends AbstractSanitizableDao
@@ -25,11 +26,11 @@ abstract class QlDao extends AbstractSanitizableDao
     if($this->_tableName === null)
     {
       $class = get_called_class();
-      $ns = get_namespace($class);
+      $ns = Objects::getNamespace($class);
       $dirs = $this->getTableNameExcludeDirs();
       foreach($dirs as $dir)
       {
-        $ns = ltrim(string_from($ns, $dir), '\\');
+        $ns = ltrim(Strings::offset($ns, $dir), '\\');
       }
       $this->_tableName = trim(
         Inflector::tableize(
@@ -37,7 +38,7 @@ abstract class QlDao extends AbstractSanitizableDao
             '_',
             [
               Strings::stringToUnderScore($ns),
-              Inflector::pluralize(class_shortname($class))
+              Inflector::pluralize(Objects::classShortname($class))
             ]
           )
         ),

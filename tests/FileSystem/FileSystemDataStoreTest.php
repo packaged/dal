@@ -5,12 +5,13 @@ use Packaged\Dal\DalResolver;
 use Packaged\Dal\FileSystem\FileSystemDao;
 use Packaged\Dal\FileSystem\FileSystemDataStore;
 use Packaged\Dal\Foundation\Dao;
+use Packaged\Helpers\Path;
 
 class FileSystemDataStoreTest extends \PHPUnit_Framework_TestCase
 {
   protected function _getResourceLocation($filename)
   {
-    return build_path(dirname(__DIR__), 'resources', 'FileSystem', $filename);
+    return Path::build(dirname(__DIR__), 'resources', 'FileSystem', $filename);
   }
 
   protected function setUp()
@@ -45,7 +46,7 @@ class FileSystemDataStoreTest extends \PHPUnit_Framework_TestCase
       '\Packaged\Dal\Exceptions\DataStore\DaoNotFoundException'
     );
     $file = new FileSystemDao(
-      build_path(dirname(dirname(__DIR__)), 'missing.file')
+      Path::build(dirname(dirname(__DIR__)), 'missing.file')
     );
     $file->load();
   }
@@ -58,7 +59,7 @@ class FileSystemDataStoreTest extends \PHPUnit_Framework_TestCase
     $dao = $this->getMockForAbstractClass(
       '\Packaged\Dal\Foundation\AbstractDao'
     );
-    $fs  = new FileSystemDataStore();
+    $fs = new FileSystemDataStore();
     $fs->load($dao);
   }
 
@@ -102,7 +103,7 @@ class FileSystemDataStoreTest extends \PHPUnit_Framework_TestCase
   public function testFileCRUD()
   {
     $crudLoc = $this->_getResourceLocation('crud.test');
-    $file    = new FileSystemDao($crudLoc);
+    $file = new FileSystemDao($crudLoc);
     try
     {
       $file->load();

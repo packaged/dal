@@ -1,6 +1,9 @@
 <?php
 namespace Packaged\Dal\Helpers;
 
+use Packaged\Helpers\Objects;
+use Packaged\Helpers\Path;
+
 class Phid
 {
   public static function generate(
@@ -9,8 +12,8 @@ class Phid
   {
     if($prefix === null)
     {
-      $class  = class_shortname($object);
-      $short  = self::getUppers($class);
+      $class = Objects::classShortname($object);
+      $short = self::getUppers($class);
       $prefix = strlen($short) > 1 ? $short : substr(strtoupper($class), 0, 3);
     }
 
@@ -20,7 +23,7 @@ class Phid
     }
 
     return uniqid(
-      build_path_custom(':', [$prefix, 'PHID', $append]) . ':',
+      Path::buildCustom(':', [$prefix, 'PHID', $append]) . ':',
       $moreEntropy
     );
   }

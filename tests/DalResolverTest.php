@@ -2,6 +2,7 @@
 
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Exceptions\DalException;
+use Packaged\Helpers\Path;
 
 class ConnectionResolverTest extends PHPUnit_Framework_TestCase
 {
@@ -113,10 +114,10 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
   public function testConfigurations()
   {
     $connectionConfig = new \Packaged\Config\Provider\Ini\IniConfigProvider(
-      build_path(__DIR__, 'resources', 'connections.ini')
+      Path::build(__DIR__, 'resources', 'connections.ini')
     );
     $datastoreConfig = new \Packaged\Config\Provider\Ini\IniConfigProvider(
-      build_path(__DIR__, 'resources', 'datastores.ini')
+      Path::build(__DIR__, 'resources', 'datastores.ini')
     );
     $resolver = new \Packaged\Dal\DalResolver(
       $connectionConfig,
@@ -226,7 +227,7 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
 
     $perfData = $dal->getPerformanceMetrics();
     $this->assertCount(1, $perfData);
-    $perfData = head($perfData);
+    $perfData = reset($perfData);
     $this->assertEquals('test', $perfData['c']);
     $this->assertEquals('SLEEP', $perfData['q']);
     $this->assertEquals(DalResolver::MODE_READ, $perfData['m']);

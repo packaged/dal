@@ -15,7 +15,7 @@ class MemcachedConnection extends MemcacheConnection
 
   protected function _addServer($server, $port, $persist, $weight, $timeout)
   {
-    $this->_connection->addserver($server, $port, $persist);
+    $this->_connection->addserver($server, $port, $weight);
   }
 
   /**

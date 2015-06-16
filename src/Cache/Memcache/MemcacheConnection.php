@@ -33,16 +33,21 @@ class MemcacheConnection extends AbstractCacheConnection
     $servers = ValueAs::arr($cfg->getItem('servers', 'localhost'));
     foreach($servers as $alias => $server)
     {
-      $port = $cfg->getItem($alias . '.port', $cfg->getItem('port', 11211));
-      $persist = $cfg->getItem(
-        $alias . '.persist',
-        $cfg->getItem('persist', true)
+      $port = (int)$cfg->getItem(
+        $alias . '.port',
+        $cfg->getItem('port', 11211)
       );
-      $weight = $cfg->getItem(
+      $persist = ValueAs::bool(
+        $cfg->getItem(
+          $alias . '.persist',
+          $cfg->getItem('persist', true)
+        )
+      );
+      $weight = (int)$cfg->getItem(
         $alias . '.weight',
         $cfg->getItem('weight', 1)
       );
-      $timeout = $cfg->getItem(
+      $timeout = (int)$cfg->getItem(
         $alias . '.timeout',
         $cfg->getItem('timeout', 1)
       );

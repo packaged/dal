@@ -152,6 +152,14 @@ class MemcacheConnection extends AbstractCacheConnection
    */
   public function saveItem(ICacheItem $item, $ttl = null)
   {
-    return $this->_connection->set($item->getKey(), $item->get(), $ttl);
+    $value = $item->get();
+    $compress = is_bool($value) || is_int($value) || is_float($value)
+      ? false : MEMCACHE_COMPRESSED;
+    return $this->_connection->set(
+      $item->getKey(),
+      $item->get(),
+      $compress,
+      $ttl
+    );
   }
 }

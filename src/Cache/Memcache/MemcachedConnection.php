@@ -1,6 +1,8 @@
 <?php
 namespace Packaged\Dal\Cache\Memcache;
 
+use Packaged\Dal\Cache\ICacheItem;
+
 class MemcachedConnection extends MemcacheConnection
 {
   /**
@@ -45,5 +47,18 @@ class MemcachedConnection extends MemcacheConnection
     }
     $this->_connection = null;
     return $this;
+  }
+
+  /**
+   * Save cache item
+   *
+   * @param ICacheItem $item
+   * @param int|null   $ttl
+   *
+   * @return bool
+   */
+  public function saveItem(ICacheItem $item, $ttl = null)
+  {
+    return $this->_connection->set($item->getKey(), $item->get(), $ttl);
   }
 }

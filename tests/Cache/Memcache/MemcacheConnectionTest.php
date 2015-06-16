@@ -33,7 +33,7 @@ class MemcacheConnectionTest extends \PHPUnit_Framework_TestCase
     $pull = $connection->getItem('tester');
     $this->assertFalse($pull->exists());
 
-    $connection->saveItem($item);
+    $connection->saveItem($item, 10);
 
     $pull = $connection->getItem('tester');
     $this->assertTrue($pull->exists());

@@ -227,6 +227,23 @@ abstract class AbstractDao implements IDao
   }
 
   /**
+   * Setup the dao on unserialize
+   */
+  public function __wakeup()
+  {
+    //Calculate public properties
+    $this->_startup();
+
+    //Configure the DAO
+    $this->_configure();
+  }
+
+  public function __sleep()
+  {
+    return array_keys(get_object_vars($this));
+  }
+
+  /**
    * Setup the dao
    */
   final protected function _startup()

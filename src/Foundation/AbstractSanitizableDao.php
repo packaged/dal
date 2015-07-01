@@ -541,4 +541,9 @@ abstract class AbstractSanitizableDao extends AbstractDao
     }
     return $id;
   }
+
+  public function __sleep()
+  {
+    return array_diff(parent::__sleep(), ['_sanetizers']);
+  }
 }

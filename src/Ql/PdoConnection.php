@@ -446,7 +446,7 @@ class PdoConnection
     }
     else if(is_int($var))
     {
-      if($var >= (2 ^ 31))
+      if($var >= pow(2, 31))
       {
         $type = \PDO::PARAM_STR;
       }

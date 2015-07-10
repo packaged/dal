@@ -442,7 +442,7 @@ class PdoConnection
     else if(is_bool($var))
     {
       $var = $var ? 1 : 0;
-      $type = \PDO::PARAM_BOOL;
+      $type = \PDO::PARAM_INT;
     }
     else if(is_int($var))
     {

@@ -35,6 +35,7 @@ class QlDaoTest extends \PHPUnit_Framework_TestCase
     $u = new MockQlDao();
     $u->username = $username;
     $u->display = 'Test One';
+    $u->boolTest = true;
     $u->save();
     // save again to ensure no query is made
     $u->save();

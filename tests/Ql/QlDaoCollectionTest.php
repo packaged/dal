@@ -104,6 +104,10 @@ class QlDaoCollectionTest extends \PHPUnit_Framework_TestCase
     $first = MockQlDao::collection(['username' => 'NotExisting'])->first('abc');
     $this->assertEquals('abc', $first);
 
+    $count = MockQlDao::collection(['username' => 'NotExisting'])
+      ->orderBy('username')->count();
+    $this->assertEquals(0, $count);
+
     $col = MockQlDao::collection(['username' => 'Test'])->limit(10);
     $first = $col->first();
     $this->assertTrue($col->hasClause('LIMIT'));

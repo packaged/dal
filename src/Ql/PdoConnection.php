@@ -52,7 +52,10 @@ class PdoConnection
         );
       }
 
-      $remainingAttempts = ((int)$this->_config()->getItem('connect_retries', 3));
+      $remainingAttempts = ((int)$this->_config()->getItem(
+        'connect_retries',
+        3
+      ));
 
       while(($remainingAttempts > 0) && ($this->_connection === null))
       {
@@ -348,7 +351,6 @@ class PdoConnection
     try
     {
       $stmt = $this->_getStatement($query);
-      $values = $this->_prepareValues($values);
       if($values)
       {
         $this->_bindValues($stmt, $values);
@@ -420,21 +422,6 @@ class PdoConnection
     return $e->getCode() == 2006;
   }
 
-  protected function _prepareValues($values)
-  {
-    if(is_array($values))
-    {
-      foreach($values as $k => $value)
-      {
-        if(is_bool($value))
-        {
-          $values[$k] = $value ? 1 : 0;
-        }
-      }
-    }
-    return $values;
-  }
-
   protected function _bindValues(\PDOStatement $stmt, array $values)
   {
     $i = 1;
@@ -458,7 +445,14 @@ class PdoConnection
     }
     else if(is_int($var))
     {
-      $type = \PDO::PARAM_INT;
+      if($var >= (2 ^ 31))
+      {
+        $type = \PDO::PARAM_STR;
+      }
+      else
+      {
+        $type = \PDO::PARAM_INT;
+      }
     }
     return $type;
   }

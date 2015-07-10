@@ -289,8 +289,7 @@ class PdoConnection
           try
           {
             $stmt = $this->_connection->prepare($query);
-          }
-          finally
+          } finally
           {
             $this->_connection->setAttribute(
               \PDO::ATTR_EMULATE_PREPARES,
@@ -427,7 +426,8 @@ class PdoConnection
     $i = 1;
     foreach($values as $value)
     {
-      $stmt->bindValue($i, $value, $this->_pdoTypeForPhpVar($value));
+      $type = $this->_pdoTypeForPhpVar($value);
+      $stmt->bindValue($i, $value, $type);
       $i++;
     }
   }
@@ -441,6 +441,7 @@ class PdoConnection
     }
     else if(is_bool($var))
     {
+      $var = $var ? 1 : 0;
       $type = \PDO::PARAM_BOOL;
     }
     else if(is_int($var))

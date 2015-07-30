@@ -231,8 +231,12 @@ abstract class AbstractDao implements IDao
    */
   public function __wakeup()
   {
-    //Calculate public properties
-    $this->_startup();
+    if(!$this->_hasStartedUp())
+    {
+      //Initialise startup commands on a new instance
+      //This avoids setting default values to the first instance to wake up
+      new static();
+    }
 
     //Configure the DAO
     $this->_configure();
@@ -243,10 +247,7 @@ abstract class AbstractDao implements IDao
     return array_keys(get_object_vars($this));
   }
 
-  /**
-   * Setup the dao
-   */
-  final protected function _startup()
+  protected function _hasStartedUp()
   {
     //Cache the called class
     if($this->_calledClass === null)
@@ -257,26 +258,37 @@ abstract class AbstractDao implements IDao
     //If the properties have already been configured, do not re-execute startup
     if(isset(static::$_properties[$this->_calledClass]))
     {
-      return;
+      return true;
     }
+    return false;
+  }
 
-    //Initialise the properties array to disable starting from running even if
-    //no properties are located
-    static::$_properties[$this->_calledClass] = [];
-
-    $reflect = new \ReflectionClass($this->_calledClass);
-    foreach($reflect->getProperties(\ReflectionProperty::IS_PUBLIC) as $pub)
+  /**
+   * Setup the dao
+   */
+  final protected function _startup()
+  {
+    if(!$this->_hasStartedUp())
     {
-      if(!$pub->isStatic())
-      {
-        //Add all non static properties to the cache with their default values
-        static::$_properties[$this->_calledClass][$pub->getName()]
-          = $pub->getValue($this);
-      }
-    }
+      //Initialise the properties array to disable starting from running even if
+      //no properties are located
+      static::$_properties[$this->_calledClass] = [];
 
-    //Run dao type specific startup methods
-    $this->_postStartup();
+      $reflect = new \ReflectionClass($this->_calledClass);
+      //$newInstance = $reflect->newInstance();
+      foreach($reflect->getProperties(\ReflectionProperty::IS_PUBLIC) as $pub)
+      {
+        if(!$pub->isStatic())
+        {
+          //Add all non static properties to the cache with their default values
+          static::$_properties[$this->_calledClass][$pub->getName()]
+            = $pub->getValue($this);
+        }
+      }
+
+      //Run dao type specific startup methods
+      $this->_postStartup();
+    }
   }
 
   /**

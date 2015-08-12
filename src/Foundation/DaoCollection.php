@@ -94,6 +94,9 @@ class DaoCollection implements IDaoCollection
     return $this;
   }
 
+  /**
+   * @return IDao[]
+   */
   public function getRawArray()
   {
     $this->_prepareDaos();

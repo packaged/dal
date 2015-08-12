@@ -26,7 +26,8 @@ use Packaged\QueryBuilder\Statement\IStatementSegment;
 use Packaged\QueryBuilder\Statement\QueryStatement;
 
 /**
- * @method QlDao createNewDao($fresh = true)
+ * @method QlDao   createNewDao($fresh = true)
+ * @method QlDao[] getRawArray()
  */
 class QlDaoCollection extends DaoCollection
   implements IAggregateDaoCollection, IStatement

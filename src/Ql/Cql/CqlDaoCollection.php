@@ -8,7 +8,8 @@ use Packaged\QueryBuilder\Clause\SelectClause;
 use Packaged\QueryBuilder\SelectExpression\ISelectExpression;
 
 /**
- * @method CqlDao createNewDao($fresh = true)
+ * @method CqlDao   createNewDao($fresh = true)
+ * @method CqlDao[] getRawArray()
  */
 class CqlDaoCollection extends QlDaoCollection
 {

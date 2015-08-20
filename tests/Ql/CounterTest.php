@@ -48,15 +48,26 @@ class CounterTest extends \PHPUnit_Framework_TestCase
     $datastore->save($dao);
     $dao->c1->increment(15);
     $datastore->save($dao);
-    $dao->c1->increment(0);
+    $dao->c3->increment(8);
     $datastore->save($dao);
-    $dao->c1->increment(0.0);
+    $dao->c3->increment(9.7);
     $datastore->save($dao);
-    $dao->c1->increment(null);
+    $dao->c3->increment(99);
     $datastore->save($dao);
-    $dao->c1->increment('');
+    $dao->c3->increment(1.3);
     $datastore->save($dao);
-    $dao->c1->increment('goat');
+    $dao->c3->increment(0.0);
+    $datastore->save($dao);
+    $dao->c3->increment(null);
+    $datastore->save($dao);
+    $dao->c3->increment('');
+    $datastore->save($dao);
+    $dao->c3->increment('goat');
+    $datastore->save($dao);
+    $dao->c3->increment(
+      '99
+ a'
+    );
     $datastore->save($dao);
     $dao->c2->increment(0);
     $datastore->save($dao);
@@ -64,6 +75,7 @@ class CounterTest extends \PHPUnit_Framework_TestCase
     $dao = MockCounterDao::loadById('test1');
     $this->assertEquals(30, $dao->c1->calculated());
     $this->assertEquals(-4, $dao->c2->calculated());
+    $this->assertEquals(217, $dao->c3->calculated());
 
     $dao = MockCounterDao::loadById('test1');
     $this->assertEquals(30, $dao->c1->calculated());
@@ -81,7 +93,10 @@ class CounterTest extends \PHPUnit_Framework_TestCase
     $this->assertEquals(500, $dao->c1->calculated());
 
     $json = json_encode($dao);
-    $this->assertEquals('{"id":"test1","c1":"500","c2":"-4"}', $json);
+    $this->assertEquals(
+      '{"id":"test1","c1":"500","c2":"-4","c3":"217.00"}',
+      $json
+    );
 
     $dao = new MockCounterDao();
     $dao->id = 'test1';
@@ -90,7 +105,7 @@ class CounterTest extends \PHPUnit_Framework_TestCase
     $datastore->save($dao);
 
     $json = json_encode($dao);
-    $this->assertEquals('{"id":"test1","c1":"6","c2":"-8"}', $json);
+    $this->assertEquals('{"id":"test1","c1":"6","c2":"-8","c3":"0"}', $json);
   }
 }
 
@@ -110,6 +125,11 @@ class MockCounterDao extends QlDao
    * @var Counter
    */
   public $c2;
+  /**
+   * @counter
+   * @var Counter
+   */
+  public $c3;
 
   protected $_dataStore;
 

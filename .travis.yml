@@ -26,6 +26,7 @@ before_script:
                 `id` varchar(50) NOT NULL,
                 `c1` int(11) DEFAULT NULL,
                 `c2` int(11) DEFAULT NULL,
+                `c3` decimal(10,2) DEFAULT NULL,
                 PRIMARY KEY (`id`)
               ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;'
 

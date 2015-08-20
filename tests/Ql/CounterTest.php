@@ -37,9 +37,36 @@ class CounterTest extends \PHPUnit_Framework_TestCase
     $dao->c2->decrement(3);
     $datastore->save($dao);
 
-    $dao = MockCounterDao::loadOrNew('test1');
+    $dao = MockCounterDao::loadById('test1');
     $this->assertEquals(5, $dao->c1->calculated());
     $this->assertEquals(-4, $dao->c2->calculated());
+
+    $dao = MockCounterDao::loadById('test1');
+    $dao->c1->increment(0);
+    $datastore->save($dao);
+    $dao->c1->increment(10);
+    $datastore->save($dao);
+    $dao->c1->increment(15);
+    $datastore->save($dao);
+    $dao->c1->increment(0);
+    $datastore->save($dao);
+    $dao->c1->increment(0.0);
+    $datastore->save($dao);
+    $dao->c1->increment(null);
+    $datastore->save($dao);
+    $dao->c1->increment('');
+    $datastore->save($dao);
+    $dao->c1->increment('goat');
+    $datastore->save($dao);
+    $dao->c2->increment(0);
+    $datastore->save($dao);
+
+    $dao = MockCounterDao::loadById('test1');
+    $this->assertEquals(30, $dao->c1->calculated());
+    $this->assertEquals(-4, $dao->c2->calculated());
+
+    $dao = MockCounterDao::loadById('test1');
+    $this->assertEquals(30, $dao->c1->calculated());
 
     $dao->c1 = 100;
     $dao->save();

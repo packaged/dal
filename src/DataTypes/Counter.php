@@ -33,26 +33,26 @@ class Counter implements IDataType, \JsonSerializable
 
   public function increment($by = 1)
   {
-    $this->_adjusted = true;
     $this->_adjust += abs($by);
+    $this->_adjusted = abs($by) > 0;
     return $this;
   }
 
   public function decrement($by = 1)
   {
-    $this->_adjusted = true;
     $this->_adjust -= abs($by);
+    $this->_adjusted = abs($by) > 0;
     return $this;
   }
 
   public function isIncrement()
   {
-    return $this->_adjust > 0;
+    return $this->_adjusted && $this->_adjust > 0;
   }
 
   public function isDecrement()
   {
-    return $this->_adjust < 0;
+    return $this->_adjusted && $this->_adjust < 0;
   }
 
   public function isFixedValue()
@@ -62,7 +62,7 @@ class Counter implements IDataType, \JsonSerializable
 
   public function hasChanged()
   {
-    return $this->_adjusted;
+    return (bool)$this->_adjusted;
   }
 
   public function getIncrement()

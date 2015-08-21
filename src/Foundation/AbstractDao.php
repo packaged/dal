@@ -2,6 +2,7 @@
 namespace Packaged\Dal\Foundation;
 
 use Packaged\Dal\DalResolver;
+use Packaged\Dal\DataTypes\Counter;
 use Packaged\Dal\IDao;
 use Packaged\Dal\IDataStore;
 use Packaged\Helpers\Arrays;
@@ -95,12 +96,16 @@ abstract class AbstractDao implements IDao
    */
   public function getDaoChanges()
   {
-    $current = (array)$this->getDaoPropertyData();
+    $current = $this->getDaoPropertyData();
     $changes = [];
     foreach($current as $key => $val)
     {
       if($val !== $this->_savedData[$key])
       {
+        if($this->$key instanceof Counter && !$this->$key->hasChanged())
+        {
+          continue;
+        }
         $changes[$key] = [
           'from' => Arrays::value($this->_savedData, $key),
           'to'   => Arrays::value($current, $key)
@@ -145,10 +150,7 @@ abstract class AbstractDao implements IDao
    */
   public function getDaoPropertyData()
   {
-    return array_intersect_key(
-      Objects::propertyValues($this),
-      array_flip($this->getDaoProperties())
-    );
+    return Objects::propertyValues($this);
   }
 
   /**

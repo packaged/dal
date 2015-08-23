@@ -164,22 +164,23 @@ abstract class QlDao extends AbstractSanitizableDao
    */
   public function getDataStore()
   {
+    $resolver = static::getDalResolver();
     try
     {
-      return static::$_resolver->getDataStore($this->_dataStoreName);
+      return $resolver->getDataStore($this->_dataStoreName);
     }
     catch(DataStoreNotFoundException $e)
     {
-      if(static::getDalResolver()->hasConnection($this->_dataStoreName))
+      if($resolver->hasConnection($this->_dataStoreName))
       {
-        $dataStore = new QlDataStore();
-        $dataStore->configure(
-          new ConfigSection('', ['connection' => $this->_dataStoreName])
-        );
-        static::getDalResolver()->addDataStore(
+        $config = new ConfigSection(
           $this->_dataStoreName,
-          $dataStore
+          ['connection' => $this->_dataStoreName]
         );
+        $dataStore = new QlDataStore();
+        $dataStore->configure($config);
+        $resolver->addDataStoreConfig($config);
+        $resolver->addDataStore($this->_dataStoreName, $dataStore);
         return $dataStore;
       }
       throw $e;

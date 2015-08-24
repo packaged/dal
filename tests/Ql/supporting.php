@@ -25,16 +25,21 @@ class MockQlDao extends QlDao
   }
 }
 
-class MockMultiKeyQlDao extends QlDao
+class MockNonUniqueKeyDao extends MockQlDao
 {
-  /**
-   * @bigint
-   */
-  public $id;
-  public $username;
-  public $display;
-  public $boolTest;
+  public function getDaoIDProperties()
+  {
+    return ['username'];
+  }
 
+  public function getTableName()
+  {
+    return 'mock_ql_daos';
+  }
+}
+
+class MockMultiKeyQlDao extends MockQlDao
+{
   public function getDaoIDProperties()
   {
     return ['id', 'username'];

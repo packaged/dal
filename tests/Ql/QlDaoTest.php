@@ -80,6 +80,40 @@ class QlDaoTest extends \PHPUnit_Framework_TestCase
     $resolver->shutdown();
   }
 
+  /**
+   * @expectedException \Packaged\Dal\Exceptions\DataStore\TooManyResultsException
+   * @expectedExceptionMessage Too many results located
+   */
+  public function testMultipleExistsFailure()
+  {
+    $datastore = new MockQlDataStore();
+    $connection = new MockPdoConnection();
+    $connection->config();
+    $datastore->setConnection($connection);
+
+    $resolver = new DalResolver();
+    $resolver->boot();
+    $resolver->addDataStore('mockql', $datastore);
+
+    $connection->setResolver($resolver);
+
+    $u1 = new MockQlDao();
+    $u1->username = 'TestMultiple';
+    $u1->display = 'Test One';
+    $u1->save();
+
+    $u2 = new MockQlDao();
+    $u2->username = 'TestMultiple';
+    $u2->display = 'Test Two';
+    $u2->save();
+
+    $test = new MockNonUniqueKeyDao();
+    $test->username = 'TestMultiple';
+    $test->exists();
+
+    MockNonUniqueKeyDao::loadById('TestMultiple');
+  }
+
   public function testDatastoreAutoConstruct()
   {
     $connection = new PdoConnection();

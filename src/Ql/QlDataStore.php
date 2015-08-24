@@ -7,6 +7,7 @@ use Packaged\Dal\DataTypes\Counter;
 use Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException;
 use Packaged\Dal\Exceptions\DataStore\DaoNotFoundException;
 use Packaged\Dal\Exceptions\DataStore\DataStoreException;
+use Packaged\Dal\Exceptions\DataStore\TooManyResultsException;
 use Packaged\Dal\Foundation\AbstractDataStore;
 use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\IDao;
@@ -201,7 +202,7 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
       case 0:
         throw new DaoNotFoundException("Unable to locate Dao");
       default:
-        throw new DataStoreException("Too many results located");
+        throw new TooManyResultsException("Too many results located");
     }
     return $dao;
   }
@@ -259,7 +260,10 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
       $this->load($dao);
       return $dao->isDaoLoaded();
     }
-    catch(\Exception $e)
+    catch(DaoNotFoundException $e)
+    {
+    }
+    catch(TooManyResultsException $e)
     {
     }
     return false;

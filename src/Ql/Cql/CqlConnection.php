@@ -11,6 +11,7 @@ use cassandra\CqlResultType;
 use cassandra\CqlRow;
 use cassandra\InvalidRequestException;
 use cassandra\NotFoundException;
+use cassandra\TimedOutException;
 use Packaged\Config\ConfigurableInterface;
 use Packaged\Config\ConfigurableTrait;
 use Packaged\Dal\DalResolver;
@@ -389,6 +390,15 @@ class CqlConnection
     }
     catch(\Exception $exception)
     {
+      if($exception instanceof TimedOutException
+        && (!(Strings::startsWith($statement->getQuery(), 'SELECT', false)))
+      )
+      {
+        // TimedOutException on writes is NOT a failure
+        // http://www.datastax.com/dev/blog/how-cassandra-deals-with-replica-failure
+        return true;
+      }
+
       $this->_clearCache($statement->getQuery(), $statement->getCompression());
       $e = CqlException::from($exception);
       if($retries > 0 && $this->_isRecoverableException($e))

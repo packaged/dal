@@ -453,6 +453,19 @@ class CqlTest extends \PHPUnit_Framework_TestCase
       $this->assertEquals(3, $connection->getExecuteCount());
     }
 
+    $connection->setClient(new WriteTimeoutClient(null));
+    try
+    {
+      $connection->resetCounts();
+      $stmt = $connection->prepare('test');
+      $connection->execute($stmt);
+    }
+    catch(CqlException $e)
+    {
+      $this->assertEquals(1, $connection->getPrepareCount());
+      $this->assertEquals(3, $connection->getExecuteCount());
+    }
+
     $connection->setClient(new UnpreparedPrepareClient(null));
     try
     {
@@ -717,6 +730,21 @@ class FailExecuteClient extends CassandraClient
   )
   {
     throw new TTransportException('Class: timed out reading 123 bytes');
+  }
+}
+
+class WriteTimeoutClient extends CassandraClient
+{
+  public function prepare_cql3_query($query, $compression)
+  {
+    return new CqlPreparedResult();
+  }
+
+  public function execute_prepared_cql3_query(
+    $itemId, array $values, $consistency
+  )
+  {
+    throw new TimedOutException();
   }
 }
 

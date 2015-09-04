@@ -417,8 +417,10 @@ class PdoConnection
    */
   private function _shouldReconnectAfterException(PdoException $e)
   {
-    // "MySQL server has gone away"
-    return $e->getCode() == 2006;
+    // 2006 = MySQL server has gone away
+    // 1047 = ER_UNKNOWN_COM_ERROR - happens when a PXC node is resyncing:
+    //         "WSREP has not yet prepared node for application use"
+    return in_array($e->getCode(), [2006, 1047]);
   }
 
   protected function _bindValues(\PDOStatement $stmt, array $values)

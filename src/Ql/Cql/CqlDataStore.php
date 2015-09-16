@@ -60,9 +60,12 @@ class CqlDataStore extends QlDataStore
       }
     }
 
-    $qb = static::_getQueryBuilderClass();
-    return $qb::update($dao->getTableName(), $data)
-      ->where($dao->getId(true));
+    if($data)
+    {
+      $qb = static::_getQueryBuilderClass();
+      return $qb::update($dao->getTableName(), $data)->where($dao->getId(true));
+    }
+    return null;
   }
 
   /**

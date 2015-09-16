@@ -52,6 +52,11 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
     }
 
     $statement = $this->_getStatement($dao);
+    if(!($statement instanceof IStatement))
+    {
+      return [];
+    }
+
     $this->_prepareQuery($statement, $dao);
     $assembler = $this->_assemble($statement);
 
@@ -95,7 +100,7 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
   /**
    * @param QlDao $dao
    *
-   * @return IStatement
+   * @return null|IStatement
    */
   protected function _getStatement(QlDao $dao)
   {

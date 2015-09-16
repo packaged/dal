@@ -414,6 +414,14 @@ class CqlTest extends \PHPUnit_Framework_TestCase
     $loaded = MockCounterCqlDao::loadById('test1');
     $this->assertEquals(5, $loaded->c1->calculated());
     $this->assertEquals(-2, $loaded->c2->calculated());
+
+    $dao = new MockCounterCqlDao();
+    $dao->id = 'test1';
+    $dao->c1->increment(5);
+    $dao->c1->decrement(5);
+    $datastore->save($dao);
+    $dao->c2->increment(0);
+    $datastore->save($dao);
   }
 
   public function testRetries()

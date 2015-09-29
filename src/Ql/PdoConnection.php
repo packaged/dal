@@ -137,23 +137,7 @@ class PdoConnection
    */
   public function isConnected()
   {
-    if($this->_connection === null)
-    {
-      return false;
-    }
-    else
-    {
-      try
-      {
-        $this->_connection->query("SELECT 1");
-        return true;
-      }
-      catch(\Exception $e)
-      {
-        $this->_connection = null;
-        return false;
-      }
-    }
+    return $this->_connection !== null;
   }
 
   /**

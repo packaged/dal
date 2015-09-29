@@ -42,7 +42,7 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
     $connection->configure($config);
     $connection->connect();
     $this->assertTrue($connection->isConnected());
-    $connection->causeGoneAway();
+    $connection->disconnect();
     $this->assertFalse($connection->isConnected());
   }
 

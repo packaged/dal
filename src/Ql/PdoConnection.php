@@ -389,7 +389,11 @@ class PdoConnection
   private function _shouldDelayAfterException(PdoException $e)
   {
     // Deadlock errors: MySQL error 1213, SQLSTATE code 40001
-    return in_array($e->getCode(), [1213, 40001]);
+    $codes = ['1213', '40001'];
+    $p = $e->getPrevious();
+    return
+      in_array((string)$e->getCode(), $codes, true)
+      || in_array((string)$p->getCode(), $codes, true);
   }
 
   /**
@@ -401,10 +405,15 @@ class PdoConnection
    */
   private function _shouldReconnectAfterException(PdoException $e)
   {
-    // 2006 = MySQL server has gone away
-    // 1047 = ER_UNKNOWN_COM_ERROR - happens when a PXC node is resyncing:
-    //         "WSREP has not yet prepared node for application use"
-    return in_array($e->getCode(), [2006, 1047]);
+    // 2006  = MySQL server has gone away
+    // 1047  = ER_UNKNOWN_COM_ERROR - happens when a PXC node is resyncing:
+    //          "WSREP has not yet prepared node for application use"
+    // HY000 = General SQL error
+    $codes = ['2006', '1047', 'HY000'];
+    $p = $e->getPrevious();
+    return
+      in_array((string)$e->getCode(), $codes, true)
+      || ($p && in_array((string)$p->getCode(), $codes, true));
   }
 
   protected function _bindValues(\PDOStatement $stmt, array $values)

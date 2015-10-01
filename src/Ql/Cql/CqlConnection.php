@@ -240,7 +240,7 @@ class CqlConnection
    */
   protected function _cacheKey($query, $compression)
   {
-    return md5($query . $compression) . sha1($query . $compression);
+    return $compression . '~' . $query;
   }
 
   /**

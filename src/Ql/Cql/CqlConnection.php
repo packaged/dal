@@ -23,6 +23,7 @@ use Packaged\Dal\Traits\ResolverAwareTrait;
 use Packaged\Helpers\Strings;
 use Packaged\Helpers\ValueAs;
 use Thrift\Exception\TException;
+use Thrift\Exception\TTransportException;
 use Thrift\Protocol\TBinaryProtocolAccelerated;
 use Thrift\Transport\TFramedTransport;
 use Thrift\Transport\TSocketPool;
@@ -59,6 +60,9 @@ class CqlConnection
 
   protected $_prepareCache = [];
 
+  protected $_availableHosts = [];
+  protected $_availableHostCount = 0;
+
   /**
    * Open the connection
    *
@@ -70,9 +74,16 @@ class CqlConnection
   {
     if($this->_client === null)
     {
+      if(empty($this->_availableHosts))
+      {
+        $this->_availableHosts = ValueAs::arr(
+          $this->_config()->getItem('hosts', 'localhost')
+        );
+        $this->_availableHostCount = count($this->_availableHosts);
+      }
       $this->_prepareCache = [];
       $this->_socket = new DalSocketPool(
-        ValueAs::arr($this->_config()->getItem('hosts', 'localhost')),
+        $this->_availableHosts,
         (int)$this->_config()->getItem('port', 9160),
         ValueAs::bool($this->_config()->getItem('persist', false))
       );
@@ -128,8 +139,9 @@ class CqlConnection
       }
       catch(TException $e)
       {
+        $this->_removeCurrentHost();
         $exception = CqlException::from($e);
-        $this->_connected = false;
+        $this->disconnect();
         throw new ConnectionException(
           $exception->getMessage(),
           $exception->getCode(),
@@ -295,6 +307,7 @@ class CqlConnection
     }
     try
     {
+      $this->connect();
       return $this->_getStatement($query, $compression)->prepare();
     }
     catch(\Exception $exception)
@@ -314,12 +327,13 @@ class CqlConnection
 
       if($retries > 0 && $this->_isRecoverableException($e))
       {
-        $this->disconnect()->connect();
+        $this->disconnect();
         return $this->prepare($query, $compression, $retries - 1);
       }
       error_log(
         'CqlConnection Error: (' . $e->getCode() . ') ' . $e->getMessage()
       );
+      $this->disconnect();
       throw $e;
     }
   }
@@ -341,11 +355,15 @@ class CqlConnection
   {
     if($retries === null)
     {
-      $retries = (int)$this->_config()->getItem('retries', 2);
+      $retries = (int)$this->_config()->getItem(
+        'retries',
+        min(max($this->_availableHostCount, 2), 10)
+      );
     }
     $return = [];
     try
     {
+      $this->connect();
       $packedParameters = [];
       foreach($parameters as $k => $value)
       {
@@ -401,9 +419,10 @@ class CqlConnection
 
       $this->_clearCache($statement->getQuery(), $statement->getCompression());
       $e = CqlException::from($exception);
+
       if($retries > 0 && $this->_isRecoverableException($e))
       {
-        $this->disconnect()->connect();
+        $this->disconnect();
         if(Strings::startsWith($e->getMessage(), 'Prepared query with ID'))
         {
           // re-prepare statement
@@ -422,9 +441,21 @@ class CqlConnection
       error_log(
         'CqlConnection Error: (' . $e->getCode() . ') ' . $e->getMessage()
       );
+      $this->disconnect();
       throw $e;
     }
     return $return;
+  }
+
+  protected function _removeCurrentHost()
+  {
+    if($this->_socket)
+    {
+      $this->_availableHosts = array_diff(
+        (array)$this->_availableHosts,
+        [$this->_socket->getHost()]
+      );
+    }
   }
 
   /**
@@ -434,6 +465,17 @@ class CqlConnection
    */
   private function _isRecoverableException(CqlException $e)
   {
+    if($e->getPrevious() instanceof TTransportException
+      || Strings::startsWith(
+        $e->getMessage(),
+        'TSocketPool: All hosts in pool are down.'
+      )
+    )
+    {
+      $this->_removeCurrentHost();
+      return true;
+    }
+
     if(($e->getPrevious() instanceof InvalidRequestException
         && !Strings::startsWith($e->getMessage(), 'Prepared query with ID'))
       || ($e->getPrevious() instanceof NotFoundException)

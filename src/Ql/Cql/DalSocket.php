@@ -1,9 +1,9 @@
 <?php
 namespace Packaged\Dal\Ql\Cql;
 
-use Thrift\Transport\TSocketPool;
+use Thrift\Transport\TSocket;
 
-class DalSocketPool extends TSocketPool
+class DalSocket extends TSocket
 {
   /**
    * Calling close should disconnect persistent connections.

@@ -26,7 +26,7 @@ use Thrift\Exception\TException;
 use Thrift\Exception\TTransportException;
 use Thrift\Protocol\TBinaryProtocolAccelerated;
 use Thrift\Transport\TFramedTransport;
-use Thrift\Transport\TSocketPool;
+use Thrift\Transport\TSocket;
 use Thrift\Transport\TTransport;
 
 class CqlConnection
@@ -40,7 +40,7 @@ class CqlConnection
    */
   protected $_client;
   /**
-   * @var TSocketPool
+   * @var TSocket
    */
   protected $_socket;
   /**
@@ -82,8 +82,17 @@ class CqlConnection
         $this->_availableHostCount = count($this->_availableHosts);
       }
       $this->_prepareCache = [];
-      $this->_socket = new DalSocketPool(
-        $this->_availableHosts,
+
+      if($this->_availableHostCount < 1)
+      {
+        throw new ConnectionException('Could not find any configured hosts');
+      }
+
+      shuffle($this->_availableHosts);
+      $host = $this->_availableHosts[0];
+
+      $this->_socket = new DalSocket(
+        $host,
         (int)$this->_config()->getItem('port', 9160),
         ValueAs::bool($this->_config()->getItem('persist', false))
       );
@@ -91,74 +100,79 @@ class CqlConnection
       $this->_socket->setSendTimeout(
         (int)$this->_config()->getItem('connect_timeout', 1000)
       );
-      $this->_socket->setRetryInterval(
-        (int)$this->_config()->getItem('retry_interval', 0)
-      );
-      $this->_socket->setNumRetries(
-        (int)$this->_config()->getItem('retries', 1)
-      );
 
       $this->_transport = new TFramedTransport($this->_socket);
       $this->_protocol = new TBinaryProtocolAccelerated($this->_transport);
       $this->_client = new CassandraClient($this->_protocol);
 
+      $remainingAttempts = (int)$this->_config()->getItem('connect_retries', 1);
+
       $exception = null;
-      try
+      while($remainingAttempts > 0)
       {
-        $this->_transport->open();
-        $this->_connected = true;
-
-        $this->_socket->setRecvTimeout(
-          (int)$this->_config()->getItem('receive_timeout', 1000)
-        );
-        $this->_socket->setSendTimeout(
-          (int)$this->_config()->getItem('send_timeout', 1000)
-        );
-
-        $username = $this->_config()->getItem('username');
-        // @codeCoverageIgnoreStart
-        if($username)
+        $remainingAttempts--;
+        $exception = null;
+        try
         {
-          $this->_client->login(
-            new AuthenticationRequest(
-              [
-                'credentials' => [
-                  'username' => $username,
-                  'password' => $this->_config()->getItem('password', ''),
-                ]
-              ]
-            )
+          $this->_transport->open();
+          $this->_connected = true;
+
+          $this->_socket->setRecvTimeout(
+            (int)$this->_config()->getItem('receive_timeout', 1000)
           );
-        }
-        //@codeCoverageIgnoreEnd
+          $this->_socket->setSendTimeout(
+            (int)$this->_config()->getItem('send_timeout', 1000)
+          );
 
-        $keyspace = $this->_config()->getItem('keyspace');
-        if($keyspace)
-        {
-          $this->_setKeyspace($keyspace);
+          $username = $this->_config()->getItem('username');
+          // @codeCoverageIgnoreStart
+          if($username)
+          {
+            $this->_client->login(
+              new AuthenticationRequest(
+                [
+                  'credentials' => [
+                    'username' => $username,
+                    'password' => $this->_config()->getItem('password', ''),
+                  ]
+                ]
+              )
+            );
+          }
+          //@codeCoverageIgnoreEnd
+
+          $keyspace = $this->_config()->getItem('keyspace');
+          if($keyspace)
+          {
+            $this->_setKeyspace($keyspace);
+          }
         }
-      }
-      catch(TException $e)
-      {
-        $exception = $e;
-      }
-      catch(CqlException $e)
-      {
-        $exception = $e;
-      }
-      if($exception)
-      {
-        if(!($exception instanceof CqlException))
+        catch(TException $e)
         {
-          $exception = CqlException::from($exception);
+          $exception = $e;
         }
-        $this->_removeCurrentHost();
-        $this->disconnect();
-        throw new ConnectionException(
-          $exception->getMessage(),
-          $exception->getCode(),
-          $exception->getPrevious()
-        );
+        catch(CqlException $e)
+        {
+          $exception = $e;
+        }
+
+        if($exception)
+        {
+          $this->_removeCurrentHost();
+          $this->disconnect();
+          if($remainingAttempts < 1)
+          {
+            if(!($exception instanceof CqlException))
+            {
+              $exception = CqlException::from($exception);
+            }
+            throw new ConnectionException(
+              $exception->getMessage(),
+              $exception->getCode(),
+              $exception->getPrevious()
+            );
+          }
+        }
       }
     }
     return $this;
@@ -522,7 +536,7 @@ class CqlConnection
   public function setReceiveTimeout($timeout)
   {
     $this->_config()->addItem('receive_timeout', (int)$timeout);
-    if($this->_socket instanceof TSocketPool)
+    if($this->_socket instanceof TSocket)
     {
       $this->_socket->setRecvTimeout((int)$timeout);
     }
@@ -539,7 +553,7 @@ class CqlConnection
   public function setSendTimeout($timeout)
   {
     $this->_config()->addItem('send_timeout', (int)$timeout);
-    if($this->_socket instanceof TSocketPool)
+    if($this->_socket instanceof TSocket)
     {
       $this->_socket->setSendTimeout((int)$timeout);
     }

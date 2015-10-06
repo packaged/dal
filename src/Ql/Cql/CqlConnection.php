@@ -40,7 +40,7 @@ class CqlConnection
    */
   protected $_client;
   /**
-   * @var TSocket
+   * @var DalSocket
    */
   protected $_socket;
   /**
@@ -107,9 +107,14 @@ class CqlConnection
             (int)$this->_config()->getItem('port', 9160),
             ValueAs::bool($this->_config()->getItem('persist', false))
           );
-
-          $this->_socket->setSendTimeout(
+          $this->_socket->setConnectTimeout(
             (int)$this->_config()->getItem('connect_timeout', 1000)
+          );
+          $this->_socket->setRecvTimeout(
+            (int)$this->_config()->getItem('receive_timeout', 1000)
+          );
+          $this->_socket->setSendTimeout(
+            (int)$this->_config()->getItem('send_timeout', 1000)
           );
 
           $this->_transport = new TFramedTransport($this->_socket);
@@ -118,14 +123,7 @@ class CqlConnection
 
           $this->_transport->open();
           $this->_connected = true;
-
-          $this->_socket->setRecvTimeout(
-            (int)$this->_config()->getItem('receive_timeout', 1000)
-          );
-          $this->_socket->setSendTimeout(
-            (int)$this->_config()->getItem('send_timeout', 1000)
-          );
-
+          
           $username = $this->_config()->getItem('username');
           // @codeCoverageIgnoreStart
           if($username)

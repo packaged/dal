@@ -102,6 +102,7 @@ class CqlConnection
       $this->_protocol = new TBinaryProtocolAccelerated($this->_transport);
       $this->_client = new CassandraClient($this->_protocol);
 
+      $exception = null;
       try
       {
         $this->_transport->open();
@@ -139,13 +140,24 @@ class CqlConnection
       }
       catch(TException $e)
       {
+        $exception = $e;
+      }
+      catch(CqlException $e)
+      {
+        $exception = $e;
+      }
+      if($exception)
+      {
+        if(!($exception instanceof CqlException))
+        {
+          $exception = CqlException::from($exception);
+        }
         $this->_removeCurrentHost();
-        $exception = CqlException::from($e);
         $this->disconnect();
         throw new ConnectionException(
           $exception->getMessage(),
           $exception->getCode(),
-          $e
+          $exception->getPrevious()
         );
       }
     }

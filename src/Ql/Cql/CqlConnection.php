@@ -88,32 +88,34 @@ class CqlConnection
         throw new ConnectionException('Could not find any configured hosts');
       }
 
-      shuffle($this->_availableHosts);
-      $host = $this->_availableHosts[0];
-
-      $this->_socket = new DalSocket(
-        $host,
-        (int)$this->_config()->getItem('port', 9160),
-        ValueAs::bool($this->_config()->getItem('persist', false))
+      $remainingAttempts = (int)$this->_config()->getItem(
+        'connect_attempts',
+        1
       );
 
-      $this->_socket->setSendTimeout(
-        (int)$this->_config()->getItem('connect_timeout', 1000)
-      );
-
-      $this->_transport = new TFramedTransport($this->_socket);
-      $this->_protocol = new TBinaryProtocolAccelerated($this->_transport);
-      $this->_client = new CassandraClient($this->_protocol);
-
-      $remainingAttempts = (int)$this->_config()->getItem('connect_retries', 1);
-
-      $exception = null;
       while($remainingAttempts > 0)
       {
         $remainingAttempts--;
         $exception = null;
         try
         {
+          shuffle($this->_availableHosts);
+          $host = reset($this->_availableHosts);
+
+          $this->_socket = new DalSocket(
+            $host,
+            (int)$this->_config()->getItem('port', 9160),
+            ValueAs::bool($this->_config()->getItem('persist', false))
+          );
+
+          $this->_socket->setSendTimeout(
+            (int)$this->_config()->getItem('connect_timeout', 1000)
+          );
+
+          $this->_transport = new TFramedTransport($this->_socket);
+          $this->_protocol = new TBinaryProtocolAccelerated($this->_transport);
+          $this->_client = new CassandraClient($this->_protocol);
+
           $this->_transport->open();
           $this->_connected = true;
 

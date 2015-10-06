@@ -173,6 +173,10 @@ class CqlConnection
             );
           }
         }
+        else
+        {
+          break;
+        }
       }
     }
     return $this;

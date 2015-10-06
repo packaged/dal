@@ -74,19 +74,7 @@ class CqlConnection
   {
     if($this->_client === null)
     {
-      if(empty($this->_availableHosts))
-      {
-        $this->_availableHosts = ValueAs::arr(
-          $this->_config()->getItem('hosts', 'localhost')
-        );
-        $this->_availableHostCount = count($this->_availableHosts);
-      }
       $this->_prepareCache = [];
-
-      if($this->_availableHostCount < 1)
-      {
-        throw new ConnectionException('Could not find any configured hosts');
-      }
 
       $remainingAttempts = (int)$this->_config()->getItem(
         'connect_attempts',
@@ -99,6 +87,20 @@ class CqlConnection
         $exception = null;
         try
         {
+          if(empty($this->_availableHosts))
+          {
+            $this->_availableHosts = ValueAs::arr(
+              $this->_config()->getItem('hosts', 'localhost')
+            );
+            $this->_availableHostCount = count($this->_availableHosts);
+            if($this->_availableHostCount < 1)
+            {
+              throw new ConnectionException(
+                'Could not find any configured hosts'
+              );
+            }
+          }
+
           shuffle($this->_availableHosts);
           $host = reset($this->_availableHosts);
 
@@ -123,7 +125,7 @@ class CqlConnection
 
           $this->_transport->open();
           $this->_connected = true;
-          
+
           $username = $this->_config()->getItem('username');
           // @codeCoverageIgnoreStart
           if($username)
@@ -167,7 +169,7 @@ class CqlConnection
               $exception = CqlException::from($exception);
             }
             throw new ConnectionException(
-              $exception->getMessage(),
+              'Failed to connect',
               $exception->getCode(),
               $exception->getPrevious()
             );

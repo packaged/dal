@@ -1,7 +1,6 @@
 <?php
 namespace Packaged\Dal\Exceptions\Connection;
 
-use Thrift\Exception\TApplicationException;
 use cassandra\AuthenticationException;
 use cassandra\AuthorizationException;
 use cassandra\InvalidRequestException;
@@ -9,6 +8,7 @@ use cassandra\NotFoundException;
 use cassandra\SchemaDisagreementException;
 use cassandra\TimedOutException;
 use cassandra\UnavailableException;
+use Thrift\Exception\TApplicationException;
 
 class CqlException extends ConnectionException
 {
@@ -108,7 +108,7 @@ class CqlException extends ConnectionException
     }
     catch(\Exception $e)
     {
-      return new self($e->getMessage(), $e->getCode(), $e);
+      return new self($e->getMessage(), $e->getCode() ?: 500, $e);
     }
   }
 }

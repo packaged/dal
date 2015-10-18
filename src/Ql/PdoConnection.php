@@ -27,6 +27,7 @@ class PdoConnection
   protected $_lastConnectTime = 0;
   protected $_emulatedPrepares = false;
   protected $_delayedPreparesCount = null;
+  protected $_inTransaction = false;
 
   /**
    * Open the connection
@@ -199,6 +200,41 @@ class PdoConnection
   }
 
   /**
+   * Start a transaction
+   */
+  public function startTransaction()
+  {
+    $this->connect();
+    $result = $this->_connection->exec('START TRANSACTION');
+    $this->_inTransaction = true;
+    return $result;
+  }
+
+  /**
+   * Commit the current transaction
+   */
+  public function commit()
+  {
+    if($this->_inTransaction)
+    {
+      return $this->_connection->exec('COMMIT');
+    }
+    throw new PdoException('Not currently in a transaction');
+  }
+
+  /**
+   * Roll back the current transaction
+   */
+  public function rollback()
+  {
+    if($this->_inTransaction)
+    {
+      return $this->_connection->exec('ROLLBACK');
+    }
+    throw new PdoException('Not currently in a transaction');
+  }
+
+  /**
    * @param $query
    *
    * @return string
@@ -309,17 +345,24 @@ class PdoConnection
 
   protected function _recycleConnectionIfRequired()
   {
-    if($this->_lastConnectTime > 0)
+    if($this->isConnected())
     {
-      $recycleTime = (int)$this->_config()
-        ->getItem('connection_recycle_time', 900);
-
-      if(($recycleTime > 0)
-        && ((time() - $this->_lastConnectTime) >= $recycleTime)
-      )
+      if(($this->_lastConnectTime > 0) && (! $this->_inTransaction))
       {
-        $this->disconnect()->connect();
+        $recycleTime = (int)$this->_config()
+          ->getItem('connection_recycle_time', 900);
+
+        if(($recycleTime > 0)
+          && ((time() - $this->_lastConnectTime) >= $recycleTime)
+        )
+        {
+          $this->disconnect()->connect();
+        }
       }
+    }
+    else
+    {
+      $this->connect();
     }
   }
 

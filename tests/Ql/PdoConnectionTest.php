@@ -235,6 +235,98 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
   {
     return [[0, 0], [1, 1], [2, 2], ['true', 1], ['false', 0]];
   }
+
+  public function testTransactions()
+  {
+    $connection = new MockPdoConnection();
+    $connection->setResolver(new DalResolver());
+    $connection->runQuery('USE packaged_dal');
+
+    $connection2 = new MockPdoConnection();
+    $connection2->setResolver(new DalResolver());
+    $connection2->runQuery('USE packaged_dal');
+
+    $connection->runQuery("DROP TABLE IF EXISTS transactions_test");
+    $connection->runQuery(
+      "CREATE TABLE transactions_test ("
+      . "id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,"
+      . "name VARCHAR(255),"
+      . "value VARCHAR(255),"
+      . "testname VARCHAR(10)"
+      . ")"
+    );
+
+    $insertFn = function($testName, $count) use ($connection)
+    {
+      for($i = 0; $i < $count; $i++)
+      {
+        $connection->runQuery(
+          sprintf(
+            "INSERT INTO transactions_test (name, value, testname)"
+            . " VALUES ('name %d', 'value %d', '%s')",
+            $i,
+            $i,
+            $testName
+          )
+        );
+      }
+    };
+
+    $countFn = function($testName, $conn = null) use ($connection)
+    {
+      $conn = $conn ?: $connection;
+      return $conn->runQuery(
+        sprintf(
+          "SELECT * FROM transactions_test WHERE testname='%s'",
+          $testName
+        )
+      );
+    };
+
+    // Test a commit
+    $connection->startTransaction();
+    $insertFn('commit', 10);
+    $this->assertEquals(10, $countFn('commit'));
+    $this->assertEquals(0, $countFn('commit', $connection2));
+    $connection->commit();
+    $this->assertEquals(10, $countFn('commit'));
+    $this->assertEquals(10, $countFn('commit', $connection2));
+
+    // Test a rollback
+    $connection->startTransaction();
+    $insertFn('rollback', 10);
+    $this->assertEquals(10, $countFn('rollback'));
+    $this->assertEquals(0, $countFn('rollback', $connection2));
+    $connection->rollback();
+    $this->assertEquals(0, $countFn('rollback'));
+    $this->assertEquals(0, $countFn('rollback', $connection2));
+  }
+
+  public function testCommitNotInTransaction()
+  {
+    $connection = new MockPdoConnection();
+    $connection->setResolver(new DalResolver());
+    $connection->connect();
+
+    $this->setExpectedException(
+      PdoException::class,
+      'Not currently in a transaction'
+    );
+    $connection->commit();
+  }
+
+  public function testRollbackNotInTransaction()
+  {
+    $connection = new MockPdoConnection();
+    $connection->setResolver(new DalResolver());
+    $connection->connect();
+
+    $this->setExpectedException(
+      PdoException::class,
+      'Not currently in a transaction'
+    );
+    $connection->rollback();
+  }
 }
 
 class FailingRawConnection

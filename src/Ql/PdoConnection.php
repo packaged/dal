@@ -205,7 +205,7 @@ class PdoConnection
   public function startTransaction()
   {
     $this->connect();
-    $result = $this->_connection->exec('START TRANSACTION');
+    $result = $this->_connection->beginTransaction();
     $this->_inTransaction = true;
     return $result;
   }
@@ -217,7 +217,7 @@ class PdoConnection
   {
     if($this->_inTransaction)
     {
-      return $this->_connection->exec('COMMIT');
+      return $this->_connection->commit();
     }
     throw new PdoException('Not currently in a transaction');
   }
@@ -229,7 +229,7 @@ class PdoConnection
   {
     if($this->_inTransaction)
     {
-      return $this->_connection->exec('ROLLBACK');
+      return $this->_connection->rollBack();
     }
     throw new PdoException('Not currently in a transaction');
   }

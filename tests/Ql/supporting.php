@@ -111,8 +111,6 @@ class MockAbstractQlDataConnection implements IQLDataConnection
 
 class MockPdoConnection extends PdoConnection
 {
-  private $_queryRunCount = 0;
-
   public function setConnection($connection)
   {
     $this->_connection = $connection;
@@ -130,15 +128,9 @@ class MockPdoConnection extends PdoConnection
     return $this->_config();
   }
 
-  protected function _runQuery($query, array $values = null, $retries = null)
-  {
-    $this->_queryRunCount++;
-    return parent::_runQuery($query, $values, $retries);
-  }
-
   public function getRunCount()
   {
-    return $this->_queryRunCount;
+    return $this->_lastRetryCount;
   }
 }
 

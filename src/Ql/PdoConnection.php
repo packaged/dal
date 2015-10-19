@@ -28,6 +28,7 @@ class PdoConnection
   protected $_emulatedPrepares = false;
   protected $_delayedPreparesCount = null;
   protected $_inTransaction = false;
+  protected $_lastRetryCount = 0;
 
   /**
    * Open the connection
@@ -204,10 +205,14 @@ class PdoConnection
    */
   public function startTransaction()
   {
-    $this->connect();
-    $result = $this->_connection->beginTransaction();
-    $this->_inTransaction = true;
-    return $result;
+    return $this->_performWithRetries(
+      function()
+      {
+        $result = $this->_connection->beginTransaction();
+        $this->_inTransaction = true;
+        return $result;
+      }
+    );
   }
 
   /**
@@ -368,44 +373,100 @@ class PdoConnection
 
   protected function _runQuery($query, array $values = null, $retries = null)
   {
+    return $this->_performWithRetries(
+      function() use ($query, $values)
+      {
+        $stmt = $this->_getStatement($query);
+        if($values)
+        {
+          $this->_bindValues($stmt, $values);
+        }
+        $stmt->execute();
+        return $stmt;
+      },
+      function() use ($query)
+      {
+        $this->_clearCache($this->_cacheKey($query));
+      },
+      $retries
+    );
+  }
+
+  /**
+   * @param callable      $func
+   * @param callable|null $onError
+   * @param int|null      $retryCount
+   *
+   * @return mixed
+   * @throws ConnectionException
+   * @throws PdoException
+   */
+  protected function _performWithRetries(
+    callable $func, callable $onError = null, $retryCount = null
+  )
+  {
+    $this->_lastRetryCount = 0;
     $this->_recycleConnectionIfRequired();
 
-    if($retries === null)
+    if($retryCount === null)
     {
-      $retries = (int)$this->_config()->getItem('retries', 2);
+      $retryCount = (int)$this->_config()->getItem('retries', 2);
     }
-    try
+
+    /** @var null|PdoException $exception */
+    $exception = null;
+    $retries = $retryCount;
+    do
     {
-      $stmt = $this->_getStatement($query);
-      if($values)
+      try
       {
-        $this->_bindValues($stmt, $values);
+        $this->_lastRetryCount++;
+        return $func();
       }
-      $stmt->execute();
+      catch(\PDOException $sourceException)
+      {
+        if($onError)
+        {
+          $onError();
+        }
+
+        $exception = PdoException::from($sourceException);
+        if($retries > 0 && $this->_isRecoverableException($exception))
+        {
+          if($this->_shouldReconnectAfterException($exception))
+          {
+            $this->disconnect()->connect();
+          }
+          else if($this->_shouldDelayAfterException($exception))
+          {
+            // Sleep for between 0.1 and 3 milliseconds
+            usleep(mt_rand(100, 3000));
+          }
+        }
+        else
+        {
+          error_log(
+            'PdoConnection Error: (' . $exception->getCode() . ') '
+            . $exception->getMessage()
+          );
+          throw $exception;
+        }
+      }
+      $retries--;
     }
-    catch(\PDOException $sourceException)
+    while($retries > 0);
+
+    if($exception)
     {
-      $this->_clearCache($this->_cacheKey($query));
-      $e = PdoException::from($sourceException);
-      if($retries > 0 && $this->_isRecoverableException($e))
-      {
-        if($this->_shouldReconnectAfterException($e))
-        {
-          $this->disconnect()->connect();
-        }
-        else if($this->_shouldDelayAfterException($e))
-        {
-          // Sleep for between 0.1 and 3 milliseconds
-          usleep(mt_rand(100, 3000));
-        }
-        return $this->_runQuery($query, $values, $retries - 1);
-      }
-      error_log(
-        'PdoConnection Error: (' . $e->getCode() . ') ' . $e->getMessage()
+      throw $exception;
+    }
+    else
+    {
+      throw new PdoException(
+        'An unknown error occurred performing a PDO operation. '
+        . 'The operation failed after ' . $retryCount . ' retries'
       );
-      throw $e;
     }
-    return $stmt;
   }
 
   /**
@@ -415,7 +476,8 @@ class PdoConnection
    */
   private function _isRecoverableException(PdoException $e)
   {
-    if(Strings::startsWith($e->getPrevious()->getCode(), 42))
+    $code = $e->getPrevious()->getCode();
+    if(($code == 0) || Strings::startsWith($code, 42))
     {
       return false;
     }

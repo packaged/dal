@@ -181,7 +181,7 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
     catch(PdoException $e)
     {
     }
-    $this->assertEquals(3, $connection->getRunCount());
+    $this->assertEquals(1, $connection->getRunCount());
   }
 
   public function testInvalidSyntax()

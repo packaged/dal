@@ -222,7 +222,25 @@ class PdoConnection
   {
     if($this->_inTransaction)
     {
-      return $this->_connection->commit();
+      try
+      {
+        $result = $this->_connection->commit();
+        return $result;
+      }
+      catch(\Exception $e)
+      {
+        try
+        {
+          $this->rollback();
+        }
+        catch(\Exception $e)
+        {
+        }
+      }
+      finally
+      {
+        $this->_inTransaction = false;
+      }
     }
     throw new PdoException('Not currently in a transaction');
   }
@@ -234,7 +252,15 @@ class PdoConnection
   {
     if($this->_inTransaction)
     {
-      return $this->_connection->rollBack();
+      try
+      {
+        $result = $this->_connection->rollBack();
+        return $result;
+      }
+      finally
+      {
+        $this->_inTransaction = false;
+      }
     }
     throw new PdoException('Not currently in a transaction');
   }
@@ -435,6 +461,15 @@ class PdoConnection
         {
           if($this->_shouldReconnectAfterException($exception))
           {
+            if($this->_inTransaction)
+            {
+              error_log(
+                'PdoConnection error during transaction: '
+                . '(' . $exception->getCode() . ') ' . $exception->getMessage()
+              );
+              throw $exception;
+            }
+            
             $this->disconnect()->connect();
           }
           else if($this->_shouldDelayAfterException($exception))
@@ -477,7 +512,7 @@ class PdoConnection
   private function _isRecoverableException(PdoException $e)
   {
     $code = $e->getPrevious()->getCode();
-    if(($code == 0) || Strings::startsWith($code, 42))
+    if(($code === 0) || Strings::startsWith($code, 42))
     {
       return false;
     }

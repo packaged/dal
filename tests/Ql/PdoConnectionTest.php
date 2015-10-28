@@ -330,15 +330,25 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
 
   public function testStatementCacheLimit()
   {
+    $this->_doStmtCacheLimitTest(0);
+    $this->_doStmtCacheLimitTest(1);
+    $this->_doStmtCacheLimitTest(20);
+  }
+
+  private function _doStmtCacheLimitTest($limit)
+  {
     $connection = new StmtCacheConnection();
+    $connection->setCacheLimit($limit);
     $connection->setResolver(new DalResolver());
     $connection->connect();
 
     $this->assertEquals(0, $connection->getCachedStatementCount());
 
-    // run 15 statements three times each, make sure only a max of 10 are kept
+    // run (1.5x limit) statements three times each, make sure the
+    // correct amount are cached
     $stmts = [];
-    for($i = 0; $i < 15; $i++)
+    $numQueries = max(ceil($limit * 1.5), 5);
+    for($i = 0; $i < $numQueries; $i++)
     {
       $sql = 'SELECT ' . $i;
       $stmts[$i] = $sql;
@@ -347,7 +357,7 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
         $connection->runQuery($sql);
       }
       $this->assertEquals(
-        min($i + 1, 10),
+        min($i + 1, $limit),
         $connection->getCachedStatementCount()
       );
 
@@ -356,7 +366,7 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
       for($j = 0; $j <= $i; $j++)
       {
         $cacheKey = $connection->getCacheKey($stmts[$j]);
-        if(($i >= 10) && ($j <= $i - 10))
+        if(($i >= $limit) && ($j <= $i - $limit))
         {
           $this->assertFalse(isset($cache[$cacheKey]));
         }
@@ -412,5 +422,10 @@ class StmtCacheConnection extends MockPdoConnection
   public function getCacheKey($sql)
   {
     return $this->_stmtCacheKey($sql);
+  }
+
+  public function setCacheLimit($limit)
+  {
+    $this->_maxPreparedStatements = $limit;
   }
 }

@@ -327,6 +327,46 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
     );
     $connection->rollback();
   }
+
+  public function testStatementCacheLimit()
+  {
+    $connection = new StmtCacheConnection();
+    $connection->setResolver(new DalResolver());
+    $connection->connect();
+
+    $this->assertEquals(0, $connection->getCachedStatementCount());
+
+    // run 15 statements three times each, make sure only a max of 10 are kept
+    $stmts = [];
+    for($i = 0; $i < 15; $i++)
+    {
+      $sql = 'SELECT ' . $i;
+      $stmts[$i] = $sql;
+      for($n = 0; $n < 3; $n++)
+      {
+        $connection->runQuery($sql);
+      }
+      $this->assertEquals(
+        min($i + 1, 10),
+        $connection->getCachedStatementCount()
+      );
+
+      // make sure the correct statements are still in the cache
+      $cache = $connection->getCachedStatements();
+      for($j = 0; $j <= $i; $j++)
+      {
+        $cacheKey = $connection->getCacheKey($stmts[$j]);
+        if(($i >= 10) && ($j <= $i - 10))
+        {
+          $this->assertFalse(isset($cache[$cacheKey]));
+        }
+        else
+        {
+          $this->assertTrue(isset($cache[$cacheKey]));
+        }
+      }
+    }
+  }
 }
 
 class FailingRawConnection
@@ -354,5 +394,23 @@ class GoneAwayConnection
   public function query()
   {
     throw new \Exception("MySQL Has Gone Away");
+  }
+}
+
+class StmtCacheConnection extends MockPdoConnection
+{
+  public function getCachedStatementCount()
+  {
+    return count($this->_prepareCache);
+  }
+
+  public function getCachedStatements()
+  {
+    return $this->_prepareCache;
+  }
+
+  public function getCacheKey($sql)
+  {
+    return $this->_stmtCacheKey($sql);
   }
 }

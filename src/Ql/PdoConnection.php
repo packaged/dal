@@ -29,6 +29,7 @@ class PdoConnection
   protected $_delayedPreparesCount = null;
   protected $_inTransaction = false;
   protected $_lastRetryCount = 0;
+  protected $_maxPreparedStatements = null;
 
   /**
    * Open the connection
@@ -41,7 +42,7 @@ class PdoConnection
   {
     if(!$this->isConnected())
     {
-      $this->_prepareCache = [];
+      $this->_clearStmtCache();
 
       $dsn = $this->_config()->getItem('dsn', null);
       if($dsn === null)
@@ -151,7 +152,7 @@ class PdoConnection
    */
   public function disconnect()
   {
-    $this->_prepareCache = [];
+    $this->_clearStmtCache();
     $this->_connection = null;
     return $this;
   }
@@ -265,26 +266,6 @@ class PdoConnection
     throw new PdoException('Not currently in a transaction');
   }
 
-  /**
-   * @param $query
-   *
-   * @return string
-   */
-  protected function _cacheKey($query)
-  {
-    return md5($query) . strlen($query);
-  }
-
-  /**
-   * @param $queryCacheKey
-   *
-   * @return bool
-   */
-  protected function _isCached($queryCacheKey)
-  {
-    return isset($this->_prepareCache[$queryCacheKey]);
-  }
-
   protected function _getDelayedPreparesCount()
   {
     if($this->_delayedPreparesCount === null)
@@ -316,10 +297,11 @@ class PdoConnection
    */
   protected function _getStatement($query)
   {
-    $cacheKey = $this->_cacheKey($query);
-    if($this->_isCached($cacheKey))
+    $cacheKey = $this->_stmtCacheKey($query);
+    $cached = $this->_getStmtCache($cacheKey);
+    if($cached)
     {
-      return $this->_prepareCache[$cacheKey];
+      return $cached;
     }
 
     $stmt = false;
@@ -363,15 +345,71 @@ class PdoConnection
     {
       // Do a real prepare and cache the statement
       $stmt = $this->_connection->prepare($query);
-      $this->_prepareCache[$cacheKey] = $stmt;
+      $this->_addStmtCache($cacheKey, $stmt);
     }
 
     return $stmt;
   }
 
-  protected function _clearCache($cacheKey)
+  /**
+   * Delete everything from the prepared statement cache
+   */
+  protected function _clearStmtCache()
+  {
+    $this->_prepareCache = [];
+  }
+
+  /**
+   * @param $query
+   *
+   * @return string
+   */
+  protected function _stmtCacheKey($query)
+  {
+    return md5($query) . strlen($query);
+  }
+
+  /**
+   * @param string $cacheKey
+   */
+  protected function _deleteStmtCache($cacheKey)
   {
     unset($this->_prepareCache[$cacheKey]);
+  }
+
+  /**
+   * @param string        $cacheKey
+   * @param \PDOStatement $statement
+   */
+  protected function _addStmtCache($cacheKey, \PDOStatement $statement)
+  {
+    if($this->_maxPreparedStatements === null)
+    {
+      $this->_maxPreparedStatements = $this->_config()
+        ->getItem('max_prepared_statements', 10);
+    }
+
+    if($this->_maxPreparedStatements > 0)
+    {
+      $this->_prepareCache[$cacheKey] = $statement;
+
+      while(count($this->_prepareCache) > $this->_maxPreparedStatements)
+      {
+        array_shift($this->_prepareCache);
+      }
+    }
+  }
+
+  /**
+   * @param string $cacheKey
+   *
+   * @return \PDOStatement
+   */
+  protected function _getStmtCache($cacheKey)
+  {
+    return isset(
+      $this->_prepareCache[$cacheKey]
+    ) ? $this->_prepareCache[$cacheKey] : null;
   }
 
   protected function _recycleConnectionIfRequired()
@@ -412,7 +450,7 @@ class PdoConnection
       },
       function() use ($query)
       {
-        $this->_clearCache($this->_cacheKey($query));
+        $this->_deleteStmtCache($this->_stmtCacheKey($query));
       },
       $retries
     );

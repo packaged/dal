@@ -165,7 +165,7 @@ class DelayedPreparesPdoConnection extends MockPdoConnection
   protected function _getStatement($query)
   {
     $res = parent::_getStatement($query);
-    $this->_lastQueryCacheKey = $this->_cacheKey($query);
+    $this->_lastQueryCacheKey = $this->_stmtCacheKey($query);
     return $res;
   }
 

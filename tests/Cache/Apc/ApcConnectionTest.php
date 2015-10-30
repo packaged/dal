@@ -9,7 +9,9 @@ class ApcConnectionTest extends \PHPUnit_Framework_TestCase
 {
   protected function setUp()
   {
-    if(!(extension_loaded('apc') && ini_get('apc.enabled')))
+    if(!((extension_loaded('apc') || extension_loaded('apcu'))
+      && ini_get('apc.enabled'))
+    )
     {
       $this->markTestSkipped('The APC extension is not available.');
     }

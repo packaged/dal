@@ -17,6 +17,10 @@ class ApcConnection extends AbstractCacheConnection
    */
   public function deleteKey($key)
   {
+    if(function_exists('apcu_delete'))
+    {
+      return apcu_delete($key);
+    }
     return apc_delete($key);
   }
 
@@ -37,7 +41,14 @@ class ApcConnection extends AbstractCacheConnection
   public function getItem($key)
   {
     $success = false;
-    $value = apc_fetch($key, $success);
+    if(function_exists('apcu_fetch'))
+    {
+      $value = apcu_fetch($key, $success);
+    }
+    else
+    {
+      $value = apc_fetch($key, $success);
+    }
     $item = new CacheItem($key);
     $item->hydrate($success ? $value : null, $success);
     return $item;
@@ -51,6 +62,10 @@ class ApcConnection extends AbstractCacheConnection
    */
   public function clear()
   {
+    if(function_exists('apcu_clear_cache'))
+    {
+      return apcu_clear_cache();
+    }
     return apc_clear_cache("user");
   }
 
@@ -64,6 +79,10 @@ class ApcConnection extends AbstractCacheConnection
    */
   public function saveItem(ICacheItem $item, $ttl = null)
   {
+    if(function_exists('apcu_store'))
+    {
+      return apcu_store($item->getKey(), $item->get(), (int)$ttl);
+    }
     return apc_store($item->getKey(), $item->get(), (int)$ttl);
   }
 
@@ -78,7 +97,7 @@ class ApcConnection extends AbstractCacheConnection
    */
   public function connect()
   {
-    if(extension_loaded('apc'))
+    if($this->_hasExtension())
     {
       if(ini_get('apc.enabled'))
       {
@@ -100,7 +119,12 @@ class ApcConnection extends AbstractCacheConnection
    */
   public function isConnected()
   {
-    return extension_loaded('apc') && ini_get('apc.enabled');
+    return $this->_hasExtension() && ini_get('apc.enabled');
+  }
+
+  private function _hasExtension()
+  {
+    return extension_loaded('apc') || extension_loaded('apcu');
   }
 
   /**

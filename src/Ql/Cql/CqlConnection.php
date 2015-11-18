@@ -57,11 +57,18 @@ class CqlConnection
    * @var bool
    */
   protected $_connected = false;
+  protected $_strictRecoverable = false;
 
   protected $_prepareCache = [];
 
   protected $_availableHosts = [];
   protected $_availableHostCount = 0;
+
+  public function setStrictRecoverable($flag)
+  {
+    $this->_strictRecoverable = (bool)$flag;
+    return $this;
+  }
 
   /**
    * Open the connection
@@ -506,6 +513,11 @@ class CqlConnection
     {
       $this->_removeCurrentHost();
       return true;
+    }
+
+    if($this->_strictRecoverable)
+    {
+      return false;
     }
 
     if(($e->getPrevious() instanceof InvalidRequestException

@@ -515,6 +515,11 @@ class CqlConnection
     {
       return false;
     }
+
+    error_log(
+      'Exception As Recoverable: (' . $e->getCode() . ') ' . $e->getMessage()
+    );
+
     return true;
   }
 

@@ -18,7 +18,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
   protected $_sanetizers = [
     'filters'     => [],
     'validators'  => [],
-    'serializers' => []
+    'serializers' => [],
   ];
 
   protected static $_counters = [];
@@ -97,7 +97,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
    * @param $key
    * @param $value
    *
-   * @return self
+   * @return $this
    */
   public function setDaoProperty($key, $value)
   {
@@ -286,14 +286,14 @@ abstract class AbstractSanitizableDao extends AbstractDao
   }
 
   /**
-   * Hydrate the DAO with raw data
+   * Hydrate the DAO with data
    *
    * @param array $data
-   * @param bool  $raw Is being hydrated with datastore values
+   * @param bool  $serialized Data is serialised format
    *
-   * @return self
+   * @return $this
    */
-  public function hydrateDao(array $data, $raw = false)
+  public function hydrateDao(array $data, $serialized = false)
   {
     if(empty($this->_sanetizers['serializers']))
     {
@@ -306,7 +306,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
     );
     foreach($hydratable as $key => $value)
     {
-      if($raw)
+      if($serialized)
       {
         $value = $this->getPropertyUnserialized($key, $value);
       }
@@ -368,7 +368,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
   {
     $this->_sanetizers['serializers'][$property][$alias] = [
       'serializer'   => $serializer,
-      'unserializer' => $unserializer
+      'unserializer' => $unserializer,
     ];
     return $this;
   }

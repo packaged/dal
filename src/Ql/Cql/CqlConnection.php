@@ -515,14 +515,16 @@ class CqlConnection
       return true;
     }
 
-    if($this->_strictRecoverable)
+    if(($e->getPrevious() instanceof InvalidRequestException
+      && Strings::startsWith($e->getMessage(), 'Prepared query with ID'))
+    )
     {
-      return false;
+      return true;
     }
 
-    if(($e->getPrevious() instanceof InvalidRequestException
-        && !Strings::startsWith($e->getMessage(), 'Prepared query with ID'))
-      || ($e->getPrevious() instanceof NotFoundException)
+    if($this->_strictRecoverable
+      || $e->getPrevious() instanceof NotFoundException
+      || $e->getPrevious() instanceof InvalidRequestException
     )
     {
       return false;

@@ -108,6 +108,10 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
     if($dao->isDaoLoaded())
     {
       $data = $this->_getDaoChanges($dao);
+      foreach($data as $field => $value)
+      {
+        $data[$field] = $this->_getCounterValue($dao, $field);
+      }
       $qb = static::_getQueryBuilderClass();
       $statement = $qb::update($dao->getTableName(), $data)
         ->where($dao->getId(true));
@@ -124,32 +128,35 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
       {
         foreach($this->_getDaoChanges($dao, false) as $field => $value)
         {
-          if($dao->$field instanceof Counter)
-          {
-            if($dao->$field->isIncrement())
-            {
-              $value = IncrementExpression::create(
-                $field,
-                $dao->$field->getIncrement()
-              );
-            }
-            elseif($dao->$field->isDecrement())
-            {
-              $value = DecrementExpression::create(
-                $field,
-                $dao->$field->getDecrement()
-              );
-            }
-            elseif($dao->$field->isFixedValue())
-            {
-              $value = NumericExpression::create($dao->$field->calculated());
-            }
-          }
-          $statement->onDuplicateKeyUpdate($field, $value);
+          $statement->onDuplicateKeyUpdate(
+            $field,
+            $this->_getCounterValue($dao, $field)
+          );
         }
       }
     }
     return $statement;
+  }
+
+  protected function _getCounterValue(QlDao $dao, $field)
+  {
+    $value = $dao->{$field};
+    if($value instanceof Counter)
+    {
+      if($value->isIncrement())
+      {
+        $value = IncrementExpression::create($field, $value->getIncrement());
+      }
+      elseif($value->isDecrement())
+      {
+        $value = DecrementExpression::create($field, $value->getDecrement());
+      }
+      elseif($value->isFixedValue())
+      {
+        $value = NumericExpression::create($value->calculated());
+      }
+    }
+    return $value;
   }
 
   protected function _getDaoChanges(QlDao $dao, $includeIds = true)

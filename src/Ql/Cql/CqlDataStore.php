@@ -8,9 +8,6 @@ use Packaged\Dal\Ql\QlDao;
 use Packaged\Dal\Ql\QlDataStore;
 use Packaged\QueryBuilder\Assembler\CQL\CqlAssembler;
 use Packaged\QueryBuilder\Builder\CQL\CqlQueryBuilder;
-use Packaged\QueryBuilder\Expression\DecrementExpression;
-use Packaged\QueryBuilder\Expression\IncrementExpression;
-use Packaged\QueryBuilder\Expression\ValueExpression;
 use Packaged\QueryBuilder\Statement\CQL\CqlInsertStatement;
 use Packaged\QueryBuilder\Statement\CQL\CqlUpdateStatement;
 use Packaged\QueryBuilder\Statement\IStatement;
@@ -33,30 +30,11 @@ class CqlDataStore extends QlDataStore
     }
 
     $data = $this->_getDaoChanges($dao, false);
-    foreach($dao->getDaoPropertyData(false) as $field => $value)
+    foreach($data as $field => $value)
     {
-      if($value instanceof Counter)
+      if($dao->{$field} instanceof Counter)
       {
-        if($value->isIncrement())
-        {
-          $data[$field] = IncrementExpression::create($field)->setValue(
-            ValueExpression::create(
-              $dao->getPropertySerialized($field, $value->getIncrement())
-            )
-          );
-        }
-        elseif($value->isDecrement())
-        {
-          $data[$field] = DecrementExpression::create($field)->setValue(
-            ValueExpression::create(
-              $dao->getPropertySerialized($field, $value->getDecrement())
-            )
-          );
-        }
-        else
-        {
-          unset($data[$field]);
-        }
+        $data[$field] = $this->_getCounterValue($dao, $field);
       }
     }
 

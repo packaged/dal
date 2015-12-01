@@ -1,7 +1,6 @@
 <?php
 namespace Packaged\Dal\Ql\Cql;
 
-use Packaged\Dal\DataTypes\Counter;
 use Packaged\Dal\Exceptions\DataStore\DataStoreException;
 use Packaged\Dal\IDao;
 use Packaged\Dal\Ql\QlDao;
@@ -32,10 +31,7 @@ class CqlDataStore extends QlDataStore
     $data = $this->_getDaoChanges($dao, false);
     foreach($data as $field => $value)
     {
-      if($dao->{$field} instanceof Counter)
-      {
-        $data[$field] = $this->_getCounterValue($dao, $field);
-      }
+      $data[$field] = $this->_getCounterValue($dao, $field, $value);
     }
 
     if($data)

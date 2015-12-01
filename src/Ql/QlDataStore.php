@@ -110,7 +110,7 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
       $data = $this->_getDaoChanges($dao);
       foreach($data as $field => $value)
       {
-        $data[$field] = $this->_getCounterValue($dao, $field);
+        $data[$field] = $this->_getCounterValue($dao, $field, $value);
       }
       $qb = static::_getQueryBuilderClass();
       $statement = $qb::update($dao->getTableName(), $data)
@@ -130,7 +130,7 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
         {
           $statement->onDuplicateKeyUpdate(
             $field,
-            $this->_getCounterValue($dao, $field)
+            $this->_getCounterValue($dao, $field, $value)
           );
         }
       }
@@ -138,22 +138,22 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
     return $statement;
   }
 
-  protected function _getCounterValue(QlDao $dao, $field)
+  protected function _getCounterValue(QlDao $dao, $field, $value)
   {
-    $value = $dao->{$field};
-    if($value instanceof Counter)
+    $newValue = $dao->{$field};
+    if($newValue instanceof Counter)
     {
-      if($value->isIncrement())
+      if($newValue->isIncrement())
       {
-        $value = IncrementExpression::create($field, $value->getIncrement());
+        $value = IncrementExpression::create($field, $newValue->getIncrement());
       }
-      elseif($value->isDecrement())
+      elseif($newValue->isDecrement())
       {
-        $value = DecrementExpression::create($field, $value->getDecrement());
+        $value = DecrementExpression::create($field, $newValue->getDecrement());
       }
-      elseif($value->isFixedValue())
+      elseif($newValue->isFixedValue())
       {
-        $value = NumericExpression::create($value->calculated());
+        $value = NumericExpression::create($newValue->calculated());
       }
     }
     return $value;

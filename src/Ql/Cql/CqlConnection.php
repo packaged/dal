@@ -194,7 +194,7 @@ class CqlConnection
               $exception = CqlException::from($exception);
             }
             throw new ConnectionException(
-              'Failed to connect',
+              'Failed to connect: ' . $exception->getMessage(),
               $exception->getCode(),
               $exception->getPrevious()
             );

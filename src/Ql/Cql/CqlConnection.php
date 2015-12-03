@@ -135,13 +135,13 @@ class CqlConnection
             ValueAs::bool($this->_config()->getItem('persist', false))
           );
           $this->_socket->setConnectTimeout(
-            (int)$this->_config()->getItem('connect_timeout', 10000)
+            (int)$this->_config()->getItem('connect_timeout', 1000)
           );
           $this->_socket->setRecvTimeout(
-            (int)$this->_config()->getItem('receive_timeout', 10000)
+            (int)$this->_config()->getItem('receive_timeout', 1000)
           );
           $this->_socket->setSendTimeout(
-            (int)$this->_config()->getItem('send_timeout', 10000)
+            (int)$this->_config()->getItem('send_timeout', 1000)
           );
 
           $this->_transport = new TFramedTransport($this->_socket);

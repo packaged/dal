@@ -14,6 +14,10 @@ use cassandra\NotFoundException;
 use cassandra\TimedOutException;
 use Packaged\Config\ConfigurableInterface;
 use Packaged\Config\ConfigurableTrait;
+use Packaged\Config\Provider\ConfigSection;
+use Packaged\Dal\Cache\CacheItem;
+use Packaged\Dal\Cache\Ephemeral\EphemeralConnection;
+use Packaged\Dal\Cache\ICacheConnection;
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
 use Packaged\Dal\Exceptions\Connection\CqlException;
@@ -64,10 +68,24 @@ class CqlConnection
   protected $_availableHosts = [];
   protected $_availableHostCount = 0;
 
+  /**
+   * @var ICacheConnection
+   */
+  protected static $_keyspaceCache;
+
   public function setStrictRecoverable($flag)
   {
     $this->_strictRecoverable = (bool)$flag;
     return $this;
+  }
+
+  public function __construct()
+  {
+    $config = new ConfigSection(
+      'cql_keyspace', ['pool_name' => 'cql_keyspace']
+    );
+    self::$_keyspaceCache = new EphemeralConnection();
+    self::$_keyspaceCache->configure($config);
   }
 
   /**
@@ -117,13 +135,13 @@ class CqlConnection
             ValueAs::bool($this->_config()->getItem('persist', false))
           );
           $this->_socket->setConnectTimeout(
-            (int)$this->_config()->getItem('connect_timeout', 1000)
+            (int)$this->_config()->getItem('connect_timeout', 10000)
           );
           $this->_socket->setRecvTimeout(
-            (int)$this->_config()->getItem('receive_timeout', 1000)
+            (int)$this->_config()->getItem('receive_timeout', 10000)
           );
           $this->_socket->setSendTimeout(
-            (int)$this->_config()->getItem('send_timeout', 1000)
+            (int)$this->_config()->getItem('send_timeout', 10000)
           );
 
           $this->_transport = new TFramedTransport($this->_socket);
@@ -143,7 +161,7 @@ class CqlConnection
                   'credentials' => [
                     'username' => $username,
                     'password' => $this->_config()->getItem('password', ''),
-                  ]
+                  ],
                 ]
               )
             );
@@ -153,7 +171,7 @@ class CqlConnection
           $keyspace = $this->_config()->getItem('keyspace');
           if($keyspace)
           {
-            $this->_setKeyspace($keyspace);
+            $this->_setKeyspace($keyspace, !$this->_socket->isPersistent());
           }
         }
         catch(TException $e)
@@ -191,6 +209,23 @@ class CqlConnection
     return $this;
   }
 
+  public function setKeyspaceCache(ICacheConnection $cache)
+  {
+    self::$_keyspaceCache = $cache;
+  }
+
+  /**
+   * @return CacheItem
+   */
+  protected function _getKeyspaceCacheKey()
+  {
+    if($this->_socket)
+    {
+      return md5($this->_socket->getHost() . $this->_socket->getPort());
+    }
+    return false;
+  }
+
   /**
    * Check to see if the connection is already open
    *
@@ -219,18 +254,33 @@ class CqlConnection
     $this->_protocol = null;
     $this->_prepareCache = [];
     $this->_connected = false;
+    $keyspaceCacheKey = $this->_getKeyspaceCacheKey();
+    if($keyspaceCacheKey)
+    {
+      self::$_keyspaceCache->deleteKey($keyspaceCacheKey);
+    }
     return $this;
   }
 
-  protected function _setKeyspace($keyspace)
+  protected function _setKeyspace($keyspace, $force = false)
   {
-    try
+    if($keyspace)
     {
-      $this->_client->set_keyspace($keyspace);
-    }
-    catch(\Exception $e)
-    {
-      throw CqlException::from($e);
+      try
+      {
+        $cacheKey = $this->_getKeyspaceCacheKey();
+        /** @var CacheItem $cacheItem */
+        $cacheItem = self::$_keyspaceCache->getItem($cacheKey);
+        if($force || $cacheItem->get() !== $keyspace)
+        {
+          $this->_client->set_keyspace($keyspace);
+          self::$_keyspaceCache->saveItem($cacheItem->hydrate($keyspace));
+        }
+      }
+      catch(\Exception $e)
+      {
+        throw CqlException::from($e);
+      }
     }
   }
 
@@ -346,23 +396,13 @@ class CqlConnection
     }
     try
     {
-      $this->connect();
+      $this->connect()->_setKeyspace($this->_config()->getItem('keyspace'));
       return $this->_getStatement($query, $compression)->prepare();
     }
     catch(\Exception $exception)
     {
       $this->_clearCache($query, $compression);
       $e = CqlException::from($exception);
-      if(Strings::startsWith(
-          $e->getMessage(),
-          'No keyspace has been specified.'
-        )
-        && $this->_config()->has('keyspace')
-      )
-      {
-        $this->_setKeyspace($this->_config()->getItem('keyspace'));
-        return $this->prepare($query, $compression, $retries - 1);
-      }
 
       if($retries > 0 && $this->_isRecoverableException($e))
       {
@@ -402,7 +442,7 @@ class CqlConnection
     $return = [];
     try
     {
-      $this->connect();
+      $this->connect()->_setKeyspace($this->_config()->getItem('keyspace'));
       $packedParameters = [];
       foreach($parameters as $k => $value)
       {

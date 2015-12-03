@@ -47,6 +47,10 @@ class CqlException extends ConnectionException
     {
       throw $e;
     }
+    catch(CqlException $e)
+    {
+      return $e;
+    }
     catch(NotFoundException $e)
     {
       return new self(

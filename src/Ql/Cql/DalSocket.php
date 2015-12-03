@@ -42,4 +42,9 @@ class DalSocket extends TSocket
     $this->_sendTimeoutMs = $timeout;
     parent::setSendTimeout($timeout);
   }
+
+  public function isPersistent()
+  {
+    return $this->persist_;
+  }
 }

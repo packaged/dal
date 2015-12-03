@@ -314,7 +314,7 @@ class CqlTest extends \PHPUnit_Framework_TestCase
         null,
         null,
         null,
-        100
+        100,
       ],
       $connection->getExecutedQueryValues()
     );
@@ -343,7 +343,7 @@ class CqlTest extends \PHPUnit_Framework_TestCase
         null,
         null,
         null,
-        null
+        null,
       ],
       $connection->getExecutedQueryValues()
     );
@@ -490,6 +490,44 @@ class CqlTest extends \PHPUnit_Framework_TestCase
       $this->assertEquals(3, $connection->getPrepareCount());
       $this->assertEquals(3, $connection->getExecuteCount());
     }
+  }
+
+  public function testSwitchingKeyspace()
+  {
+    self::$_connection->runQuery(
+      "CREATE KEYSPACE IF NOT EXISTS dal_keyspace1 WITH REPLICATION = "
+      . "{'class' : 'SimpleStrategy','replication_factor' : 1};"
+    );
+    self::$_connection->runQuery(
+      "CREATE KEYSPACE IF NOT EXISTS dal_keyspace2 WITH REPLICATION = "
+      . "{'class' : 'SimpleStrategy','replication_factor' : 1};"
+    );
+    $conn1 = new CqlConnection();
+    $conn1->setResolver(new DalResolver());
+    $conn1->setConfig('persist', true);
+    $conn1->setConfig('keyspace', 'dal_keyspace1');
+    $conn1->connect();
+    $conn1->runQuery(
+      'CREATE TABLE IF NOT EXISTS "test1" ("test_field" text, PRIMARY KEY ("test_field"))'
+    );
+
+    $conn2 = new CqlConnection();
+    $conn2->setResolver(new DalResolver());
+    $conn2->setConfig('persist', true);
+    $conn2->setConfig('keyspace', 'dal_keyspace2');
+    $conn2->connect();
+    $conn2->runQuery(
+      'CREATE TABLE IF NOT EXISTS "test2" ("test_field" text, PRIMARY KEY ("test_field"))'
+    );
+
+    $conn1->runQuery('INSERT INTO "test1" ("test_field") VALUES (\'value1\')');
+    $conn2->runQuery('INSERT INTO "test2" ("test_field") VALUES (\'value2\')');
+
+    $row1 = $conn1->fetchQueryResults('SELECT * FROM "test1"');
+    $this->assertEquals('value1', $row1[0]['test_field']);
+
+    $row2 = $conn2->fetchQueryResults('SELECT * FROM "test2"');
+    $this->assertEquals('value2', $row2[0]['test_field']);
   }
 }
 

@@ -67,7 +67,7 @@ abstract class DalConnection
 
   protected function _clearDatabaseCache()
   {
-    $key = $this->_getInternalConnectionId();
+    $key = $this->_getConnectionId();
     if($key)
     {
       self::$_databaseCache->deleteKey($key);
@@ -76,7 +76,7 @@ abstract class DalConnection
 
   private function _getCurrentDatabase()
   {
-    $key = $this->_getInternalConnectionId();
+    $key = $this->_getConnectionId();
     if($key)
     {
       return self::$_databaseCache->getItem($key)->get();
@@ -89,10 +89,10 @@ abstract class DalConnection
     $database = $database ?: $this->_getDatabaseName();
     if($database && ($force || ($this->_getCurrentDatabase() != $database)))
     {
-      $this->_selectDatabase($database);
       $this->_clearStmtCache();
+      $this->_selectDatabase($database);
 
-      $key = $this->_getInternalConnectionId();
+      $key = $this->_getConnectionId();
       if($key)
       {
         self::$_databaseCache->saveItem(new CacheItem($key, $database));
@@ -100,36 +100,33 @@ abstract class DalConnection
     }
   }
 
-  private function _getInternalConnectionId()
-  {
-    $key = $this->_getConnectionId();
-    return $key ? get_called_class() . '-' . $key : null;
-  }
-
   protected function _addCachedStmt($key, $stmt)
   {
-    $connId = $this->_getInternalConnectionId();
-    if(isset(self::$_stmtCache[$connId]))
+    $connId = $this->_getConnectionId();
+    if($connId)
     {
-      self::$_stmtCache[$connId][$key] = $stmt;
-    }
-    else
-    {
-      self::$_stmtCache[$connId] = [$key => $stmt];
+      if(isset(self::$_stmtCache[$connId]))
+      {
+        self::$_stmtCache[$connId][$key] = $stmt;
+      }
+      else
+      {
+        self::$_stmtCache[$connId] = [$key => $stmt];
+      }
     }
   }
 
   protected function _getCachedStmt($key)
   {
-    $connId = $this->_getInternalConnectionId();
-    return isset(self::$_stmtCache[$connId][$key])
+    $connId = $this->_getConnectionId();
+    return ($connId && isset(self::$_stmtCache[$connId][$key]))
       ? self::$_stmtCache[$connId][$key] : null;
   }
 
   protected function _deleteCachedStmt($key)
   {
-    $connId = $this->_getInternalConnectionId();
-    if(isset(self::$_stmtCache[$connId][$key]))
+    $connId = $this->_getConnectionId();
+    if($connId && isset(self::$_stmtCache[$connId][$key]))
     {
       unset(self::$_stmtCache[$connId][$key]);
     }
@@ -137,15 +134,24 @@ abstract class DalConnection
 
   protected function _clearStmtCache()
   {
-    self::$_stmtCache[$this->_getInternalConnectionId()] = [];
+    $connId = $this->_getConnectionId();
+    if($connId)
+    {
+      self::$_stmtCache[$connId] = [];
+    }
   }
 
   protected function &_getStmtCache()
   {
-    if(!isset(self::$_stmtCache[$this->_getInternalConnectionId()]))
+    $connId = $this->_getConnectionId();
+    if($connId)
     {
-      self::$_stmtCache[$this->_getInternalConnectionId()] = [];
+      if(!isset(self::$_stmtCache[$connId]))
+      {
+        self::$_stmtCache[$connId] = [];
+      }
+      return self::$_stmtCache[$connId];
     }
-    return self::$_stmtCache[$this->_getInternalConnectionId()];
+    return [];
   }
 }

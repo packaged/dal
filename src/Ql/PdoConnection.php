@@ -40,12 +40,13 @@ class PdoConnection extends DalConnection implements ILastInsertId
       $this->_clearStmtCache();
 
       $this->_host = null;
+      $this->_username = $this->_config()->getItem('username', 'root');
+
       $dsn = $this->_config()->getItem('dsn', null);
       if($dsn === null)
       {
         $this->_host = $this->_config()->getItem('hostname', '127.0.0.1');
         $this->_port = $this->_config()->getItem('port', 3306);
-        $this->_username = $this->_config()->getItem('username', 'root');
 
         $dsn = sprintf(
           "mysql:host=%s;port=%d",

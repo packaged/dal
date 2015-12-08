@@ -362,56 +362,76 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
    * @dataProvider switchDBProvider
    * @throws ConnectionException
    */
-  public function testSwitchDB($persistent = true)
+  public function testSharedConnection($persistent)
   {
     $tmpConn = new MockPdoConnection();
     $tmpConn->setResolver(new DalResolver());
     $tmpConn->addConfig('options', [\PDO::ATTR_PERSISTENT => $persistent]);
-    foreach(['packaged_dal_dbA', 'packaged_dal_dbB'] as $db)
-    {
-      $tmpConn->runQuery("DROP DATABASE IF EXISTS " . $db);
-      $tmpConn->runQuery("CREATE DATABASE " . $db);
-      $tmpConn->runQuery(
-        "CREATE TABLE " . $db . ".testtable ("
-        . "id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,"
-        . "name VARCHAR(200),"
-        . "value VARCHAR(200)"
-        . ")"
-      );
-    }
+
+    $numProcs = count($tmpConn->fetchQueryResults("SHOW FULL PROCESSLIST"));
+
+    $tmpConn->runQuery("DROP DATABASE IF EXISTS packaged_dal_a");
+    $tmpConn->runQuery("DROP DATABASE IF EXISTS packaged_dal_b");
+    $tmpConn->runQuery("CREATE DATABASE packaged_dal_a");
+    $tmpConn->runQuery("CREATE DATABASE packaged_dal_b");
+    $tmpConn->runQuery(
+      "CREATE TABLE packaged_dal_a.table_a (id int, value varchar(200))"
+    );
+    $tmpConn->runQuery(
+      "CREATE TABLE packaged_dal_b.table_b (id int, value varchar(200))"
+    );
+    $tmpConn->runQuery(
+      "INSERT INTO packaged_dal_a.table_a VALUES (1, 'test_a')"
+    );
+    $tmpConn->runQuery(
+      "INSERT INTO packaged_dal_b.table_b VALUES (1, 'test_b')"
+    );
 
     $conn1 = new MockPdoConnection();
     $conn1->setResolver(new DalResolver());
     $conn1->addConfig('options', [\PDO::ATTR_PERSISTENT => $persistent]);
+    $conn1->addConfig('database', 'packaged_dal_a');
 
     $conn2 = new MockPdoConnection();
     $conn2->setResolver(new DalResolver());
     $conn2->addConfig('options', [\PDO::ATTR_PERSISTENT => $persistent]);
+    $conn2->addConfig('database', 'packaged_dal_b');
 
     $conn1->connect();
     $conn2->connect();
 
-    $conn1->addConfig('database', 'packaged_dal_dbA');
-    $conn2->addConfig('database', 'packaged_dal_dbB');
+    $testSelect = function (MockPdoConnection $conn, $isA)
+    use ($tmpConn, $persistent)
+    {
+      $tbl = 'table_' . ($isA ? 'a' : 'b');
+      $db = 'packaged_dal_' . ($isA ? 'a' : 'b');
 
-    $conn1->runQuery(
-      "INSERT INTO testtable (name,value) VALUES ('nameA1', 'valueA1')"
-    );
-    $conn2->runQuery(
-      "INSERT INTO testtable (name,value) VALUES ('nameB1', 'valueB1')"
-    );
+      $this->assertEquals(
+        [['id' => 1, 'value' => $isA ? 'test_a' : 'test_b']],
+        $conn->fetchQueryResults("SELECT * FROM " . $tbl)
+      );
 
-    $resA = $conn1->fetchQueryResults('SELECT * FROM testtable');
-    $resB = $conn2->fetchQueryResults('SELECT * FROM testtable');
+      if($persistent)
+      {
+        $this->assertEquals(
+          [['db' => $db]],
+          $tmpConn->fetchQueryResults('SELECT DATABASE() AS db')
+        );
+      }
+    };
+
+    $testSelect($conn1, true);
+    $testSelect($conn2, false);
+    $testSelect($conn1, true);
+    $testSelect($conn2, false);
 
     $this->assertEquals(
-      [['id' => 1, 'name' => 'nameA1', 'value' => 'valueA1']],
-      $resA
+      $persistent ? $numProcs : $numProcs + 2,
+      count($tmpConn->fetchQueryResults("SHOW FULL PROCESSLIST"))
     );
-    $this->assertEquals(
-      [['id' => 1, 'name' => 'nameB1', 'value' => 'valueB1']],
-      $resB
-    );
+
+    $tmpConn->runQuery("DROP DATABASE IF EXISTS packaged_dal_a");
+    $tmpConn->runQuery("DROP DATABASE IF EXISTS packaged_dal_b");
   }
 
   private function _doStmtCacheLimitTest($limit)

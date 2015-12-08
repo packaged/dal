@@ -11,7 +11,7 @@ use Packaged\Dal\Traits\ResolverAwareTrait;
 use Packaged\Helpers\Strings;
 use Packaged\Helpers\ValueAs;
 
-class PdoConnection
+class PdoConnection extends DalConnection
   implements IQLDataConnection, ConfigurableInterface, ILastInsertId,
              IResolverAware
 {
@@ -31,6 +31,11 @@ class PdoConnection
   protected $_lastRetryCount = 0;
   protected $_maxPreparedStatements = null;
 
+  protected $_host;
+  protected $_port;
+  protected $_username;
+  protected static $_pdoCache = [];
+
   /**
    * Open the connection
    *
@@ -44,14 +49,18 @@ class PdoConnection
     {
       $this->_clearStmtCache();
 
+      $this->_host = null;
       $dsn = $this->_config()->getItem('dsn', null);
       if($dsn === null)
       {
+        $this->_host = $this->_config()->getItem('hostname', '127.0.0.1');
+        $this->_port = $this->_config()->getItem('port', 3306);
+        $this->_username = $this->_config()->getItem('username', 'root');
+
         $dsn = sprintf(
-          "mysql:host=%s;dbname=%s;port=%d",
-          $this->_config()->getItem('hostname', '127.0.0.1'),
-          $this->_config()->getItem('database'),
-          $this->_config()->getItem('port', 3306)
+          "mysql:host=%s;port=%d",
+          $this->_host,
+          $this->_port
         );
       }
 
@@ -71,7 +80,7 @@ class PdoConnection
 
           $this->_connection = new \PDO(
             $dsn,
-            $this->_config()->getItem('username', 'root'),
+            $this->_username,
             $this->_config()->getItem('password', ''),
             $options
           );
@@ -95,6 +104,8 @@ class PdoConnection
               $this->_emulatedPrepares
             );
           }
+
+          $this->_switchDatabase(null, empty($options[\PDO::ATTR_PERSISTENT]));
 
           $remainingAttempts = 0;
         }
@@ -131,6 +142,47 @@ class PdoConnection
       \PDO::ATTR_ERRMODE    => \PDO::ERRMODE_EXCEPTION,
       \PDO::ATTR_TIMEOUT    => 5
     ];
+  }
+
+  /**
+   * Get the key for the 'current database' cache used for auto-switching DB
+   *
+   * @return null|string
+   */
+  protected function _getDatabaseCacheKey()
+  {
+    if($this->_host)
+    {
+      return $this->_host . '|' . $this->_port . '|' . $this->_username;
+    }
+    else
+    {
+      return null;
+    }
+  }
+
+  protected function _getDatabaseName()
+  {
+    return $this->_config()->getItem('database');
+  }
+
+  /**
+   * Select a database
+   *
+   * @param string $database
+   *
+   * @throws PdoException
+   */
+  protected function _selectDatabase($database)
+  {
+    if($this->_inTransaction)
+    {
+      throw new PdoException('Cannot switch database while in a transaction');
+    }
+    if($database && $this->isConnected())
+    {
+      $this->_connection->exec(sprintf('USE `%s`', $database));
+    }
   }
 
   /**
@@ -206,6 +258,8 @@ class PdoConnection
    */
   public function startTransaction()
   {
+    $this->_switchDatabase();
+
     return $this->_performWithRetries(
       function()
       {
@@ -297,6 +351,8 @@ class PdoConnection
    */
   protected function _getStatement($query)
   {
+    $this->_switchDatabase();
+
     $cacheKey = $this->_stmtCacheKey($query);
     $cached = $this->_getStmtCache($cacheKey);
     if($cached)
@@ -437,6 +493,8 @@ class PdoConnection
 
   protected function _runQuery($query, array $values = null, $retries = null)
   {
+    $this->_switchDatabase();
+
     return $this->_performWithRetries(
       function() use ($query, $values)
       {

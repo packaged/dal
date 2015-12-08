@@ -22,6 +22,7 @@ use Packaged\Dal\DalResolver;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
 use Packaged\Dal\Exceptions\Connection\CqlException;
 use Packaged\Dal\IResolverAware;
+use Packaged\Dal\Ql\DalConnection;
 use Packaged\Dal\Ql\IQLDataConnection;
 use Packaged\Dal\Traits\ResolverAwareTrait;
 use Packaged\Helpers\Strings;
@@ -33,7 +34,7 @@ use Thrift\Transport\TFramedTransport;
 use Thrift\Transport\TSocket;
 use Thrift\Transport\TTransport;
 
-class CqlConnection
+class CqlConnection extends DalConnection
   implements IQLDataConnection, ConfigurableInterface, IResolverAware
 {
   use ConfigurableTrait;
@@ -68,24 +69,10 @@ class CqlConnection
   protected $_availableHosts = [];
   protected $_availableHostCount = 0;
 
-  /**
-   * @var ICacheConnection
-   */
-  protected static $_keyspaceCache;
-
   public function setStrictRecoverable($flag)
   {
     $this->_strictRecoverable = (bool)$flag;
     return $this;
-  }
-
-  public function __construct()
-  {
-    $config = new ConfigSection(
-      'cql_keyspace', ['pool_name' => 'cql_keyspace']
-    );
-    self::$_keyspaceCache = new EphemeralConnection();
-    self::$_keyspaceCache->configure($config);
   }
 
   /**
@@ -168,11 +155,7 @@ class CqlConnection
           }
           //@codeCoverageIgnoreEnd
 
-          $keyspace = $this->_config()->getItem('keyspace');
-          if($keyspace)
-          {
-            $this->_setKeyspace($keyspace, !$this->_socket->isPersistent());
-          }
+          $this->_switchDatabase(null, !$this->_socket->isPersistent());
         }
         catch(TException $e)
         {
@@ -209,21 +192,24 @@ class CqlConnection
     return $this;
   }
 
-  public function setKeyspaceCache(ICacheConnection $cache)
-  {
-    self::$_keyspaceCache = $cache;
-  }
-
   /**
-   * @return CacheItem
+   * @return string
    */
-  protected function _getKeyspaceCacheKey()
+  protected function _getDatabaseCacheKey()
   {
     if($this->_socket)
     {
       return md5($this->_socket->getHost() . $this->_socket->getPort());
     }
     return false;
+  }
+
+  /**
+   * @return string
+   */
+  protected function _getDatabaseName()
+  {
+    return $this->_config()->getItem('keyspace');
   }
 
   /**
@@ -254,33 +240,19 @@ class CqlConnection
     $this->_protocol = null;
     $this->_prepareCache = [];
     $this->_connected = false;
-    $keyspaceCacheKey = $this->_getKeyspaceCacheKey();
-    if($keyspaceCacheKey)
-    {
-      self::$_keyspaceCache->deleteKey($keyspaceCacheKey);
-    }
+    $this->_clearDatabaseCache();
     return $this;
   }
 
-  protected function _setKeyspace($keyspace, $force = false)
+  protected function _selectDatabase($database)
   {
-    if($keyspace)
+    try
     {
-      try
-      {
-        $cacheKey = $this->_getKeyspaceCacheKey();
-        /** @var CacheItem $cacheItem */
-        $cacheItem = self::$_keyspaceCache->getItem($cacheKey);
-        if($force || $cacheItem->get() !== $keyspace)
-        {
-          $this->_client->set_keyspace($keyspace);
-          self::$_keyspaceCache->saveItem($cacheItem->hydrate($keyspace));
-        }
-      }
-      catch(\Exception $e)
-      {
-        throw CqlException::from($e);
-      }
+      $this->_client->set_keyspace($database);
+    }
+    catch(\Exception $e)
+    {
+      throw CqlException::from($e);
     }
   }
 
@@ -294,6 +266,8 @@ class CqlConnection
    */
   public function runQuery($query, array $values = [])
   {
+    $this->_switchDatabase();
+
     $perfId = $this->getResolver()->startPerformanceMetric(
       $this,
       DalResolver::MODE_WRITE,
@@ -396,7 +370,7 @@ class CqlConnection
     }
     try
     {
-      $this->connect()->_setKeyspace($this->_config()->getItem('keyspace'));
+      $this->connect()->_switchDatabase();
       return $this->_getStatement($query, $compression)->prepare();
     }
     catch(\Exception $exception)
@@ -442,7 +416,7 @@ class CqlConnection
     $return = [];
     try
     {
-      $this->connect()->_setKeyspace($this->_config()->getItem('keyspace'));
+      $this->connect()->_switchDatabase();
       $packedParameters = [];
       foreach($parameters as $k => $value)
       {

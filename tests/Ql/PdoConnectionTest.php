@@ -328,11 +328,90 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
     $connection->rollback();
   }
 
+  public function testSwitchDBDuringTransaction()
+  {
+    $connection = new MockPdoConnection();
+    $connection->config();
+    $connection->setResolver(new DalResolver());
+    $connection->connect();
+
+    $connection->startTransaction();
+    $connection->addConfig('database', 'packaged_dal_2');
+    $this->setExpectedException(
+      PdoException::class,
+      'Cannot switch database while in a transaction'
+    );
+    $connection->runQuery('SELECT 1');
+  }
+
   public function testStatementCacheLimit()
   {
     $this->_doStmtCacheLimitTest(0);
     $this->_doStmtCacheLimitTest(1);
     $this->_doStmtCacheLimitTest(20);
+  }
+
+  public function switchDBProvider()
+  {
+    return [[true], [false]];
+  }
+
+  /**
+   * @param bool $persistent
+   *
+   * @dataProvider switchDBProvider
+   * @throws ConnectionException
+   */
+  public function testSwitchDB($persistent = true)
+  {
+    $tmpConn = new MockPdoConnection();
+    $tmpConn->setResolver(new DalResolver());
+    $tmpConn->addConfig('options', [\PDO::ATTR_PERSISTENT => $persistent]);
+    foreach(['packaged_dal_dbA', 'packaged_dal_dbB'] as $db)
+    {
+      $tmpConn->runQuery("DROP DATABASE IF EXISTS " . $db);
+      $tmpConn->runQuery("CREATE DATABASE " . $db);
+      $tmpConn->runQuery(
+        "CREATE TABLE " . $db . ".testtable ("
+        . "id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,"
+        . "name VARCHAR(200),"
+        . "value VARCHAR(200)"
+        . ")"
+      );
+    }
+
+    $conn1 = new MockPdoConnection();
+    $conn1->setResolver(new DalResolver());
+    $conn1->addConfig('options', [\PDO::ATTR_PERSISTENT => $persistent]);
+
+    $conn2 = new MockPdoConnection();
+    $conn2->setResolver(new DalResolver());
+    $conn2->addConfig('options', [\PDO::ATTR_PERSISTENT => $persistent]);
+
+    $conn1->connect();
+    $conn2->connect();
+
+    $conn1->addConfig('database', 'packaged_dal_dbA');
+    $conn2->addConfig('database', 'packaged_dal_dbB');
+
+    $conn1->runQuery(
+      "INSERT INTO testtable (name,value) VALUES ('nameA1', 'valueA1')"
+    );
+    $conn2->runQuery(
+      "INSERT INTO testtable (name,value) VALUES ('nameB1', 'valueB1')"
+    );
+
+    $resA = $conn1->fetchQueryResults('SELECT * FROM testtable');
+    $resB = $conn2->fetchQueryResults('SELECT * FROM testtable');
+
+    $this->assertEquals(
+      [['id' => 1, 'name' => 'nameA1', 'value' => 'valueA1']],
+      $resA
+    );
+    $this->assertEquals(
+      [['id' => 1, 'name' => 'nameB1', 'value' => 'valueB1']],
+      $resB
+    );
   }
 
   private function _doStmtCacheLimitTest($limit)

@@ -344,13 +344,6 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
     $connection->runQuery('SELECT 1');
   }
 
-  public function testStatementCacheLimit()
-  {
-    $this->_doStmtCacheLimitTest(0);
-    $this->_doStmtCacheLimitTest(1);
-    $this->_doStmtCacheLimitTest(20);
-  }
-
   public function switchDBProvider()
   {
     return [[true], [false]];
@@ -434,12 +427,24 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
     $tmpConn->runQuery("DROP DATABASE IF EXISTS packaged_dal_b");
   }
 
-  private function _doStmtCacheLimitTest($limit)
+  public function stmtCacheLimitProvider()
+  {
+    return [[0], [1], [20]];
+  }
+
+  /**
+   * @dataProvider stmtCacheLimitProvider
+   * @param int $limit
+   *
+   * @throws ConnectionException
+   */
+  public function testStatementCacheLimit($limit)
   {
     $connection = new StmtCacheConnection();
     $connection->setCacheLimit($limit);
     $connection->setResolver(new DalResolver());
     $connection->connect();
+    $connection->clearStmtCache();
 
     $this->assertEquals(0, $connection->getCachedStatementCount());
 
@@ -455,6 +460,7 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
       {
         $connection->runQuery($sql);
       }
+
       $this->assertEquals(
         min($i + 1, $limit),
         $connection->getCachedStatementCount()
@@ -508,14 +514,19 @@ class GoneAwayConnection
 
 class StmtCacheConnection extends MockPdoConnection
 {
+  public function clearStmtCache()
+  {
+    $this->_clearStmtCache();
+  }
+
   public function getCachedStatementCount()
   {
-    return count($this->_prepareCache);
+    return count($this->_getStmtCache());
   }
 
   public function getCachedStatements()
   {
-    return $this->_prepareCache;
+    return $this->_getStmtCache();
   }
 
   public function getCacheKey($sql)

@@ -12,19 +12,10 @@ use cassandra\CqlRow;
 use cassandra\InvalidRequestException;
 use cassandra\NotFoundException;
 use cassandra\TimedOutException;
-use Packaged\Config\ConfigurableInterface;
-use Packaged\Config\ConfigurableTrait;
-use Packaged\Config\Provider\ConfigSection;
-use Packaged\Dal\Cache\CacheItem;
-use Packaged\Dal\Cache\Ephemeral\EphemeralConnection;
-use Packaged\Dal\Cache\ICacheConnection;
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
 use Packaged\Dal\Exceptions\Connection\CqlException;
-use Packaged\Dal\IResolverAware;
 use Packaged\Dal\Ql\DalConnection;
-use Packaged\Dal\Ql\IQLDataConnection;
-use Packaged\Dal\Traits\ResolverAwareTrait;
 use Packaged\Helpers\Strings;
 use Packaged\Helpers\ValueAs;
 use Thrift\Exception\TException;
@@ -35,11 +26,7 @@ use Thrift\Transport\TSocket;
 use Thrift\Transport\TTransport;
 
 class CqlConnection extends DalConnection
-  implements IQLDataConnection, ConfigurableInterface, IResolverAware
 {
-  use ConfigurableTrait;
-  use ResolverAwareTrait;
-
   /**
    * @var CassandraClient
    */
@@ -64,8 +51,6 @@ class CqlConnection extends DalConnection
   protected $_connected = false;
   protected $_strictRecoverable = false;
 
-  protected $_prepareCache = [];
-
   protected $_availableHosts = [];
   protected $_availableHostCount = 0;
 
@@ -86,8 +71,6 @@ class CqlConnection extends DalConnection
   {
     if($this->_client === null)
     {
-      $this->_prepareCache = [];
-
       $remainingAttempts = (int)$this->_config()->getItem(
         'connect_attempts',
         1
@@ -137,6 +120,8 @@ class CqlConnection extends DalConnection
 
           $this->_transport->open();
           $this->_connected = true;
+
+          $this->_clearStmtCache();
 
           $username = $this->_config()->getItem('username');
           // @codeCoverageIgnoreStart
@@ -195,7 +180,7 @@ class CqlConnection extends DalConnection
   /**
    * @return string
    */
-  protected function _getDatabaseCacheKey()
+  protected function _getConnectionId()
   {
     if($this->_socket)
     {
@@ -238,10 +223,8 @@ class CqlConnection extends DalConnection
     }
     $this->_transport = null;
     $this->_protocol = null;
-    $this->_prepareCache = [];
     $this->_connected = false;
-    $this->_clearDatabaseCache();
-    return $this;
+    return parent::disconnect();
   }
 
   protected function _selectDatabase($database)
@@ -323,33 +306,18 @@ class CqlConnection extends DalConnection
    * @param $query
    * @param $compression
    *
-   * @return bool
-   */
-  protected function _isCached($query, $compression)
-  {
-    return isset($this->_prepareCache[$this->_cacheKey($query, $compression)]);
-  }
-
-  /**
-   * @param $query
-   * @param $compression
-   *
    * @return CqlStatement
    */
   protected function _getStatement($query, $compression)
   {
-    if($this->_isCached($query, $compression))
+    $cacheKey = $this->_cacheKey($query, $compression);
+    $stmt = $this->_getCachedStmt($cacheKey);
+    if(!$stmt)
     {
-      return $this->_prepareCache[$this->_cacheKey($query, $compression)];
+      $stmt = new CqlStatement($this->_client, $query, $compression);
+      $this->_addCachedStmt($cacheKey, $stmt);
     }
-    $stmt = new CqlStatement($this->_client, $query, $compression);
-    $this->_prepareCache[$this->_cacheKey($query, $compression)] = $stmt;
-    return $this->_prepareCache[$this->_cacheKey($query, $compression)];
-  }
-
-  protected function _clearCache($query, $compression)
-  {
-    unset($this->_prepareCache[$this->_cacheKey($query, $compression)]);
+    return $stmt;
   }
 
   /**
@@ -375,7 +343,7 @@ class CqlConnection extends DalConnection
     }
     catch(\Exception $exception)
     {
-      $this->_clearCache($query, $compression);
+      $this->_deleteCachedStmt($this->_cacheKey($query, $compression));
       $e = CqlException::from($exception);
 
       if($retries > 0 && $this->_isRecoverableException($e))
@@ -470,7 +438,9 @@ class CqlConnection extends DalConnection
         return true;
       }
 
-      $this->_clearCache($statement->getQuery(), $statement->getCompression());
+      $this->_deleteCachedStmt(
+        $this->_cacheKey($statement->getQuery(), $statement->getCompression())
+      );
       $e = CqlException::from($exception);
 
       if($retries > 0 && $this->_isRecoverableException($e))

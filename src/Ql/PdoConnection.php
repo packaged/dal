@@ -1,29 +1,19 @@
 <?php
 namespace Packaged\Dal\Ql;
 
-use Packaged\Config\ConfigurableInterface;
-use Packaged\Config\ConfigurableTrait;
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
 use Packaged\Dal\Exceptions\Connection\PdoException;
-use Packaged\Dal\IResolverAware;
-use Packaged\Dal\Traits\ResolverAwareTrait;
 use Packaged\Helpers\Strings;
 use Packaged\Helpers\ValueAs;
 
-class PdoConnection extends DalConnection
-  implements IQLDataConnection, ConfigurableInterface, ILastInsertId,
-             IResolverAware
+class PdoConnection extends DalConnection implements ILastInsertId
 {
-  use ConfigurableTrait;
-  use ResolverAwareTrait;
-
   /**
    * @var \PDO
    */
   protected $_connection;
   protected $_prepareDelayCount = [];
-  protected $_prepareCache = [];
   protected $_lastConnectTime = 0;
   protected $_emulatedPrepares = false;
   protected $_delayedPreparesCount = null;
@@ -149,7 +139,7 @@ class PdoConnection extends DalConnection
    *
    * @return null|string
    */
-  protected function _getDatabaseCacheKey()
+  protected function _getConnectionId()
   {
     if($this->_host)
     {
@@ -204,9 +194,8 @@ class PdoConnection extends DalConnection
    */
   public function disconnect()
   {
-    $this->_clearStmtCache();
     $this->_connection = null;
-    return $this;
+    return parent::disconnect();
   }
 
   /**
@@ -261,7 +250,7 @@ class PdoConnection extends DalConnection
     $this->_switchDatabase();
 
     return $this->_performWithRetries(
-      function()
+      function ()
       {
         $result = $this->_connection->beginTransaction();
         $this->_inTransaction = true;
@@ -354,7 +343,7 @@ class PdoConnection extends DalConnection
     $this->_switchDatabase();
 
     $cacheKey = $this->_stmtCacheKey($query);
-    $cached = $this->_getStmtCache($cacheKey);
+    $cached = $this->_getCachedStmt($cacheKey);
     if($cached)
     {
       return $cached;
@@ -378,7 +367,8 @@ class PdoConnection extends DalConnection
           try
           {
             $stmt = $this->_connection->prepare($query);
-          } finally
+          }
+          finally
           {
             $this->_connection->setAttribute(
               \PDO::ATTR_EMULATE_PREPARES,
@@ -401,18 +391,10 @@ class PdoConnection extends DalConnection
     {
       // Do a real prepare and cache the statement
       $stmt = $this->_connection->prepare($query);
-      $this->_addStmtCache($cacheKey, $stmt);
+      $this->_addCachedStmt($cacheKey, $stmt);
     }
 
     return $stmt;
-  }
-
-  /**
-   * Delete everything from the prepared statement cache
-   */
-  protected function _clearStmtCache()
-  {
-    $this->_prepareCache = [];
   }
 
   /**
@@ -426,18 +408,10 @@ class PdoConnection extends DalConnection
   }
 
   /**
-   * @param string $cacheKey
-   */
-  protected function _deleteStmtCache($cacheKey)
-  {
-    unset($this->_prepareCache[$cacheKey]);
-  }
-
-  /**
    * @param string        $cacheKey
    * @param \PDOStatement $statement
    */
-  protected function _addStmtCache($cacheKey, \PDOStatement $statement)
+  protected function _addCachedStmt($cacheKey, \PDOStatement $statement)
   {
     if($this->_maxPreparedStatements === null)
     {
@@ -447,32 +421,21 @@ class PdoConnection extends DalConnection
 
     if($this->_maxPreparedStatements > 0)
     {
-      $this->_prepareCache[$cacheKey] = $statement;
+      parent::_addCachedStmt($cacheKey, $statement);
 
-      while(count($this->_prepareCache) > $this->_maxPreparedStatements)
+      $cache =& $this->_getStmtCache();
+      while(count($cache) > $this->_maxPreparedStatements)
       {
-        array_shift($this->_prepareCache);
+        array_shift($cache);
       }
     }
-  }
-
-  /**
-   * @param string $cacheKey
-   *
-   * @return \PDOStatement
-   */
-  protected function _getStmtCache($cacheKey)
-  {
-    return isset(
-      $this->_prepareCache[$cacheKey]
-    ) ? $this->_prepareCache[$cacheKey] : null;
   }
 
   protected function _recycleConnectionIfRequired()
   {
     if($this->isConnected())
     {
-      if(($this->_lastConnectTime > 0) && (! $this->_inTransaction))
+      if(($this->_lastConnectTime > 0) && (!$this->_inTransaction))
       {
         $recycleTime = (int)$this->_config()
           ->getItem('connection_recycle_time', 900);
@@ -496,7 +459,7 @@ class PdoConnection extends DalConnection
     $this->_switchDatabase();
 
     return $this->_performWithRetries(
-      function() use ($query, $values)
+      function () use ($query, $values)
       {
         $stmt = $this->_getStatement($query);
         if($values)
@@ -506,9 +469,9 @@ class PdoConnection extends DalConnection
         $stmt->execute();
         return $stmt;
       },
-      function() use ($query)
+      function () use ($query)
       {
-        $this->_deleteStmtCache($this->_stmtCacheKey($query));
+        $this->_deleteCachedStmt($this->_stmtCacheKey($query));
       },
       $retries
     );
@@ -565,7 +528,7 @@ class PdoConnection extends DalConnection
               );
               throw $exception;
             }
-            
+
             $this->disconnect()->connect();
           }
           else if($this->_shouldDelayAfterException($exception))

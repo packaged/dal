@@ -11,8 +11,8 @@ php:
 
 before_script:
   # PHP
-  - pecl install memcache
-  - pecl install memcached
+  - printf "\n" | pecl install memcache
+  - printf "\n" | pecl install memcached
   - bash -c 'if [ "$TRAVIS_PHP_VERSION" != "hhvm" ]; then phpenv config-add travis.php.ini; fi;'
 
   # PHP<7

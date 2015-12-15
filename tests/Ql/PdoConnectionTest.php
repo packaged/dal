@@ -205,7 +205,7 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
    * @dataProvider delayedPreparesProvider
    *
    * @param int|string $setting
-   * @param int $expectedDelayCount
+   * @param int        $expectedDelayCount
    *
    * @throws ConnectionException
    */
@@ -256,7 +256,7 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
       . ")"
     );
 
-    $insertFn = function($testName, $count) use ($connection)
+    $insertFn = function ($testName, $count) use ($connection)
     {
       for($i = 0; $i < $count; $i++)
       {
@@ -272,7 +272,7 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
       }
     };
 
-    $countFn = function($testName, $conn = null) use ($connection)
+    $countFn = function ($testName, $conn = null) use ($connection)
     {
       $conn = $conn ?: $connection;
       return $conn->runQuery(
@@ -434,6 +434,7 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
 
   /**
    * @dataProvider stmtCacheLimitProvider
+   *
    * @param int $limit
    *
    * @throws ConnectionException
@@ -521,12 +522,12 @@ class StmtCacheConnection extends MockPdoConnection
 
   public function getCachedStatementCount()
   {
-    return count($this->_getStmtCache());
+    return count(self::$_stmtCache[$this->_getConnectionId()]);
   }
 
   public function getCachedStatements()
   {
-    return $this->_getStmtCache();
+    return self::$_stmtCache[$this->_getConnectionId()];
   }
 
   public function getCacheKey($sql)

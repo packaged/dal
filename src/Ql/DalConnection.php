@@ -140,18 +140,4 @@ abstract class DalConnection
       self::$_stmtCache[$connId] = [];
     }
   }
-
-  protected function &_getStmtCache()
-  {
-    $connId = $this->_getConnectionId();
-    if($connId)
-    {
-      if(!isset(self::$_stmtCache[$connId]))
-      {
-        self::$_stmtCache[$connId] = [];
-      }
-      return self::$_stmtCache[$connId];
-    }
-    return [];
-  }
 }

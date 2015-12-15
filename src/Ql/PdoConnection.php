@@ -124,6 +124,7 @@ class PdoConnection extends DalConnection implements ILastInsertId
 
   /**
    * Default options for the PDO Connection
+   *
    * @return array
    */
   protected function _defaultOptions()
@@ -131,7 +132,7 @@ class PdoConnection extends DalConnection implements ILastInsertId
     return [
       \PDO::ATTR_PERSISTENT => false,
       \PDO::ATTR_ERRMODE    => \PDO::ERRMODE_EXCEPTION,
-      \PDO::ATTR_TIMEOUT    => 5
+      \PDO::ATTR_TIMEOUT    => 5,
     ];
   }
 
@@ -412,7 +413,7 @@ class PdoConnection extends DalConnection implements ILastInsertId
    * @param string        $cacheKey
    * @param \PDOStatement $statement
    */
-  protected function _addCachedStmt($cacheKey, \PDOStatement $statement)
+  protected function _addCachedStmt($cacheKey, $statement)
   {
     if($this->_maxPreparedStatements === null)
     {
@@ -424,10 +425,13 @@ class PdoConnection extends DalConnection implements ILastInsertId
     {
       parent::_addCachedStmt($cacheKey, $statement);
 
-      $cache =& $this->_getStmtCache();
-      while(count($cache) > $this->_maxPreparedStatements)
+      $connId = $this->_getConnectionId();
+      if(isset(self::$_stmtCache[$connId]))
       {
-        array_shift($cache);
+        while(count(self::$_stmtCache[$connId]) > $this->_maxPreparedStatements)
+        {
+          array_shift(self::$_stmtCache[$connId]);
+        }
       }
     }
   }
@@ -486,6 +490,7 @@ class PdoConnection extends DalConnection implements ILastInsertId
    * @return mixed
    * @throws ConnectionException
    * @throws PdoException
+   * @throws null
    */
   protected function _performWithRetries(
     callable $func, callable $onError = null, $retryCount = null

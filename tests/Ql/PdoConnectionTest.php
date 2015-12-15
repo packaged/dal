@@ -240,11 +240,11 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
   {
     $connection = new MockPdoConnection();
     $connection->setResolver(new DalResolver());
-    $connection->runQuery('USE packaged_dal');
+    $connection->addConfig('database', 'packaged_dal');
 
     $connection2 = new MockPdoConnection();
     $connection2->setResolver(new DalResolver());
-    $connection2->runQuery('USE packaged_dal');
+    $connection2->addConfig('database', 'packaged_dal');
 
     $connection->runQuery("DROP TABLE IF EXISTS transactions_test");
     $connection->runQuery(

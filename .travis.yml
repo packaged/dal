@@ -10,16 +10,18 @@ php:
   - hhvm
 
 before_script:
+  # PHP
+  - pecl install memcache
+  - pecl install memcached
+  - bash -c 'if [ "$TRAVIS_PHP_VERSION" != "hhvm" ]; then phpenv config-add travis.php.ini; fi;'
+
   # PHP<7
   - bash -c 'if [ "$TRAVIS_PHP_VERSION" != "hhvm" ] && [ "$TRAVIS_PHP_VERSION" != "7.0" ]; then printf "\n" | pecl install apcu-4.0.10; fi;'
 
   # PHP7
   - bash -c 'if [ "$TRAVIS_PHP_VERSION" = "7.0" ]; then printf "\n" | pecl install apcu; fi;'
-
-  # PHP
-  - bash -c 'if [ "$TRAVIS_PHP_VERSION" != "hhvm" ]; then phpenv config-add travis.php.ini; fi;'
   - composer self-update
-  - sleep 30
+  - sleep 20
   - composer require satooshi/php-coveralls:dev-master --dev --no-progress --no-interaction --prefer-source
   - mysql -e 'create database packaged_dal;'
   - mysql -e 'CREATE TABLE `packaged_dal`.`mock_ql_daos` (

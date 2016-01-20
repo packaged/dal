@@ -42,8 +42,8 @@ before_script:
               ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;'
 
 script:
- - mkdir -p build/logs
- - phpunit --coverage-clover build/logs/clover.xml
+  - mkdir -p build/logs
+  - phpunit --coverage-clover build/logs/clover.xml
 
 after_script:
   - php vendor/bin/coveralls -v

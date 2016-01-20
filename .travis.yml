@@ -24,7 +24,7 @@ before_script:
 
   - composer self-update
   - sleep 20
-  - composer require satooshi/php-coveralls:dev-master --dev --no-progress --no-interaction --prefer-source
+  - composer install --no-progress --no-interaction --prefer-source
   - mysql -e 'create database packaged_dal;'
   - mysql -e 'CREATE TABLE `packaged_dal`.`mock_ql_daos` (
                 `id` int(11) unsigned NOT NULL AUTO_INCREMENT,

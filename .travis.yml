@@ -20,7 +20,7 @@ before_script:
 
   # PHP7
   - bash -c 'if [ "$TRAVIS_PHP_VERSION" = "7.0" ]; then printf "\n" | pecl install apcu; fi;'
-  - bash -c 'if [ "$TRAVIS_PHP_VERSION" = "7.0" ]; then git clone --branch php7 git@github.com:php-memcached-dev/php-memcached php-memcached; cd php-memcached/; phpize; ./configure; make; make install; fi;'
+  - bash -c 'if [ "$TRAVIS_PHP_VERSION" = "7.0" ]; then git clone --branch php7 https://github.com/php-memcached-dev/php-memcached.git; cd php-memcached/; phpize; ./configure; make; make install; fi;'
 
   - composer self-update
   - sleep 20

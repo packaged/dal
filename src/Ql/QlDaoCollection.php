@@ -52,6 +52,7 @@ class QlDaoCollection extends DaoCollection
 
   /**
    * Reset the query to a single select * FROM table
+   *
    * @return $this
    */
   public function resetQuery()
@@ -133,6 +134,7 @@ class QlDaoCollection extends DaoCollection
   {
     $this->_isLoaded = false;
     parent::clear();
+    return $this;
   }
 
   /**

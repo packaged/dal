@@ -241,16 +241,10 @@ abstract class AbstractSanitizableDao extends AbstractDao
         switch($type)
         {
           case self::SERIALIZATION_JSON:
-            if($value !== null)
-            {
-              $value = json_encode($value);
-            }
+            $value = json_encode($value);
             break;
           case self::SERIALIZATION_PHP:
-            if($value !== null)
-            {
-              $value = serialize($value);
-            }
+            $value = serialize($value);
             break;
           case is_array($type) && isset($type['serializer']):
             $value = $type['serializer']($value);
@@ -278,16 +272,10 @@ abstract class AbstractSanitizableDao extends AbstractDao
         switch($type)
         {
           case self::SERIALIZATION_JSON:
-            if($value !== null)
-            {
-              $value = json_decode($value);
-            }
+            $value = json_decode($value);
             break;
           case self::SERIALIZATION_PHP:
-            if($value !== null)
-            {
-              $value = unserialize($value);
-            }
+            $value = unserialize($value);
             break;
           case is_array($type) && isset($type['unserializer']):
             $value = $type['unserializer']($value);

@@ -86,6 +86,7 @@ abstract class AbstractDao implements IDao
     $this->markDaoDatasetAsSaved();
 
     //Run any specific constructor
+    /** @noinspection PhpMethodParametersCountMismatchInspection */
     $this->_construct(...$constructArgs);
   }
 
@@ -108,7 +109,7 @@ abstract class AbstractDao implements IDao
         }
         $changes[$key] = [
           'from' => Arrays::value($this->_savedData, $key),
-          'to'   => Arrays::value($current, $key)
+          'to'   => Arrays::value($current, $key),
         ];
       }
     }
@@ -402,9 +403,10 @@ abstract class AbstractDao implements IDao
   /**
    * (PHP 5 &gt;= 5.4.0)<br/>
    * Specify data which should be serialized to JSON
+   *
    * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
    * @return mixed data which can be serialized by <b>json_encode</b>,
-   * which is a value of any type other than a resource.
+   *       which is a value of any type other than a resource.
    */
   public function jsonSerialize()
   {

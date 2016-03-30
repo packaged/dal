@@ -3,7 +3,6 @@ language: php
 services:
   - cassandra
   - memcached
-  - memcache
 
 php:
   - 5.6

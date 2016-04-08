@@ -3,7 +3,6 @@ namespace Ql;
 
 use cassandra\CassandraClient;
 use cassandra\Compression;
-use cassandra\ConsistencyLevel;
 use cassandra\CqlPreparedResult;
 use cassandra\InvalidRequestException;
 use cassandra\TimedOutException;
@@ -427,68 +426,83 @@ class CqlTest extends \PHPUnit_Framework_TestCase
   public function testRetries()
   {
     $connection = new MockCqlConnection();
-    $connection->setClient(new FailPrepareClient(null));
+    $client = new FailPrepareClient(null);
+    $connection->setClient($client);
+    $connection->connect();
+    $invalidQuery = 'SOME QUERY';
+    $stmt = new MockCqlStatement(
+      $connection->getClient(),
+      $invalidQuery,
+      Compression::NONE
+    );
+    $connection->addPersistentStatement($invalidQuery, $stmt);
 
     try
     {
-      $connection->resetCounts();
-      $connection->prepare('SOME QUERY');
+      $connection->prepare($invalidQuery);
     }
     catch(CqlException $e)
     {
-      $this->assertEquals(3, $connection->getPrepareCount());
-      $this->assertEquals(0, $connection->getExecuteCount());
+      $this->assertEquals(3, $client->prepareCount);
+      $this->assertEquals(0, $client->executeCount);
     }
 
-    $connection->setClient(new FailExecuteClient(null));
+    $client = new FailExecuteClient(null);
+    $connection->setClient($client);
+    $testQuery = 'test';
+    $stmt = new MockCqlStatement(
+      $connection->getClient(),
+      $testQuery,
+      Compression::NONE
+    );
+    $connection->addPersistentStatement($testQuery, $stmt);
     try
     {
-      $connection->resetCounts();
-      $stmt = $connection->prepare('test');
+      $stmt = $connection->prepare($testQuery);
       $connection->execute($stmt);
     }
     catch(CqlException $e)
     {
-      $this->assertEquals(1, $connection->getPrepareCount());
-      $this->assertEquals(3, $connection->getExecuteCount());
+      $this->assertEquals(1, $client->prepareCount);
+      $this->assertEquals(3, $client->executeCount);
     }
 
-    $connection->setClient(new WriteTimeoutClient(null));
+    $client = new WriteTimeoutClient(null);
+    $connection->setClient($client);
     try
     {
-      $connection->resetCounts();
-      $stmt = $connection->prepare('test');
+      $stmt = $connection->prepare($testQuery);
       $connection->execute($stmt);
     }
     catch(CqlException $e)
     {
-      $this->assertEquals(1, $connection->getPrepareCount());
-      $this->assertEquals(3, $connection->getExecuteCount());
+      $this->assertEquals(1, $client->prepareCount);
+      $this->assertEquals(3, $client->executeCount);
     }
 
-    $connection->setClient(new UnpreparedPrepareClient(null));
+    $client = new UnpreparedPrepareClient(null);
+    $connection->setClient($client);
     try
     {
-      $connection->resetCounts();
-      $connection->prepare('test');
+      $connection->prepare($testQuery);
     }
     catch(CqlException $e)
     {
-      $this->assertEquals(3, $connection->getPrepareCount());
-      $this->assertEquals(0, $connection->getExecuteCount());
+      $this->assertEquals(3, $client->prepareCount);
+      $this->assertEquals(0, $client->executeCount);
     }
 
-    $connection->setClient(new UnpreparedExecuteClient(null));
+    $client = new UnpreparedExecuteClient(null);
+    $connection->setClient($client);
     try
     {
-      $connection->resetCounts();
-      $stmt = $connection->prepare('test');
+      $stmt = $connection->prepare('unprepared test');
       $connection->execute($stmt);
     }
     catch(CqlException $e)
     {
-      $this->assertEquals(3, $connection->getPrepareCount());
-      $this->assertEquals(3, $connection->getExecuteCount());
+      $this->assertEquals(3, $client->prepareCount);
+      $this->assertEquals(3, $client->executeCount);
     }
   }
 
@@ -552,9 +566,6 @@ class MockCqlStatement extends CqlStatement
 
 class MockCqlConnection extends CqlConnection
 {
-  protected $_executeCount = 0;
-  protected $_prepareCount = 0;
-
   protected $_newClient = null;
 
   public function getConfig($item)
@@ -577,37 +588,31 @@ class MockCqlConnection extends CqlConnection
     $this->disconnect()->connect();
   }
 
-  public function execute(
-    CqlStatement $statement, array $parameters = [],
-    $consistency = ConsistencyLevel::QUORUM, $retries = null
-  )
+  public function getClient()
   {
-    $this->_executeCount++;
-    return parent::execute($statement, $parameters, $consistency, $retries);
+    return $this->connect()->_client;
   }
 
-  public function getExecuteCount()
+  protected function _getConnectionId()
   {
-    return $this->_executeCount;
+    return 'mock';
   }
 
-  public function prepare(
-    $query, $compression = Compression::NONE, $retries = null
-  )
+  private $ps = [];
+
+  public function addPersistentStatement($query, CqlStatement $stmt)
   {
-    $this->_prepareCount++;
-    return parent::prepare($query, $compression, $retries);
+    $key = $this->_cacheKey($query, Compression::NONE);
+    $this->ps[$key] = $stmt;
   }
 
-  public function getPrepareCount()
+  protected function _getCachedStmt($key)
   {
-    return $this->_prepareCount;
-  }
-
-  public function resetCounts()
-  {
-    $this->_prepareCount = 0;
-    $this->_executeCount = 0;
+    if(isset($this->ps[$key]))
+    {
+      return $this->ps[$key];
+    }
+    return parent::_getCachedStmt($key);
   }
 }
 
@@ -748,18 +753,40 @@ class MockCounterCqlDao extends CqlDao
   }
 }
 
-class FailPrepareClient extends CassandraClient
+class MockCassandraClient extends CassandraClient
+{
+  public $prepareCount = 0;
+  public $executeCount = 0;
+
+  public function prepare_cql3_query($query, $compression)
+  {
+    $this->prepareCount++;
+    parent::prepare_cql3_query($query, $compression);
+  }
+
+  public function execute_prepared_cql3_query(
+    $itemId, array $values, $consistency
+  )
+  {
+    $this->executeCount++;
+    parent::execute_prepared_cql3_query($itemId, $values, $consistency);
+  }
+}
+
+class FailPrepareClient extends MockCassandraClient
 {
   public function prepare_cql3_query($query, $compression)
   {
+    $this->prepareCount++;
     throw new TimedOutException();
   }
 }
 
-class FailExecuteClient extends CassandraClient
+class FailExecuteClient extends MockCassandraClient
 {
   public function prepare_cql3_query($query, $compression)
   {
+    $this->prepareCount++;
     return new CqlPreparedResult();
   }
 
@@ -767,14 +794,16 @@ class FailExecuteClient extends CassandraClient
     $itemId, array $values, $consistency
   )
   {
+    $this->executeCount++;
     throw new TTransportException('Class: timed out reading 123 bytes');
   }
 }
 
-class WriteTimeoutClient extends CassandraClient
+class WriteTimeoutClient extends MockCassandraClient
 {
   public function prepare_cql3_query($query, $compression)
   {
+    $this->prepareCount++;
     return new CqlPreparedResult();
   }
 
@@ -782,14 +811,16 @@ class WriteTimeoutClient extends CassandraClient
     $itemId, array $values, $consistency
   )
   {
+    $this->executeCount++;
     throw new TimedOutException();
   }
 }
 
-class UnpreparedExecuteClient extends CassandraClient
+class UnpreparedExecuteClient extends MockCassandraClient
 {
   public function prepare_cql3_query($query, $compression)
   {
+    $this->prepareCount++;
     return new CqlPreparedResult();
   }
 
@@ -797,16 +828,18 @@ class UnpreparedExecuteClient extends CassandraClient
     $itemId, array $values, $consistency
   )
   {
+    $this->executeCount++;
     throw new \Exception(
       'Prepared query with ID 1 not found (either the query was not prepared on this host (maybe the host has been restarted?) or you have prepared too many queries and it has been evicted from the internal cache)'
     );
   }
 }
 
-class UnpreparedPrepareClient extends CassandraClient
+class UnpreparedPrepareClient extends MockCassandraClient
 {
   public function prepare_cql3_query($query, $compression)
   {
+    $this->prepareCount++;
     throw new \Exception(
       'Prepared query with ID 1 not found (either the query was not prepared on this host (maybe the host has been restarted?) or you have prepared too many queries and it has been evicted from the internal cache)'
     );

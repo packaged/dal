@@ -51,4 +51,9 @@ class CqlStatement
     }
     return $this;
   }
+
+  public function clearPrepare()
+  {
+    $this->_isPrepared = false;
+  }
 }

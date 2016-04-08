@@ -10,7 +10,7 @@
   ],
   "require": {
     "php": ">=5.6.0",
-    "packaged/helpers": "~1.0",
+    "packaged/helpers": "~1.4.0",
     "packaged/docblock": "~0.1",
     "packaged/querybuilder": "~0.11",
     "packaged/config": "~1.1",

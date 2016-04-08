@@ -340,27 +340,30 @@ class CqlConnection extends DalConnection
     {
       $retries = (int)$this->_config()->getItem('retries', 2);
     }
-    try
-    {
-      $this->connect()->_switchDatabase();
-      return $this->_getStatement($query, $compression)->prepare();
-    }
-    catch(\Exception $exception)
-    {
-      $this->_deleteCachedStmt($this->_cacheKey($query, $compression));
-      $e = CqlException::from($exception);
-
-      if($retries > 0 && $this->_isRecoverableException($e))
+    return RetryHelper::retry(
+      $retries,
+      function () use ($query, $compression)
       {
+        $this->connect()->_switchDatabase();
+        return $this->_getStatement($query, $compression)->prepare();
+      },
+      function (\Exception $exception) use ($query, $compression)
+      {
+        $this->_deleteCachedStmt($this->_cacheKey($query, $compression));
+        $e = CqlException::from($exception);
+
+        if($this->_isRecoverableException($e))
+        {
+          $this->disconnect();
+          return $e;
+        }
+        error_log(
+          'CqlConnection Error: (' . $e->getCode() . ') ' . $e->getMessage()
+        );
         $this->disconnect();
-        return $this->prepare($query, $compression, $retries - 1);
+        throw $e;
       }
-      error_log(
-        'CqlConnection Error: (' . $e->getCode() . ') ' . $e->getMessage()
-      );
-      $this->disconnect();
-      throw $e;
-    }
+    );
   }
 
   /**
@@ -447,93 +450,94 @@ class CqlConnection extends DalConnection
         min(max($this->_availableHostCount, 2), 10)
       );
     }
-    $return = [];
-    try
-    {
-      $this->connect()->_switchDatabase();
-      $packedParameters = [];
-      foreach($parameters as $k => $value)
+    return RetryHelper::retry(
+      $retries,
+      function () use ($parameters, $statement, $consistency)
       {
-        $packedParameters[] = CqlDataType::pack(
-          $statement->getStatement()->variable_types[$k],
-          $value
-        );
-      }
-      $result = $this->_client->execute_prepared_cql3_query(
-        $statement->getStatement()->itemId,
-        $packedParameters,
-        $consistency
-      );
+        $this->connect()->_switchDatabase();
+        $packedParameters = [];
+        foreach($parameters as $k => $value)
+        {
+          $packedParameters[] = CqlDataType::pack(
+            $statement->getStatement()->variable_types[$k],
+            $value
+          );
+        }
+        try
+        {
+          $result = $this->_client->execute_prepared_cql3_query(
+            $statement->getStatement()->itemId,
+            $packedParameters,
+            $consistency
+          );
+        }
+        catch(\Exception $e)
+        {
+          if($e instanceof TimedOutException
+            && (!(Strings::startsWith($statement->getQuery(), 'SELECT', false)))
+          )
+          {
+            // TimedOutException on writes is NOT a failure
+            // http://www.datastax.com/dev/blog/how-cassandra-deals-with-replica-failure
+            return true;
+          }
+          throw $e;
+        }
 
-      /**
-       * @var $result CqlResult
-       */
-      if($result->type == CqlResultType::VOID)
-      {
-        return true;
-      }
-
-      foreach($result->rows as $row)
-      {
         /**
-         * @var $row CqlRow
+         * @var $result CqlResult
          */
-        $resultRow = [];
-        foreach($row->columns as $column)
+        if($result->type == CqlResultType::VOID)
+        {
+          return true;
+        }
+
+        $return = [];
+        foreach($result->rows as $row)
         {
           /**
-           * @var $column Column
+           * @var $row CqlRow
            */
-          $resultRow[$column->name] = CqlDataType::unpack(
-            $result->schema->value_types[$column->name],
-            $column->value
-          );
+          $resultRow = [];
+          foreach($row->columns as $column)
+          {
+            /**
+             * @var $column Column
+             */
+            $resultRow[$column->name] = CqlDataType::unpack(
+              $result->schema->value_types[$column->name],
+              $column->value
+            );
+          }
+
+          $return[] = $resultRow;
         }
-
-        $return[] = $resultRow;
-      }
-    }
-    catch(\Exception $exception)
-    {
-      if($exception instanceof TimedOutException
-        && (!(Strings::startsWith($statement->getQuery(), 'SELECT', false)))
-      )
+        return $return;
+      },
+      function ($exception) use ($statement)
       {
-        // TimedOutException on writes is NOT a failure
-        // http://www.datastax.com/dev/blog/how-cassandra-deals-with-replica-failure
-        return true;
-      }
-
-      $this->_deleteCachedStmt(
-        $this->_cacheKey($statement->getQuery(), $statement->getCompression())
-      );
-      $e = CqlException::from($exception);
-
-      if($retries > 0 && $this->_isRecoverableException($e))
-      {
-        $this->disconnect();
-        if(Strings::startsWith($e->getMessage(), 'Prepared query with ID'))
-        {
-          // re-prepare statement
-          $statement = $this->prepare(
-            $statement->getQuery(),
-            $statement->getCompression()
-          );
-        }
-        return $this->execute(
-          $statement,
-          $parameters,
-          $consistency,
-          $retries - 1
+        $this->_deleteCachedStmt(
+          $this->_cacheKey($statement->getQuery(), $statement->getCompression())
         );
+        $e = CqlException::from($exception);
+
+        if($this->_isRecoverableException($e))
+        {
+          $this->disconnect();
+          if(Strings::startsWith($e->getMessage(), 'Prepared query with ID'))
+          {
+            // re-prepare statement
+            $statement->clearPrepare();
+          }
+          return $e;
+        }
+        error_log(
+          'CqlConnection Error: (' . $e->getCode() . ') ' . $e->getMessage()
+        );
+        $this->disconnect();
+        throw $e;
       }
-      error_log(
-        'CqlConnection Error: (' . $e->getCode() . ') ' . $e->getMessage()
-      );
-      $this->disconnect();
-      throw $e;
-    }
-    return $return;
+    );
   }
 
   protected function _removeCurrentHost()

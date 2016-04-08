@@ -231,7 +231,10 @@ class CqlConnection extends DalConnection
   {
     try
     {
-      $this->_client->set_keyspace($database);
+      if($this->isConnected())
+      {
+        $this->_client->set_keyspace($database);
+      }
     }
     catch(\Exception $e)
     {

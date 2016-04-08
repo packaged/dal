@@ -105,14 +105,7 @@ abstract class DalConnection
     $connId = $this->_getConnectionId();
     if($connId)
     {
-      if(isset(self::$_stmtCache[$connId]))
-      {
-        self::$_stmtCache[$connId][$key] = $stmt;
-      }
-      else
-      {
-        self::$_stmtCache[$connId] = [$key => $stmt];
-      }
+      self::$_stmtCache[$connId][$key] = $stmt;
     }
   }
 

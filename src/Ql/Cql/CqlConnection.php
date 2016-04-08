@@ -16,6 +16,7 @@ use Packaged\Dal\DalResolver;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
 use Packaged\Dal\Exceptions\Connection\CqlException;
 use Packaged\Dal\Ql\DalConnection;
+use Packaged\Helpers\RetryHelper;
 use Packaged\Helpers\Strings;
 use Packaged\Helpers\ValueAs;
 use Thrift\Exception\TException;
@@ -360,6 +361,68 @@ class CqlConnection extends DalConnection
       $this->disconnect();
       throw $e;
     }
+  }
+
+  /**
+   * Run a query without preparing it and without retries
+   *
+   * @param string $query
+   * @param int    $consistency
+   * @param int    $retries
+   *
+   * @return array The query results
+   */
+  public function runRawQuery(
+    $query, $consistency = ConsistencyLevel::QUORUM, $retries = null
+  )
+  {
+    if($retries === null)
+    {
+      $retries = (int)$this->_config()->getItem('retries', 2);
+    }
+    return RetryHelper::retry(
+      $retries,
+      function () use ($query, $consistency)
+      {
+        $this->connect()->_switchDatabase();
+        $result = $this->_client->execute_cql3_query(
+          $query,
+          Compression::NONE,
+          $consistency
+        );
+
+        /**
+         * @var $result CqlResult
+         */
+        if($result->type == CqlResultType::VOID)
+        {
+          return true;
+        }
+
+        $return = [];
+        foreach($result->rows as $row)
+        {
+          /**
+           * @var $row CqlRow
+           */
+          $resultRow = [];
+          foreach($row->columns as $column)
+          {
+            /**
+             * @var $column Column
+             */
+            $resultRow[$column->name] = CqlDataType::unpack(
+              $result->schema->value_types[$column->name],
+              $column->value
+            );
+          }
+
+          $return[] = $resultRow;
+        }
+
+        return $return;
+      }
+    );
   }
 
   /**

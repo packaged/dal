@@ -347,20 +347,17 @@ class CqlConnection extends DalConnection
         $this->connect()->_switchDatabase();
         return $this->_getStatement($query, $compression)->prepare();
       },
-      function (\Exception $exception) use ($query, $compression)
+      function (\Exception &$e) use ($query, $compression)
       {
-        $this->_deleteCachedStmt($this->_cacheKey($query, $compression));
-        $e = CqlException::from($exception);
-
+        $e = CqlException::from($e);
+        $this->disconnect();
         if($this->_isRecoverableException($e))
         {
-          $this->disconnect();
-          return $e;
+          return true;
         }
         error_log(
           'CqlConnection Error: (' . $e->getCode() . ') ' . $e->getMessage()
         );
-        $this->disconnect();
         throw $e;
       }
     );
@@ -514,27 +511,22 @@ class CqlConnection extends DalConnection
         }
         return $return;
       },
-      function ($exception) use ($statement)
+      function (\Exception &$e) use ($statement)
       {
-        $this->_deleteCachedStmt(
-          $this->_cacheKey($statement->getQuery(), $statement->getCompression())
-        );
-        $e = CqlException::from($exception);
-
+        $e = CqlException::from($e);
+        $this->disconnect();
         if($this->_isRecoverableException($e))
         {
-          $this->disconnect();
           if(Strings::startsWith($e->getMessage(), 'Prepared query with ID'))
           {
             // re-prepare statement
             $statement->clearPrepare();
           }
-          return $e;
+          return true;
         }
         error_log(
           'CqlConnection Error: (' . $e->getCode() . ') ' . $e->getMessage()
         );
-        $this->disconnect();
         throw $e;
       }
     );

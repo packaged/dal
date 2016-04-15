@@ -109,23 +109,32 @@ class MemcacheConnection extends AbstractCacheConnection
    *
    * @param string $key
    *   The key for which to return the corresponding Cache Item.
+   * @param bool $throw true to throw backend exceptions
    *
    * @return ICacheItem
    *   The corresponding Cache Item.
    * @throws \RuntimeException
    *   If the $key string is not a legal value
+   * @throws \Exception
    */
-  public function getItem($key)
+  public function getItem($key, $throw = false)
   {
     $item = new CacheItem($key);
-    $value = $this->_connection->get($key);
-    if($value !== false)
+    $item->hydrate(null, false);
+    try
     {
-      $item->hydrate($value, true);
+      $value = $this->_connection->get($key);
+      if($value !== false)
+      {
+        $item->hydrate($value, true);
+      }
     }
-    else
+    catch(\Exception $e)
     {
-      $item->hydrate(null, false);
+      if($throw)
+      {
+        throw $e;
+      }
     }
     return $item;
   }

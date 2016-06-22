@@ -217,9 +217,11 @@ class PdoConnection extends DalConnection implements ILastInsertId
       DalResolver::MODE_WRITE,
       $query
     );
-    $result = $this->_runQuery($query, $values)->rowCount();
+    $stmt = $this->_runQuery($query, $values);
+    $rowCount = $stmt->rowCount();
+    $stmt->closeCursor();
     $this->getResolver()->closePerformanceMetric($perfId);
-    return $result;
+    return $rowCount;
   }
 
   /**
@@ -459,6 +461,14 @@ class PdoConnection extends DalConnection implements ILastInsertId
     }
   }
 
+  /**
+   * @param            $query
+   * @param array|null $values
+   * @param null       $retries
+   *
+   * @return \PDOStatement
+   * @throws PdoException
+   */
   protected function _runQuery($query, array $values = null, $retries = null)
   {
     $this->_switchDatabase();

@@ -55,6 +55,11 @@ class PdoConnection extends DalConnection implements ILastInsertId
         );
       }
 
+      $options = array_replace(
+        $this->_defaultOptions(),
+        ValueAs::arr($this->_config()->getItem('options'))
+      );
+
       $remainingAttempts = ((int)$this->_config()->getItem(
         'connect_retries',
         3
@@ -64,17 +69,22 @@ class PdoConnection extends DalConnection implements ILastInsertId
       {
         try
         {
-          $options = array_replace(
-            $this->_defaultOptions(),
-            ValueAs::arr($this->_config()->getItem('options'))
-          );
-
-          $this->_connection = new \PDO(
-            $dsn,
-            $this->_username,
-            $this->_config()->getItem('password', ''),
-            $options
-          );
+          $wasCached = false;
+          $cachedConnection = $this->_getCachedConnection($options);
+          if($cachedConnection && ($cachedConnection instanceof \PDO))
+          {
+            $this->_connection = $cachedConnection;
+            $wasCached = true;
+          }
+          else
+          {
+            $this->_connection = new \PDO(
+              $dsn,
+              $this->_username,
+              $this->_config()->getItem('password', ''),
+              $options
+            );
+          }
 
           if(isset($options[\PDO::ATTR_EMULATE_PREPARES]))
           {
@@ -96,7 +106,15 @@ class PdoConnection extends DalConnection implements ILastInsertId
             );
           }
 
-          $this->_switchDatabase(null, empty($options[\PDO::ATTR_PERSISTENT]));
+          if(!$wasCached)
+          {
+            $this->_storeCachedConnection($this->_connection, $options);
+          }
+
+          $this->_switchDatabase(
+            null,
+            empty($options[\PDO::ATTR_PERSISTENT])
+          );
 
           $remainingAttempts = 0;
         }

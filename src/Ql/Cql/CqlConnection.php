@@ -72,106 +72,123 @@ class CqlConnection extends DalConnection
   {
     if($this->_client === null)
     {
-      $remainingAttempts = (int)$this->_config()->getItem(
-        'connect_attempts',
-        1
-      );
-
-      while($remainingAttempts > 0)
+      $cachedConnection = $this->_getCachedConnection();
+      if($cachedConnection)
       {
-        $remainingAttempts--;
-        $exception = null;
-        try
+        $this->_client = $cachedConnection['client'];
+        $this->_protocol = $cachedConnection['protocol'];
+        $this->_transport = $cachedConnection['transport'];
+        $this->_socket = $cachedConnection['socket'];
+
+        $this->_clearStmtCache();
+        $this->_switchDatabase(null, !$this->_socket->isPersistent());
+        $this->_connected = true;
+      }
+      else
+      {
+        $remainingAttempts = (int)$this->_config()->getItem(
+          'connect_attempts',
+          1
+        );
+
+        while($remainingAttempts > 0)
         {
-          if(empty($this->_availableHosts))
+          $remainingAttempts--;
+          $exception = null;
+          try
           {
-            $this->_availableHosts = ValueAs::arr(
-              $this->_config()->getItem('hosts', 'localhost')
-            );
-            $this->_availableHostCount = count($this->_availableHosts);
-            if($this->_availableHostCount < 1)
+            if(empty($this->_availableHosts))
             {
+              $this->_availableHosts = ValueAs::arr(
+                $this->_config()->getItem('hosts', 'localhost')
+              );
+              $this->_availableHostCount = count($this->_availableHosts);
+              if($this->_availableHostCount < 1)
+              {
+                throw new ConnectionException(
+                  'Could not find any configured hosts'
+                );
+              }
+            }
+
+            shuffle($this->_availableHosts);
+            $host = reset($this->_availableHosts);
+
+            $this->_socket = new DalSocket(
+              $host,
+              (int)$this->_config()->getItem('port', 9160),
+              ValueAs::bool($this->_config()->getItem('persist', false))
+            );
+            $this->_socket->setConnectTimeout(
+              (int)$this->_config()->getItem('connect_timeout', 1000)
+            );
+            $this->_socket->setRecvTimeout(
+              (int)$this->_config()->getItem('receive_timeout', 1000)
+            );
+            $this->_socket->setSendTimeout(
+              (int)$this->_config()->getItem('send_timeout', 1000)
+            );
+
+            $this->_transport = new TFramedTransport($this->_socket);
+            $this->_protocol = new TBinaryProtocolAccelerated(
+              $this->_transport
+            );
+            $this->_client = new CassandraClient($this->_protocol);
+
+            $this->_transport->open();
+            $this->_connected = true;
+
+            $this->_clearStmtCache();
+
+            $username = $this->_config()->getItem('username');
+            // @codeCoverageIgnoreStart
+            if($username)
+            {
+              $this->_client->login(
+                new AuthenticationRequest(
+                  [
+                    'credentials' => [
+                      'username' => $username,
+                      'password' => $this->_config()->getItem('password', ''),
+                    ],
+                  ]
+                )
+              );
+            }
+            //@codeCoverageIgnoreEnd
+
+            $this->_switchDatabase(null, !$this->_socket->isPersistent());
+          }
+          catch(TException $e)
+          {
+            $exception = $e;
+          }
+          catch(CqlException $e)
+          {
+            $exception = $e;
+          }
+
+          if($exception)
+          {
+            $this->_removeCurrentHost();
+            $this->disconnect();
+            if($remainingAttempts < 1)
+            {
+              if(!($exception instanceof CqlException))
+              {
+                $exception = CqlException::from($exception);
+              }
               throw new ConnectionException(
-                'Could not find any configured hosts'
+                'Failed to connect: ' . $exception->getMessage(),
+                $exception->getCode(),
+                $exception->getPrevious()
               );
             }
           }
-
-          shuffle($this->_availableHosts);
-          $host = reset($this->_availableHosts);
-
-          $this->_socket = new DalSocket(
-            $host,
-            (int)$this->_config()->getItem('port', 9160),
-            ValueAs::bool($this->_config()->getItem('persist', false))
-          );
-          $this->_socket->setConnectTimeout(
-            (int)$this->_config()->getItem('connect_timeout', 1000)
-          );
-          $this->_socket->setRecvTimeout(
-            (int)$this->_config()->getItem('receive_timeout', 1000)
-          );
-          $this->_socket->setSendTimeout(
-            (int)$this->_config()->getItem('send_timeout', 1000)
-          );
-
-          $this->_transport = new TFramedTransport($this->_socket);
-          $this->_protocol = new TBinaryProtocolAccelerated($this->_transport);
-          $this->_client = new CassandraClient($this->_protocol);
-
-          $this->_transport->open();
-          $this->_connected = true;
-
-          $this->_clearStmtCache();
-
-          $username = $this->_config()->getItem('username');
-          // @codeCoverageIgnoreStart
-          if($username)
+          else
           {
-            $this->_client->login(
-              new AuthenticationRequest(
-                [
-                  'credentials' => [
-                    'username' => $username,
-                    'password' => $this->_config()->getItem('password', ''),
-                  ],
-                ]
-              )
-            );
+            break;
           }
-          //@codeCoverageIgnoreEnd
-
-          $this->_switchDatabase(null, !$this->_socket->isPersistent());
-        }
-        catch(TException $e)
-        {
-          $exception = $e;
-        }
-        catch(CqlException $e)
-        {
-          $exception = $e;
-        }
-
-        if($exception)
-        {
-          $this->_removeCurrentHost();
-          $this->disconnect();
-          if($remainingAttempts < 1)
-          {
-            if(!($exception instanceof CqlException))
-            {
-              $exception = CqlException::from($exception);
-            }
-            throw new ConnectionException(
-              'Failed to connect: ' . $exception->getMessage(),
-              $exception->getCode(),
-              $exception->getPrevious()
-            );
-          }
-        }
-        else
-        {
-          break;
         }
       }
     }

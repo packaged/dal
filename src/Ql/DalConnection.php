@@ -22,6 +22,11 @@ abstract class DalConnection
   protected static $_databaseCache = null;
 
   /**
+   * @var ICacheConnection
+   */
+  protected static $_connectionCache = null;
+
+  /**
    * @var array
    */
   protected static $_stmtCache = [];
@@ -56,6 +61,11 @@ abstract class DalConnection
       self::$_databaseCache = new EphemeralConnection();
       self::$_databaseCache->configure($config);
     }
+    if(self::$_connectionCache === null)
+    {
+      self::$_connectionCache = new EphemeralConnection();
+      self::$_connectionCache->configure($config);
+    }
   }
 
   public function disconnect()
@@ -72,6 +82,37 @@ abstract class DalConnection
     {
       self::$_databaseCache->deleteKey($key);
     }
+  }
+
+  private function _getConnectionCacheKey(array $options = null)
+  {
+    $cacheKey = $this->_getConnectionId();
+    if($options)
+    {
+      $optionsArr = $options;
+      sort($optionsArr);
+      $cacheKey .= '|' . md5(json_encode($optionsArr));
+    }
+    return $cacheKey;
+  }
+
+  protected function _storeCachedConnection($connection, array $options = null)
+  {
+    $key = $this->_getConnectionCacheKey($options);
+    if($key && $connection)
+    {
+      self::$_connectionCache->saveItem(new CacheItem($key, $connection));
+    }
+  }
+
+  protected function _getCachedConnection($options = null)
+  {
+    $key = $this->_getConnectionCacheKey($options);
+    if($key)
+    {
+      return self::$_connectionCache->getItem($key)->get();
+    }
+    return null;
   }
 
   private function _getCurrentDatabase()

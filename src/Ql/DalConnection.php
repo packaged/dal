@@ -40,6 +40,11 @@ abstract class DalConnection
   abstract protected function _getConnectionId();
 
   /**
+   * @return mixed
+   */
+  abstract protected function _getConnectionCacheKey();
+
+  /**
    * Switch database/keyspace
    *
    * @param string $database
@@ -84,30 +89,18 @@ abstract class DalConnection
     }
   }
 
-  private function _getConnectionCacheKey(array $options = null)
+  protected function _storeCachedConnection($connection)
   {
-    $cacheKey = $this->_getConnectionId();
-    if($options)
-    {
-      $optionsArr = $options;
-      sort($optionsArr);
-      $cacheKey .= '|' . md5(json_encode($optionsArr));
-    }
-    return $cacheKey;
-  }
-
-  protected function _storeCachedConnection($connection, array $options = null)
-  {
-    $key = $this->_getConnectionCacheKey($options);
+    $key = $this->_getConnectionCacheKey();
     if($key && $connection)
     {
       self::$_connectionCache->saveItem(new CacheItem($key, $connection));
     }
   }
 
-  protected function _getCachedConnection($options = null)
+  protected function _getCachedConnection()
   {
-    $key = $this->_getConnectionCacheKey($options);
+    $key = $this->_getConnectionCacheKey();
     if($key)
     {
       return self::$_connectionCache->getItem($key)->get();

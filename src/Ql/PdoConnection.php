@@ -69,12 +69,10 @@ class PdoConnection extends DalConnection implements ILastInsertId
       {
         try
         {
-          $wasCached = false;
-          $cachedConnection = $this->_getCachedConnection($options);
+          $cachedConnection = $this->_getCachedConnection();
           if($cachedConnection && ($cachedConnection instanceof \PDO))
           {
             $this->_connection = $cachedConnection;
-            $wasCached = true;
           }
           else
           {
@@ -106,15 +104,9 @@ class PdoConnection extends DalConnection implements ILastInsertId
             );
           }
 
-          if(!$wasCached)
-          {
-            $this->_storeCachedConnection($this->_connection, $options);
-          }
+          $this->_storeCachedConnection($this->_connection);
 
-          $this->_switchDatabase(
-            null,
-            empty($options[\PDO::ATTR_PERSISTENT])
-          );
+          $this->_switchDatabase(null, true);
 
           $remainingAttempts = 0;
         }
@@ -169,6 +161,11 @@ class PdoConnection extends DalConnection implements ILastInsertId
     {
       return null;
     }
+  }
+
+  protected function _getConnectionCacheKey()
+  {
+    return $this->_getConnectionId();
   }
 
   protected function _getDatabaseName()

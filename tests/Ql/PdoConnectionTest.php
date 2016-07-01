@@ -419,7 +419,7 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
     $testSelect($conn2, false);
 
     $this->assertEquals(
-      $persistent ? $numProcs : $numProcs + 2,
+      $persistent ? $numProcs : $numProcs + 1,
       count($tmpConn->fetchQueryResults("SHOW FULL PROCESSLIST"))
     );
 

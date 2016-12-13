@@ -12,9 +12,7 @@ class MemcachedConnection extends MemcacheConnection
 
   protected function _newConnection()
   {
-    $conn = new \Memcached($this->_config()->getItem('pool_name', null));
-    $conn->setOption(\Memcached::OPT_BINARY_PROTOCOL, true);
-    return $conn;
+    return new \Memcached($this->_config()->getItem('pool_name', null));
   }
 
   protected function _addServer($server, $port, $persist, $weight, $timeout)
@@ -63,29 +61,4 @@ class MemcachedConnection extends MemcacheConnection
   {
     return $this->_connection->set($item->getKey(), $item->get(), $ttl);
   }
-
-  /**
-   * @param string $key
-   * @param int    $value
-   * @param int    $expiry
-   *
-   * @return int
-   */
-  public function increment($key, $value, $expiry = 0)
-  {
-    return $this->_connection->increment($key, $value, $value, $expiry);
-  }
-
-  /**
-   * @param string $key
-   * @param int    $value
-   * @param int    $expiry
-   *
-   * @return int
-   */
-  public function decrement($key, $value, $expiry = 0)
-  {
-    return $this->_connection->decrement($key, $value, $value, $expiry);
-  }
-
 }

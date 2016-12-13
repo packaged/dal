@@ -46,16 +46,6 @@ class MemcacheConnectionTest extends \PHPUnit_Framework_TestCase
     $pull = $connection->getItem('tester');
     $this->assertFalse($pull->exists());
 
-    $this->assertEquals($connection->increment("COUNT", 20), 20);
-    $this->assertEquals($connection->getItem("COUNT")->get(), 20);
-    $this->assertEquals($connection->increment("COUNT", 20), 20);
-    $this->assertEquals($connection->getItem("COUNT")->get(), 40);
-
-    $this->assertEquals($connection->decrement("COUNT", 10), 30);
-    $this->assertEquals($connection->getItem("COUNT")->get(), 30);
-    $this->assertEquals($connection->decrement("COUNT", 20), 10);
-    $this->assertEquals($connection->getItem("COUNT")->get(), 10);
-
     $connection->disconnect();
   }
 }

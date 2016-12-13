@@ -4,6 +4,7 @@ namespace Cache\Memcache;
 use Packaged\Config\Provider\ConfigSection;
 use Packaged\Dal\Cache\CacheItem;
 use Packaged\Dal\Cache\Memcache\MemcachedConnection;
+use Packaged\Helpers\Strings;
 
 class MemcachedConnectionTest extends \PHPUnit_Framework_TestCase
 {
@@ -59,6 +60,18 @@ class MemcachedConnectionTest extends \PHPUnit_Framework_TestCase
 
     $pull = $connection->getItem('tester');
     $this->assertFalse($pull->exists());
+
+    $random = Strings::randomString(10);
+
+    $this->assertEquals($connection->increment("COUNT" . $random, 20), 20);
+    $this->assertEquals($connection->getItem("COUNT" . $random)->get(), 20);
+    $this->assertEquals($connection->increment("COUNT" . $random, 20), 40);
+    $this->assertEquals($connection->getItem("COUNT" . $random)->get(), 40);
+
+    $this->assertEquals($connection->decrement("COUNT" . $random, 10), 30);
+    $this->assertEquals($connection->getItem("COUNT" . $random)->get(), 30);
+    $this->assertEquals($connection->decrement("COUNT" . $random, 20), 10);
+    $this->assertEquals($connection->getItem("COUNT" . $random)->get(), 10);
 
     $connection->disconnect();
   }

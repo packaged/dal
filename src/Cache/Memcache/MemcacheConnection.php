@@ -108,8 +108,9 @@ class MemcacheConnection extends AbstractCacheConnection
    * a cache miss. It MUST NOT return null.
    *
    * @param string $key
-   *   The key for which to return the corresponding Cache Item.
-   * @param bool $throw true to throw backend exceptions
+   *                      The key for which to return the corresponding Cache
+   *                      Item.
+   * @param bool   $throw true to throw backend exceptions
    *
    * @return ICacheItem
    *   The corresponding Cache Item.
@@ -170,5 +171,27 @@ class MemcacheConnection extends AbstractCacheConnection
       $compress,
       $ttl
     );
+  }
+
+  /**
+   * @param string $key
+   * @param int    $value
+   *
+   * @return int
+   */
+  public function increment($key, $value)
+  {
+    return $this->_connection->increment($key, $value) ? $value : 0;
+  }
+
+  /**
+   * @param string $key
+   * @param int    $value
+   *
+   * @return int
+   */
+  public function decrement($key, $value)
+  {
+    return $this->_connection->decrement($key, $value);
   }
 }

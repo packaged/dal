@@ -36,6 +36,13 @@ class CqlDataType
    */
   private static function _getType($type)
   {
+    // Remove ReversedType modifier for cluster keys sorted in descending order
+    //  eg: org.apache.cassandra.db.marshal.ReversedType(org.apache.cassandra.db.marshal.Int32Type)
+    $type = preg_replace(
+      '/^org.apache.cassandra.db.marshal.ReversedType\((.*)\)$/',
+      '\1',
+      $type
+    );
     return isset(self::$_types[$type]) ? self::$_types[$type] : false;
   }
 

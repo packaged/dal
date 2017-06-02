@@ -14,7 +14,7 @@
     "packaged/docblock": "~0.1",
     "packaged/querybuilder": "~0.11",
     "packaged/config": "~1.1",
-    "packaged/cassandrathrift": "~20.0",
+    "packaged/cassandrathrift": "20.1.0.3",
     "doctrine/inflector": "~1.0"
   },
   "require-dev": {

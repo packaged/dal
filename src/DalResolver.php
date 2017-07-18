@@ -427,33 +427,41 @@ class DalResolver implements IConnectionResolver
 
   public function startPerformanceMetric($connection, $mode, $query = null)
   {
-    $time = microtime(true);
-    $this->_currentPerf[$time] = [
-      'c' => $connection,
-      'm' => $mode,
-      'q' => $query,
-      's' => $time
-    ];
-    return $time;
+    if($this->_storePerformanceData)
+    {
+      $time = microtime(true);
+      $this->_currentPerf[$time] = [
+        'c' => $connection,
+        'm' => $mode,
+        'q' => $query,
+        's' => $time
+      ];
+      return $time;
+    }
+    return 0;
   }
 
   public function closePerformanceMetric($uniqueid)
   {
-    if(isset($this->_currentPerf[$uniqueid]))
+    if($this->_storePerformanceData)
     {
-      $perf = $this->_currentPerf[$uniqueid];
-      $this->writePerformanceMetric(
-        $perf['c'],
-        microtime(true) - $perf['s'],
-        $perf['m'],
-        $perf['q']
+      if(isset($this->_currentPerf[$uniqueid]))
+      {
+        $perf = $this->_currentPerf[$uniqueid];
+        $this->writePerformanceMetric(
+          $perf['c'],
+          microtime(true) - $perf['s'],
+          $perf['m'],
+          $perf['q']
+        );
+        unset($this->_currentPerf[$uniqueid]);
+        return true;
+      }
+      throw new DalException(
+        "You cannot close performance metrics that are not open"
       );
-      unset($this->_currentPerf[$uniqueid]);
-      return true;
     }
-    throw new DalException(
-      "You cannot close performance metrics that are not open"
-    );
+    return true;
   }
 
   public function writePerformanceMetric(

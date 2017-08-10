@@ -293,7 +293,7 @@ class CqlConnection
    *
    * @return int number of affected rows
    */
-  public function runQuery($query, array $values = [])
+  public function runQuery($query, array $values = null)
   {
     $perfId = $this->getResolver()->startPerformanceMetric(
       $this,
@@ -303,7 +303,7 @@ class CqlConnection
     $prep = $this->prepare($query);
     $this->execute(
       $prep,
-      $values,
+      $values ?: [],
       $this->_config()->getItem('write_consistency', ConsistencyLevel::ONE)
     );
     $this->getResolver()->closePerformanceMetric($perfId);
@@ -318,7 +318,7 @@ class CqlConnection
    *
    * @return array
    */
-  public function fetchQueryResults($query, array $values = [])
+  public function fetchQueryResults($query, array $values = null)
   {
     $perfId = $this->getResolver()->startPerformanceMetric(
       $this,
@@ -328,7 +328,7 @@ class CqlConnection
     $prep = $this->prepare($query);
     $results = $this->execute(
       $prep,
-      $values,
+      $values ?: [],
       $this->_config()->getItem('read_consistency', ConsistencyLevel::ONE)
     );
     $this->getResolver()->closePerformanceMetric($perfId);
@@ -437,7 +437,8 @@ class CqlConnection
     }
     return RetryHelper::retry(
       $retries,
-      function () use ($query, $consistency) {
+      function () use ($query, $consistency)
+      {
         $this->connect()->_setKeyspace($this->_config()->getItem('keyspace'));
         $result = $this->_client->execute_cql3_query(
           $query,

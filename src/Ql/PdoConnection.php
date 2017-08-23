@@ -510,6 +510,10 @@ class PdoConnection
               $sourceException
             );
           }
+          else
+          {
+            $exception = $sourceException;
+          }
         }
         else
         {

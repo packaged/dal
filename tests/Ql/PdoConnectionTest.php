@@ -1,137 +1,24 @@
 <?php
-namespace Ql;
+namespace Tests\Ql;
 
-use Packaged\Config\Provider\ConfigSection;
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
-use Packaged\Dal\Exceptions\Connection\PdoException;
-use Packaged\Dal\Exceptions\DalException;
+use Tests\Ql\Mocks\PDO\DelayedPreparesPdoConnection;
+use Tests\Ql\Mocks\PDO\MockPdoConnection;
+use Tests\Ql\Mocks\PDO\PrepareErrorPdoConnection;
+use Tests\Ql\Mocks\PDO\StmtCachePdoConnection;
 
-require_once 'supporting.php';
-
-class PdoConnectionTest extends \PHPUnit_Framework_TestCase
+class PdoConnectionTest extends AbstractQlConnectionTest
 {
-  public function testConnection()
+  protected function _getConnection()
   {
-    $connection = new MockPdoConnection();
-    $connection->config();
-    $this->assertFalse($connection->isConnected());
-    $connection->connect();
-    $this->assertTrue($connection->isConnected());
-    $connection->disconnect();
-    $this->assertFalse($connection->isConnected());
-  }
-
-  public function testConnectionException()
-  {
-    $connection = new MockPdoConnection();
-    $config = $connection->config();
-    $config->addItem('hostname', '255.255.255.255');
-    $connection->configure($config);
-
-    $this->setExpectedException(
-      '\Packaged\Dal\Exceptions\Connection\ConnectionException'
-    );
-    $connection->connect();
-  }
-
-  public function testIsConnected()
-  {
-    $connection = new CorruptablePdoConnection();
-    $config = new ConfigSection();
-    $connection->configure($config);
-    $connection->connect();
-    $this->assertTrue($connection->isConnected());
-    $connection->disconnect();
-    $this->assertFalse($connection->isConnected());
-  }
-
-  public function testAutoConnect()
-  {
-    $datastore = new MockQlDataStore();
-    $connection = new MockPdoConnection();
-    $connection->config();
-    $connection->setResolver(new DalResolver());
-    $datastore->setConnection($connection);
-
-    $dao = new MockQlDao();
-    $dao->username = time() . 'user';
-    $dao->display = 'User ' . date("Y-m-d");
-    $datastore->save($dao);
-    $datastore->getConnection()->disconnect();
-    $new = new MockQlDao();
-    $new->id = $dao->id;
-    $datastore->load($new);
-    $this->assertEquals($dao->username, $new->username);
-
-    $datastore->delete($new);
-  }
-
-  public function testRunQueryExceptions()
-  {
-    $connection = new MockPdoConnection();
-    $connection->config();
-    $connection->connect();
-    $connection->setResolver(new DalResolver());
-    $this->setExpectedException(ConnectionException::class);
-    $connection->runQuery("SELECT * FROM `made_up_table_r43i`", []);
-  }
-
-  public function testReconnect()
-  {
-    $connection = new MockPdoConnection();
-    $connection->config();
-    $connection->connect();
-    $connection->setResolver(new DalResolver());
-    $conRes = $connection->fetchQueryResults("SELECT CONNECTION_ID() AS CID");
-    $connID = $conRes[0]['CID'];
-    for($i = 0; $i < 100; $i++)
-    {
-      $connection->runQuery("SELECT * FROM `mock_ql_daos`", []);
-      if($i == 10)
-      {
-        $connection->addConfig("retries", 0);
-        try
-        {
-          $connection->runQuery("KILL " . $connID);
-        }
-        catch(\Exception $e)
-        {
-        }
-        $connection->addConfig("retries", 3);
-      }
-      usleep(20000);
-    }
-    $conRes = $connection->fetchQueryResults("SELECT CONNECTION_ID() AS CID");
-    $this->assertNotEquals($conRes[0]['CID'], $connID);
-    $this->assertEquals(100, $i);
-  }
-
-  public function testWaitTimeout()
-  {
-    $connection = new MockPdoConnection();
-    $connection->config();
-    $connection->connect();
-    $connection->setResolver(new DalResolver());
-    $connection->runQuery("SET SESSION wait_timeout = 1", []);
-    sleep(3);
-    $this->assertEquals(1, $connection->runQuery("SELECT 1", []));
-  }
-
-  public function testfetchQueryResultsExceptions()
-  {
-    $connection = new MockPdoConnection();
-    $connection->config();
-    $connection->connect();
-    $connection->setResolver(new DalResolver());
-    $this->setExpectedException(ConnectionException::class);
-    $connection->fetchQueryResults("SELECT * FROM `made_up_table_r44i`", []);
+    return new MockPdoConnection();
   }
 
   public function testNativeErrorFormat_runQuery()
   {
     $pdo = new PrepareErrorPdoConnection('My Exception Message', 1234);
-    $connection = new MockPdoConnection();
+    $connection = $this->_getConnection();
     $connection->setConnection($pdo);
     $connection->setResolver(new DalResolver());
     $this->setExpectedException(
@@ -145,7 +32,7 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
   public function testNativeErrorFormat_fetchQueryResults()
   {
     $pdo = new PrepareErrorPdoConnection('My Exception Message', 1234);
-    $connection = new MockPdoConnection();
+    $connection = $this->_getConnection();
     $connection->setResolver(new DalResolver());
     $connection->setConnection($pdo);
     $this->setExpectedException(
@@ -154,92 +41,6 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
       1234
     );
     $connection->fetchQueryResults("SELECT * FROM `made_up_table_r46i`", []);
-  }
-
-  public function testLsd()
-  {
-    $datastore = new MockQlDataStore();
-    $connection = new MockPdoConnection();
-    $connection->config();
-    $datastore->setConnection($connection);
-    $connection->connect();
-
-    $resolver = new DalResolver();
-    $resolver->addDataStore('mockql', $datastore);
-    $resolver->boot();
-    $resolver->enablePerformanceMetrics();
-
-    $connection->setResolver($resolver);
-
-    $dao = new MockQlDao();
-    $dao->username = time() . 'user';
-    $dao->display = 'User ' . date("Y-m-d");
-    $dao->boolTest = true;
-    $datastore->save($dao);
-    $dao->username = 'test 1';
-    $dao->display = 'Brooke';
-    $dao->boolTest = false;
-    $datastore->save($dao);
-    $dao->username = 'test 2';
-    $datastore->load($dao);
-    $this->assertEquals('test 1', $dao->username);
-    $this->assertEquals(0, $dao->boolTest);
-    $dao->display = 'Save 2';
-    $datastore->save($dao);
-
-    $staticLoad = MockQlDao::loadById($dao->id);
-    $this->assertEquals($dao->username, $staticLoad->username);
-
-    $datastore->delete($dao);
-
-    $metrics = $resolver->getPerformanceMetrics();
-    $resolver->disablePerformanceMetrics();
-    $this->assertCount(6, $metrics);
-
-    $resolver->shutdown();
-  }
-
-  public function testNoResolver()
-  {
-    $this->setExpectedException(
-      DalException::class,
-      "Connection running without the resolver being defined"
-    );
-    $connection = new MockPdoConnection();
-    $connection->fetchQueryResults("SELECT", []);
-  }
-
-  public function testRetries()
-  {
-    $resolver = new DalResolver();
-    $connection = new MockPdoConnection();
-    $connection->setResolver($resolver);
-    $connection->setConnection(new FailingRawConnection());
-    try
-    {
-      $connection->runQuery('my query');
-    }
-    catch(PdoException $e)
-    {
-    }
-    $this->assertEquals(1, $connection->getRunCount());
-  }
-
-  public function testInvalidSyntax()
-  {
-    $resolver = new DalResolver();
-    $connection = new MockPdoConnection();
-    $connection->setResolver($resolver);
-    $connection->connect();
-    try
-    {
-      $connection->runQuery('my query');
-    }
-    catch(PdoException $e)
-    {
-      $this->assertEquals(42000, $e->getPrevious()->getCode());
-    }
-    $this->assertEquals(1, $connection->getRunCount());
   }
 
   /**
@@ -277,98 +78,6 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
     return [[0, 0], [1, 1], [2, 2], ['true', 1], ['false', 0]];
   }
 
-  public function testTransactions()
-  {
-    $connection = new MockPdoConnection();
-    $connection->setResolver(new DalResolver());
-    $connection->runQuery('USE packaged_dal');
-
-    $connection2 = new MockPdoConnection();
-    $connection2->setResolver(new DalResolver());
-    $connection2->runQuery('USE packaged_dal');
-
-    $connection->runQuery("DROP TABLE IF EXISTS transactions_test");
-    $connection->runQuery(
-      "CREATE TABLE transactions_test ("
-      . "id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,"
-      . "name VARCHAR(255),"
-      . "value VARCHAR(255),"
-      . "testname VARCHAR(10)"
-      . ")"
-    );
-
-    $insertFn = function ($testName, $count) use ($connection)
-    {
-      for($i = 0; $i < $count; $i++)
-      {
-        $connection->runQuery(
-          sprintf(
-            "INSERT INTO transactions_test (name, value, testname)"
-            . " VALUES ('name %d', 'value %d', '%s')",
-            $i,
-            $i,
-            $testName
-          )
-        );
-      }
-    };
-
-    $countFn = function ($testName, $conn = null) use ($connection)
-    {
-      $conn = $conn ?: $connection;
-      return $conn->runQuery(
-        sprintf(
-          "SELECT * FROM transactions_test WHERE testname='%s'",
-          $testName
-        )
-      );
-    };
-
-    // Test a commit
-    $connection->startTransaction();
-    $insertFn('commit', 10);
-    $this->assertEquals(10, $countFn('commit'));
-    $this->assertEquals(0, $countFn('commit', $connection2));
-    $connection->commit();
-    $this->assertEquals(10, $countFn('commit'));
-    $this->assertEquals(10, $countFn('commit', $connection2));
-
-    // Test a rollback
-    $connection->startTransaction();
-    $insertFn('rollback', 10);
-    $this->assertEquals(10, $countFn('rollback'));
-    $this->assertEquals(0, $countFn('rollback', $connection2));
-    $connection->rollback();
-    $this->assertEquals(0, $countFn('rollback'));
-    $this->assertEquals(0, $countFn('rollback', $connection2));
-  }
-
-  public function testCommitNotInTransaction()
-  {
-    $connection = new MockPdoConnection();
-    $connection->setResolver(new DalResolver());
-    $connection->connect();
-
-    $this->setExpectedException(
-      PdoException::class,
-      'Not currently in a transaction'
-    );
-    $connection->commit();
-  }
-
-  public function testRollbackNotInTransaction()
-  {
-    $connection = new MockPdoConnection();
-    $connection->setResolver(new DalResolver());
-    $connection->connect();
-
-    $this->setExpectedException(
-      PdoException::class,
-      'Not currently in a transaction'
-    );
-    $connection->rollback();
-  }
-
   public function testStatementCacheLimit()
   {
     $this->_doStmtCacheLimitTest(0);
@@ -378,7 +87,7 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
 
   private function _doStmtCacheLimitTest($limit)
   {
-    $connection = new StmtCacheConnection();
+    $connection = new StmtCachePdoConnection();
     $connection->setCacheLimit($limit);
     $connection->setResolver(new DalResolver());
     $connection->connect();
@@ -417,56 +126,5 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
         }
       }
     }
-  }
-}
-
-class FailingRawConnection
-{
-  public function prepare($query)
-  {
-    throw new \PDOException($query);
-  }
-
-  public function setAttribute($attribute, $value)
-  {
-  }
-}
-
-class CorruptablePdoConnection extends MockPdoConnection
-{
-  public function causeGoneAway()
-  {
-    $this->_connection = new GoneAwayConnection();
-  }
-}
-
-class GoneAwayConnection
-{
-  public function query()
-  {
-    throw new \Exception("MySQL Has Gone Away");
-  }
-}
-
-class StmtCacheConnection extends MockPdoConnection
-{
-  public function getCachedStatementCount()
-  {
-    return count($this->_prepareCache);
-  }
-
-  public function getCachedStatements()
-  {
-    return $this->_prepareCache;
-  }
-
-  public function getCacheKey($sql)
-  {
-    return $this->_stmtCacheKey($sql);
-  }
-
-  public function setCacheLimit($limit)
-  {
-    $this->_maxPreparedStatements = $limit;
   }
 }

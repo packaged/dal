@@ -1,5 +1,5 @@
 <?php
-namespace Ql;
+namespace Tests\Ql;
 
 use Packaged\Config\Provider\ConfigSection;
 use Packaged\Dal\DalResolver;
@@ -9,8 +9,10 @@ use Packaged\Dal\Ql\QlDataStore;
 use Packaged\QueryBuilder\Builder\QueryBuilder;
 use Packaged\QueryBuilder\Expression\NumericExpression;
 use Packaged\QueryBuilder\Predicate\EqualPredicate;
-
-require_once 'supporting.php';
+use Tests\Ql\Mocks\MockAbstractQlDataConnection;
+use Tests\Ql\Mocks\MockMultiKeyQlDao;
+use Tests\Ql\Mocks\MockQlDao;
+use Tests\Ql\Mocks\MockQlDataStore;
 
 class QlDataStoreTest extends \PHPUnit_Framework_TestCase
 {

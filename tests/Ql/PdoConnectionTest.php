@@ -77,6 +77,47 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
     $connection->runQuery("SELECT * FROM `made_up_table_r43i`", []);
   }
 
+  public function testReconnect()
+  {
+    $connection = new MockPdoConnection();
+    $connection->config();
+    $connection->connect();
+    $connection->setResolver(new DalResolver());
+    $conRes = $connection->fetchQueryResults("SELECT CONNECTION_ID() AS CID");
+    $connID = $conRes[0]['CID'];
+    for($i = 0; $i < 100; $i++)
+    {
+      $connection->runQuery("SELECT * FROM `mock_ql_daos`", []);
+      if($i == 10)
+      {
+        $connection->addConfig("retries", 0);
+        try
+        {
+          $connection->runQuery("KILL " . $connID);
+        }
+        catch(\Exception $e)
+        {
+        }
+        $connection->addConfig("retries", 3);
+      }
+      usleep(20000);
+    }
+    $conRes = $connection->fetchQueryResults("SELECT CONNECTION_ID() AS CID");
+    $this->assertNotEquals($conRes[0]['CID'], $connID);
+    $this->assertEquals(100, $i);
+  }
+
+  public function testWaitTimeout()
+  {
+    $connection = new MockPdoConnection();
+    $connection->config();
+    $connection->connect();
+    $connection->setResolver(new DalResolver());
+    $connection->runQuery("SET SESSION wait_timeout = 1", []);
+    sleep(3);
+    $this->assertEquals(1, $connection->runQuery("SELECT 1", []));
+  }
+
   public function testfetchQueryResultsExceptions()
   {
     $connection = new MockPdoConnection();
@@ -205,7 +246,7 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
    * @dataProvider delayedPreparesProvider
    *
    * @param int|string $setting
-   * @param int $expectedDelayCount
+   * @param int        $expectedDelayCount
    *
    * @throws ConnectionException
    */
@@ -256,7 +297,7 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
       . ")"
     );
 
-    $insertFn = function($testName, $count) use ($connection)
+    $insertFn = function ($testName, $count) use ($connection)
     {
       for($i = 0; $i < $count; $i++)
       {
@@ -272,7 +313,7 @@ class PdoConnectionTest extends \PHPUnit_Framework_TestCase
       }
     };
 
-    $countFn = function($testName, $conn = null) use ($connection)
+    $countFn = function ($testName, $conn = null) use ($connection)
     {
       $conn = $conn ?: $connection;
       return $conn->runQuery(

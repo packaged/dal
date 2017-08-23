@@ -122,6 +122,7 @@ class PdoConnection
 
   /**
    * Default options for the PDO Connection
+   *
    * @return array
    */
   protected function _defaultOptions()
@@ -129,7 +130,7 @@ class PdoConnection
     return [
       \PDO::ATTR_PERSISTENT => false,
       \PDO::ATTR_ERRMODE    => \PDO::ERRMODE_EXCEPTION,
-      \PDO::ATTR_TIMEOUT    => 5
+      \PDO::ATTR_TIMEOUT    => 5,
     ];
   }
 
@@ -207,7 +208,7 @@ class PdoConnection
   public function startTransaction()
   {
     return $this->_performWithRetries(
-      function()
+      function ()
       {
         $result = $this->_connection->beginTransaction();
         $this->_inTransaction = true;
@@ -322,7 +323,8 @@ class PdoConnection
           try
           {
             $stmt = $this->_connection->prepare($query);
-          } finally
+          }
+          finally
           {
             $this->_connection->setAttribute(
               \PDO::ATTR_EMULATE_PREPARES,
@@ -416,7 +418,7 @@ class PdoConnection
   {
     if($this->isConnected())
     {
-      if(($this->_lastConnectTime > 0) && (! $this->_inTransaction))
+      if(($this->_lastConnectTime > 0) && (!$this->_inTransaction))
       {
         $recycleTime = (int)$this->_config()
           ->getItem('connection_recycle_time', 900);
@@ -438,7 +440,7 @@ class PdoConnection
   protected function _runQuery($query, array $values = null, $retries = null)
   {
     return $this->_performWithRetries(
-      function() use ($query, $values)
+      function () use ($query, $values)
       {
         $stmt = $this->_getStatement($query);
         if($values)
@@ -448,7 +450,7 @@ class PdoConnection
         $stmt->execute();
         return $stmt;
       },
-      function() use ($query)
+      function () use ($query)
       {
         $this->_deleteStmtCache($this->_stmtCacheKey($query));
       },
@@ -507,14 +509,11 @@ class PdoConnection
               );
               throw $exception;
             }
-            
-            $this->disconnect()->connect();
+            $this->disconnect();
           }
-          else if($this->_shouldDelayAfterException($exception))
-          {
-            // Sleep for between 0.1 and 3 milliseconds
-            usleep(mt_rand(100, 3000));
-          }
+          //Sleep 1ms > 30ms
+          usleep(mt_rand(1000, 30000));
+          $this->connect();
         }
         else
         {
@@ -555,23 +554,6 @@ class PdoConnection
       return false;
     }
     return true;
-  }
-
-  /**
-   * Should we delay for a random time before retrying this query?
-   *
-   * @param PdoException $e
-   *
-   * @return bool
-   */
-  private function _shouldDelayAfterException(PdoException $e)
-  {
-    // Deadlock errors: MySQL error 1213, SQLSTATE code 40001
-    $codes = ['1213', '40001'];
-    $p = $e->getPrevious();
-    return
-      in_array((string)$e->getCode(), $codes, true)
-      || in_array((string)$p->getCode(), $codes, true);
   }
 
   /**

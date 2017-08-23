@@ -489,15 +489,34 @@ class PdoConnection
         $this->_lastRetryCount++;
         return $func();
       }
-      catch(\PDOException $sourceException)
+      catch(\Exception $sourceException)
       {
         if($onError)
         {
           $onError();
         }
 
-        $exception = PdoException::from($sourceException);
-        if($retries > 0 && $this->_isRecoverableException($exception))
+        $recoverable = false;
+        if(!($sourceException instanceof \PDOException))
+        {
+          if(
+            stripos($sourceException->getMessage(), "MySQL server has gone")
+            || stripos($sourceException->getMessage(), "Error reading result")
+          )
+          {
+            $recoverable = true;
+            $exception = new PdoException(
+              $sourceException->getMessage(), 2006,
+              $sourceException
+            );
+          }
+        }
+        else
+        {
+          $exception = PdoException::from($sourceException);
+          $recoverable = $this->_isRecoverableException($exception);
+        }
+        if($retries > 0 && $recoverable)
         {
           if($this->_shouldReconnectAfterException($exception))
           {

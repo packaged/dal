@@ -4,6 +4,9 @@ namespace Cache\Memcache;
 use Packaged\Dal\Cache\CacheItem;
 use Packaged\Dal\Cache\Memcache\MemcacheConnection;
 
+/**
+ * @requires extension memcache
+ */
 class MemcacheConnectionTest extends \PHPUnit_Framework_TestCase
 {
   public function testConnection()

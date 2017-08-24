@@ -1,10 +1,14 @@
 <?php
-namespace Ql;
+namespace Tests\Ql;
 
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\Ql\PdoConnection;
 use Packaged\QueryBuilder\Assembler\QueryAssembler;
+use Tests\Ql\Mocks\MockNonUniqueKeyDao;
+use Tests\Ql\Mocks\MockQlDao;
+use Tests\Ql\Mocks\MockQlDataStore;
+use Tests\Ql\Mocks\PDO\MockPdoConnection;
 
 class QlDaoTest extends \PHPUnit_Framework_TestCase
 {

@@ -1,11 +1,13 @@
 <?php
-namespace Ql;
+namespace Tests\Ql;
 
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\DataTypes\Counter;
 use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\Ql\QlDao;
 use Packaged\Dal\Ql\QlDataStore;
+use Tests\Ql\Mocks\MockQlDataStore;
+use Tests\Ql\Mocks\PDO\MockPdoConnection;
 
 class CounterTest extends \PHPUnit_Framework_TestCase
 {
@@ -78,7 +80,7 @@ class CounterTest extends \PHPUnit_Framework_TestCase
     $dao2->save();
 
     $dao = MockCounterDao::loadById('test1');
-    $this->assertEquals(40,$dao->c1->calculated());
+    $this->assertEquals(40, $dao->c1->calculated());
 
     $this->assertEquals(217, $dao->c3->calculated());
     $dao = new MockCounterDao();

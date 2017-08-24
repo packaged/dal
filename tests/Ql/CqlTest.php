@@ -1,5 +1,5 @@
 <?php
-namespace Ql;
+namespace Tests\Ql;
 
 use cassandra\CassandraClient;
 use cassandra\Compression;
@@ -22,9 +22,8 @@ use Packaged\Dal\Ql\IQLDataConnection;
 use Packaged\QueryBuilder\Builder\QueryBuilder;
 use Packaged\QueryBuilder\Expression\ValueExpression;
 use Packaged\QueryBuilder\Predicate\EqualPredicate;
+use Tests\Ql\Mocks\MockAbstractQlDataConnection;
 use Thrift\Exception\TTransportException;
-
-require_once 'supporting.php';
 
 class CqlTest extends \PHPUnit_Framework_TestCase
 {

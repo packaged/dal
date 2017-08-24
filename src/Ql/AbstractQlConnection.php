@@ -470,7 +470,7 @@ abstract class AbstractQlConnection
    */
   protected function _sanitizeException(\Exception $e)
   {
-    return $e;
+    return ConnectionException::from($e);
   }
 
   /**

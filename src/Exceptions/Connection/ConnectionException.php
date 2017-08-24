@@ -9,7 +9,7 @@ use Packaged\Dal\Exceptions\DalException;
 class ConnectionException extends DalException
 {
   /**
-   * Create a CQL Exception from various thrift & cassandra exceptions
+   * Create an standardized exception
    *
    * @param \Exception $e
    *
@@ -17,13 +17,6 @@ class ConnectionException extends DalException
    */
   public static function from(\Exception $e)
   {
-    try
-    {
-      throw $e;
-    }
-    catch(\Exception $e)
-    {
-      return new self($e->getMessage(), $e->getCode(), $e);
-    }
+    return new self($e->getMessage(), $e->getCode(), $e);
   }
 }

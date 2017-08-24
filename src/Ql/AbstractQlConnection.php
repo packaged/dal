@@ -138,7 +138,9 @@ abstract class AbstractQlConnection
       DalResolver::MODE_WRITE,
       $query
     );
-    $result = $this->_affectedRows($this->_runQuery($query, $values));
+    $stmt = $this->_runQuery($query, $values);
+    $result = $this->_affectedRows($stmt);
+    $this->_freeStatement($stmt);
     $this->getResolver()->closePerformanceMetric($perfId);
     return $result;
   }
@@ -167,12 +169,16 @@ abstract class AbstractQlConnection
       DalResolver::MODE_READ,
       $query
     );
-    $result = $this->_fetchAll($this->_runQuery($query, $values));
+    $stmt = $this->_runQuery($query, $values);
+    $result = $this->_fetchAll($stmt);
+    $this->_freeStatement($stmt);
     $this->getResolver()->closePerformanceMetric($perfId);
     return $result;
   }
 
   abstract protected function _fetchAll($stmt);
+
+  abstract protected function _freeStatement($stmt);
 
   /**
    * Open a transaction on the connection

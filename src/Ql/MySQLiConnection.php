@@ -58,6 +58,18 @@ class MySQLiConnection extends AbstractQlConnection
     }
   }
 
+  protected function _freeStatement($stmt)
+  {
+    if($stmt instanceof \mysqli_stmt)
+    {
+      $stmt->free_result();
+    }
+    else
+    {
+      throw new ConnectionException('Incorrect type passed to close');
+    }
+  }
+
   protected function _getStatement($query)
   {
     $cacheKey = $this->_stmtCacheKey($query);
@@ -133,13 +145,11 @@ class MySQLiConnection extends AbstractQlConnection
     if($stmt instanceof \mysqli_stmt)
     {
       $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-      $stmt->close();
       return $result;
     }
     else if($stmt instanceof \mysqli_result)
     {
       $result = $stmt->fetch_all(MYSQLI_ASSOC);
-      $stmt->close();
       return $result;
     }
     else

@@ -83,6 +83,18 @@ class PdoConnection extends AbstractQlConnection
     }
   }
 
+  protected function _freeStatement($stmt)
+  {
+    if($stmt instanceof \PDOStatement)
+    {
+      $stmt->closeCursor();
+    }
+    else
+    {
+      throw new ConnectionException('Incorrect type passed to close');
+    }
+  }
+
   protected function _getStatement($query)
   {
     $cacheKey = $this->_stmtCacheKey($query);

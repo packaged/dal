@@ -150,11 +150,6 @@ class MySQLiConnection extends AbstractQlConnection
       $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
       return $result;
     }
-    else if($stmt instanceof \mysqli_result)
-    {
-      $result = $stmt->fetch_all(MYSQLI_ASSOC);
-      return $result;
-    }
     else
     {
       throw new ConnectionException('Incorrect type passed to fetch.');

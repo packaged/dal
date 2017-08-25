@@ -43,7 +43,7 @@ abstract class AbstractQlConnection
       {
         try
         {
-          $this->_makeConnection();
+          $this->_connect();
           $remainingAttempts = 0;
         }
         catch(\Exception $e)
@@ -69,11 +69,11 @@ abstract class AbstractQlConnection
   }
 
   /**
-   * Create connection
+   * Establish connection
    *
    * @return mixed
    */
-  abstract public function _makeConnection();
+  abstract public function _connect();
 
   /**
    * Default options for the Connection
@@ -119,6 +119,8 @@ abstract class AbstractQlConnection
     }
   }
 
+  abstract protected function _runQuery($query, array $values = null);
+
   /**
    * Execute a query
    *
@@ -136,19 +138,21 @@ abstract class AbstractQlConnection
       DalResolver::MODE_WRITE,
       $query
     );
-    $stmt = $this->_runQuery($query, $values);
-    $result = $this->_affectedRows($stmt);
-    $this->_freeStatement($stmt);
+
+    $result = $this->_performWithRetries(
+      function () use ($query, $values) {
+        return $this->_runQuery($query, $values);
+      },
+      function () use ($query) {
+        $this->_deleteStmtCache($this->_stmtCacheKey($query));
+      }
+    );
+
     $this->getResolver()->closePerformanceMetric($perfId);
     return $result;
   }
 
-  /**
-   * @param mixed $stmt
-   *
-   * @return integer
-   */
-  abstract protected function _affectedRows($stmt);
+  abstract protected function _fetchQueryResults($query, array $values = null);
 
   /**
    * Fetch the results of the query
@@ -167,16 +171,18 @@ abstract class AbstractQlConnection
       DalResolver::MODE_READ,
       $query
     );
-    $stmt = $this->_runQuery($query, $values);
-    $result = $this->_fetchAll($stmt);
-    $this->_freeStatement($stmt);
+
+    $result = $this->_performWithRetries(
+      function () use ($query, $values) {
+        return $this->_fetchQueryResults($query, $values);
+      },
+      function () use ($query) {
+        $this->_deleteStmtCache($this->_stmtCacheKey($query));
+      }
+    );
     $this->getResolver()->closePerformanceMetric($perfId);
     return $result;
   }
-
-  abstract protected function _fetchAll($stmt);
-
-  abstract protected function _freeStatement($stmt);
 
   /**
    * Open a transaction on the connection
@@ -268,13 +274,6 @@ abstract class AbstractQlConnection
   }
 
   /**
-   * @param $query
-   *
-   * @return mixed
-   */
-  abstract protected function _getStatement($query);
-
-  /**
    * Delete everything from the prepared statement cache
    */
   protected function _clearStmtCache()
@@ -355,25 +354,6 @@ abstract class AbstractQlConnection
     {
       $this->connect();
     }
-  }
-
-  protected function _runQuery($query, array $values = null, $retries = null)
-  {
-    return $this->_performWithRetries(
-      function () use ($query, $values) {
-        $stmt = $this->_getStatement($query);
-        if($values)
-        {
-          $this->_bindValues($stmt, $values);
-        }
-        $stmt->execute();
-        return $stmt;
-      },
-      function () use ($query) {
-        $this->_deleteStmtCache($this->_stmtCacheKey($query));
-      },
-      $retries
-    );
   }
 
   /**
@@ -485,26 +465,7 @@ abstract class AbstractQlConnection
    *
    * @return bool
    */
-  private function _shouldReconnectAfterException(\Exception $e)
-  {
-    // 2006  = MySQL server has gone away
-    // 1047  = ER_UNKNOWN_COM_ERROR - happens when a PXC node is resyncing:
-    //          "WSREP has not yet prepared node for application use"
-    // HY000 = General SQL error
-    $codes = ['2006', '1047', 'HY000'];
-    $p = $e->getPrevious();
-    return
-      in_array((string)$e->getCode(), $codes, true)
-      || ($p && in_array((string)$p->getCode(), $codes, true));
-  }
-
-  /**
-   * @param mixed $stmt
-   * @param array $values
-   *
-   * @return mixed
-   */
-  abstract protected function _bindValues($stmt, array $values);
+  abstract protected function _shouldReconnectAfterException(\Exception $e);
 
   /**
    * Retrieve the last inserted ID

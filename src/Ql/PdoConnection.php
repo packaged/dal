@@ -24,7 +24,7 @@ class PdoConnection extends AbstractQlConnection
     $this->_connection = null;
   }
 
-  public function _makeConnection()
+  public function _connect()
   {
     $dsn = $this->_config()->getItem('dsn', null);
     if($dsn === null)
@@ -90,16 +90,20 @@ class PdoConnection extends AbstractQlConnection
     }
   }
 
-  protected function _freeStatement($stmt)
+  protected function _fetchQueryResults($query, array $values = null)
   {
-    if($stmt instanceof \PDOStatement)
-    {
-      $stmt->closeCursor();
-    }
-    else
-    {
-      throw new ConnectionException('Incorrect type passed to free statement');
-    }
+    $stmt = $this->_executeQuery($query, $values);
+    $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    $stmt->closeCursor();
+    return $rows;
+  }
+
+  protected function _runQuery($query, array $values = null)
+  {
+    $stmt = $this->_executeQuery($query, $values);
+    $rows = $stmt->rowCount();
+    $stmt->closeCursor();
+    return $rows;
   }
 
   protected function _getStatement($query)
@@ -231,37 +235,23 @@ class PdoConnection extends AbstractQlConnection
     return true;
   }
 
-  protected function _affectedRows($stmt)
+  protected function _shouldReconnectAfterException(\Exception $e)
   {
-    if($stmt instanceof \PDOStatement)
-    {
-      return $stmt->rowCount();
-    }
-    else
-    {
-      throw new ConnectionException(
-        'Incorrect statement type passed to row count.'
-      );
-    }
+    // 2006  = MySQL server has gone away
+    // 1047  = ER_UNKNOWN_COM_ERROR - happens when a PXC node is resyncing:
+    //          "WSREP has not yet prepared node for application use"
+    // HY000 = General SQL error
+    $codes = ['2006', '1047', 'HY000'];
+    $p = $e->getPrevious();
+    return
+      in_array((string)$e->getCode(), $codes, true)
+      || ($p && in_array((string)$p->getCode(), $codes, true));
   }
 
-  protected function _fetchAll($stmt)
+  private function _executeQuery($query, array $values = null)
   {
-    if($stmt instanceof \PDOStatement)
-    {
-      return $stmt->fetchAll(\PDO::FETCH_ASSOC);
-    }
-    else
-    {
-      throw new ConnectionException(
-        'Incorrect statement type passed to fetch.'
-      );
-    }
-  }
-
-  protected function _bindValues($stmt, array $values)
-  {
-    if($stmt instanceof \PDOStatement)
+    $stmt = $this->_getStatement($query);
+    if($values)
     {
       $i = 1;
       foreach($values as $value)
@@ -271,10 +261,8 @@ class PdoConnection extends AbstractQlConnection
         $i++;
       }
     }
-    else
-    {
-      throw new ConnectionException('Incorrect statement type passed to bind.');
-    }
+    $stmt->execute();
+    return $stmt;
   }
 
   private function _pdoTypeForPhpVar(&$var)

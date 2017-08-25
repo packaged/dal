@@ -27,7 +27,7 @@ class MySQLiConnection extends AbstractQlConnection
     $this->_connection = null;
   }
 
-  public function _makeConnection()
+  public function _connect()
   {
     $options = array_replace(
       $this->_defaultOptions(),
@@ -58,18 +58,6 @@ class MySQLiConnection extends AbstractQlConnection
     if($this->isConnected())
     {
       $this->_connection->select_db($db);
-    }
-  }
-
-  protected function _freeStatement($stmt)
-  {
-    if($stmt instanceof \mysqli_stmt)
-    {
-      $stmt->free_result();
-    }
-    else
-    {
-      throw new ConnectionException('Incorrect type passed to free statement');
     }
   }
 
@@ -129,36 +117,39 @@ class MySQLiConnection extends AbstractQlConnection
     return true;
   }
 
-  protected function _affectedRows($stmt)
+  protected function _shouldReconnectAfterException(\Exception $e)
   {
-    if($stmt instanceof \mysqli_stmt)
-    {
-      return $stmt->affected_rows;
-    }
-    else
-    {
-      throw new ConnectionException(
-        'Incorrect statement type passed to row count.'
-      );
-    }
+    // 2006  = MySQL server has gone away
+    // 1047  = ER_UNKNOWN_COM_ERROR - happens when a PXC node is resyncing:
+    //          "WSREP has not yet prepared node for application use"
+    // HY000 = General SQL error
+    $codes = ['2006', '1047', 'HY000'];
+    $p = $e->getPrevious();
+    return
+      in_array((string)$e->getCode(), $codes, true)
+      || ($p && in_array((string)$p->getCode(), $codes, true));
   }
 
-  protected function _fetchAll($stmt)
+  protected function _runQuery($query, array $values = null)
   {
-    if($stmt instanceof \mysqli_stmt)
-    {
-      $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-      return $result;
-    }
-    else
-    {
-      throw new ConnectionException('Incorrect type passed to fetch.');
-    }
+    $stmt = $this->_executeQuery($query, $values);
+    $rows = $stmt->affected_rows;
+    $stmt->free_result();
+    return $rows;
   }
 
-  protected function _bindValues($stmt, array $values)
+  protected function _fetchQueryResults($query, array $values = null)
   {
-    if($stmt instanceof \mysqli_stmt)
+    $stmt = $this->_executeQuery($query, $values);
+    $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $stmt->free_result();
+    return $rows;
+  }
+
+  private function _executeQuery($query, array $values = null)
+  {
+    $stmt = $this->_getStatement($query);
+    if($values)
     {
       $arr = [];
       $types = '';
@@ -169,10 +160,8 @@ class MySQLiConnection extends AbstractQlConnection
       }
       $stmt->bind_param($types, ...$arr);
     }
-    else
-    {
-      throw new ConnectionException('Incorrect statement type passed to bind.');
-    }
+    $stmt->execute();
+    return $stmt;
   }
 
   private function _typeForPhpVar(&$var)

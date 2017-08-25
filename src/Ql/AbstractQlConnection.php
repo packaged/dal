@@ -15,7 +15,6 @@ abstract class AbstractQlConnection
   use ConfigurableTrait;
   use ResolverAwareTrait;
 
-  protected $_connection;
   protected $_selectedDb;
   protected $_prepareCache = [];
   protected $_lastConnectTime = 0;
@@ -40,17 +39,17 @@ abstract class AbstractQlConnection
         3
       ));
 
-      while(($remainingAttempts > 0) && ($this->_connection === null))
+      while(($remainingAttempts > 0) && (!$this->isConnected()))
       {
         try
         {
-          $this->_connection = $this->_makeConnection();
+          $this->_makeConnection();
           $remainingAttempts = 0;
         }
         catch(\Exception $e)
         {
           $remainingAttempts--;
-          $this->_connection = null;
+          $this->disconnect();
           if($remainingAttempts > 0)
           {
             usleep(mt_rand(1000, 5000));
@@ -91,10 +90,7 @@ abstract class AbstractQlConnection
    *
    * @return bool
    */
-  public function isConnected()
-  {
-    return $this->_connection !== null;
-  }
+  abstract public function isConnected();
 
   /**
    * Disconnect the open connection
@@ -106,9 +102,11 @@ abstract class AbstractQlConnection
   public function disconnect()
   {
     $this->_clearStmtCache();
-    $this->_connection = null;
+    $this->_disconnect();
     return $this;
   }
+
+  abstract protected function _disconnect();
 
   abstract protected function _switchDatabase($db);
 
@@ -146,7 +144,7 @@ abstract class AbstractQlConnection
   }
 
   /**
-   * @param $stmt
+   * @param mixed $stmt
    *
    * @return integer
    */

@@ -4,13 +4,11 @@ namespace Packaged\Dal\Ql;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
 use Packaged\Helpers\ValueAs;
 
-/**
- * Class PdoConnection
- *
- * @property \mysqli $_connection
- */
 class MySQLiConnection extends AbstractQlConnection
 {
+  /** @var \mysqli */
+  protected $_connection;
+
   public function isConnected()
   {
     try
@@ -22,6 +20,11 @@ class MySQLiConnection extends AbstractQlConnection
       $this->disconnect();
       return false;
     }
+  }
+
+  protected function _disconnect()
+  {
+    $this->_connection = null;
   }
 
   public function _makeConnection()
@@ -47,7 +50,7 @@ class MySQLiConnection extends AbstractQlConnection
       $this->_config()->getItem('port', 3306)
     );
 
-    return $connection;
+    $this->_connection = $connection;
   }
 
   public function _switchDatabase($db)

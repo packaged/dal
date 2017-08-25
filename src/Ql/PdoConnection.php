@@ -6,16 +6,23 @@ use Packaged\Dal\Exceptions\Connection\PdoException;
 use Packaged\Helpers\Strings;
 use Packaged\Helpers\ValueAs;
 
-/**
- * Class PdoConnection
- *
- * @property \PDO $_connection
- */
 class PdoConnection extends AbstractQlConnection
 {
+  /** @var \PDO */
+  protected $_connection;
   protected $_emulatedPrepares = false;
   protected $_prepareDelayCount = [];
   protected $_delayedPreparesCount = null;
+
+  public function isConnected()
+  {
+    return $this->_connection !== null;
+  }
+
+  protected function _disconnect()
+  {
+    $this->_connection = null;
+  }
 
   public function _makeConnection()
   {
@@ -61,7 +68,7 @@ class PdoConnection extends AbstractQlConnection
         $this->_emulatedPrepares
       );
     }
-    return $connection;
+    $this->_connection = $connection;
   }
 
   protected function _defaultOptions()

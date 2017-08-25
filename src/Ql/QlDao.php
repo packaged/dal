@@ -38,7 +38,7 @@ abstract class QlDao extends AbstractSanitizableDao
             '_',
             [
               Strings::stringToUnderScore($ns),
-              Inflector::pluralize(Objects::classShortname($class))
+              Inflector::pluralize(Objects::classShortname($class)),
             ]
           )
         ),
@@ -152,7 +152,16 @@ abstract class QlDao extends AbstractSanitizableDao
    */
   public function getTableNameExcludeDirs()
   {
-    return ['Mappers', 'Daos', 'Dal', 'Ql', 'Models', 'Database', 'Dao'];
+    return [
+      'Mappers',
+      'Daos',
+      'Dal',
+      'Ql',
+      'Models',
+      'Database',
+      'Dao',
+      'Mocks',
+    ];
   }
 
   /**

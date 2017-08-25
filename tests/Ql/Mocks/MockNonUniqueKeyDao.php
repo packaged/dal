@@ -3,7 +3,6 @@ namespace Tests\Ql\Mocks;
 
 class MockNonUniqueKeyDao extends MockQlDao
 {
-  protected $_tableName = 'mock_non_unique_key_daos';
 
   public function getDaoIDProperties()
   {

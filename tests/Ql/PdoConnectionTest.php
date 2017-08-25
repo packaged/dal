@@ -1,8 +1,10 @@
 <?php
 namespace Tests\Ql;
 
+use Packaged\Config\Provider\ConfigSection;
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
+use Packaged\Dal\Ql\PdoConnection;
 use Tests\Ql\Mocks\PDO\DelayedPreparesPdoConnection;
 use Tests\Ql\Mocks\PDO\MockPdoConnection;
 use Tests\Ql\Mocks\PDO\PrepareErrorPdoConnection;
@@ -13,6 +15,19 @@ class PdoConnectionTest extends AbstractQlConnectionTest
   protected function _getConnection()
   {
     return new MockPdoConnection();
+  }
+
+  public function testDsn()
+  {
+    $connection = new PdoConnection();
+    $connection->setResolver(new DalResolver());
+    $connection->configure(
+      new ConfigSection('pdo', ['hostname' => '127.0.0.1', 'port' => 3306])
+    );
+    $connection->connect();
+
+    $result = $connection->fetchQueryResults('SELECT 1');
+    $this->assertEquals([[1 => 1]], $result);
   }
 
   public function testNativeErrorFormat_runQuery()

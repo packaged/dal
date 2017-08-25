@@ -98,7 +98,7 @@ class PdoConnection extends AbstractQlConnection
     }
     else
     {
-      throw new ConnectionException('Incorrect type passed to close');
+      throw new ConnectionException('Incorrect type passed to free statement');
     }
   }
 

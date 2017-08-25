@@ -4,7 +4,7 @@ namespace Packaged\Dal\Exceptions\Connection;
 class PdoException extends ConnectionException
 {
   /**
-   * Create a CQL Exception from various thrift & cassandra exceptions
+   * Create a standardized PDO exception
    *
    * @param \Exception $e
    *

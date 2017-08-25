@@ -1,5 +1,5 @@
 <?php
-namespace Ql;
+namespace Tests\Ql;
 
 use Foundation\MockAbstractDao;
 use Packaged\Dal\DalResolver;
@@ -8,6 +8,9 @@ use Packaged\Dal\Ql\QlDaoCollection;
 use Packaged\Helpers\ValueAs;
 use Packaged\QueryBuilder\Assembler\QueryAssembler;
 use Packaged\QueryBuilder\Clause\LimitClause;
+use Tests\Ql\Mocks\MockQlDao;
+use Tests\Ql\Mocks\MockQlDataStore;
+use Tests\Ql\Mocks\PDO\MockPdoConnection;
 
 class QlDaoCollectionTest extends \PHPUnit_Framework_TestCase
 {

@@ -493,7 +493,7 @@ abstract class AbstractQlConnection
     // 1047  = ER_UNKNOWN_COM_ERROR - happens when a PXC node is resyncing:
     //          "WSREP has not yet prepared node for application use"
     // HY000 = General SQL error
-    $codes = ['2006', '1047', '2014', 'HY000'];
+    $codes = ['2006', '1047', 'HY000'];
     $p = $e->getPrevious();
     return
       in_array((string)$e->getCode(), $codes, true)

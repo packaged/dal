@@ -147,11 +147,11 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
       {
         $value = IncrementExpression::create($field, $newValue->getIncrement());
       }
-      elseif($newValue->isDecrement())
+      else if($newValue->isDecrement())
       {
         $value = DecrementExpression::create($field, $newValue->getDecrement());
       }
-      elseif($newValue->isFixedValue())
+      else if($newValue->isFixedValue())
       {
         $value = NumericExpression::create($newValue->calculated());
       }
@@ -267,6 +267,10 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
   public function exists(IDao $dao)
   {
     $dao = $this->_verifyDao($dao);
+    if($dao->isDaoLoaded())
+    {
+      return true;
+    }
     try
     {
       $this->load($dao);

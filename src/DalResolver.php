@@ -510,14 +510,18 @@ class DalResolver implements IConnectionResolver
       'm' => $mode,
     ];
 
-    $instantLog = $this->getConfigItem("log", "instant", false);
-    if($instantLog)
+    $log = $this->getConfigItem("log", "location", 'memory');
+    if($log == 'error_log')
     {
       error_log("DAL-PERF: " . json_encode($data));
     }
-    else
+    else if($log == 'memory')
     {
       $this->_perfData[] = $data;
+    }
+    else if(file_exists($log))
+    {
+      file_put_contents($log, json_encode($data) . "\n", FILE_APPEND);
     }
 
     return $this;

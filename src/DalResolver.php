@@ -502,12 +502,24 @@ class DalResolver implements IConnectionResolver
       );
       $connection = !$conn ? get_class($connection) : $conn;
     }
-    $this->_perfData[] = [
+
+    $data = [
       't' => $processTime * 1000,
       'q' => $query,
       'c' => $connection,
       'm' => $mode,
     ];
+
+    $instantLog = $this->getConfigItem("log", "instant", false);
+    if($instantLog)
+    {
+      error_log("DAL-PERF: " . json_encode($data));
+    }
+    else
+    {
+      $this->_perfData[] = $data;
+    }
+
     return $this;
   }
 

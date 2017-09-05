@@ -239,6 +239,39 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
     );
     $dal->closePerformanceMetric($id);
   }
+
+  public function testSlowQueries()
+  {
+    $config = new \Packaged\Config\Provider\ConfigProvider();
+    $config->addSection(
+      new \Packaged\Config\Provider\ConfigSection(
+        "log", ["slow_queries" => 400]
+      )
+    );
+    $dal = new DalResolver(null, null, $config);
+    $this->assertFalse($dal->isCollectingPerformanceMetrics());
+    $this->assertEmpty($dal->getPerformanceMetrics());
+
+    //Check fast queries are not logged
+    $id = $dal->startPerformanceMetric(
+      'test',
+      DalResolver::MODE_READ,
+      'USLEEP'
+    );
+    usleep(100);
+    $dal->closePerformanceMetric($id);
+    $this->assertEmpty($dal->getPerformanceMetrics());
+
+    //Check slow queries are logged
+    $id = $dal->startPerformanceMetric('test', DalResolver::MODE_READ, 'SLEEP');
+    sleep(1);
+    $dal->closePerformanceMetric($id);
+    $perfData = $dal->getPerformanceMetrics();
+    $this->assertCount(1, $perfData);
+    $perfData = reset($perfData);
+    $this->assertEquals('test', $perfData['c']);
+    $this->assertEquals('SLEEP', $perfData['q']);
+  }
 }
 
 class ConfigurableConnection
@@ -249,7 +282,7 @@ class ConfigurableConnection
 
   public static function create()
   {
-    return new static;
+    return new static();
   }
 
   public function getConfig()

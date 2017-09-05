@@ -18,6 +18,7 @@ class DalResolver implements IConnectionResolver
 {
   const TYPE_CONNECTION = 'connection';
   const TYPE_DATASTORE = 'datastore';
+  const CONFIG_KEY = 'config';
 
   /**
    * @var ConfigProviderInterface[]
@@ -33,7 +34,8 @@ class DalResolver implements IConnectionResolver
 
   public function __construct(
     ConfigProviderInterface $connectionConfig = null,
-    ConfigProviderInterface $datastoreConfig = null
+    ConfigProviderInterface $datastoreConfig = null,
+    ConfigProviderInterface $dalConfig = null
   )
   {
     if($connectionConfig !== null)
@@ -52,6 +54,15 @@ class DalResolver implements IConnectionResolver
     else
     {
       $this->_config[self::TYPE_DATASTORE] = new TestConfigProvider();
+    }
+
+    if($dalConfig !== null)
+    {
+      $this->_config[self::CONFIG_KEY] = $dalConfig;
+    }
+    else
+    {
+      $this->_config[self::CONFIG_KEY] = new TestConfigProvider();
     }
 
     $this->_confed = [self::TYPE_CONNECTION => [], self::TYPE_DATASTORE => []];
@@ -315,6 +326,20 @@ class DalResolver implements IConnectionResolver
   }
 
   /**
+   * Get DAL config
+   *
+   * @param      $section
+   * @param      $item
+   * @param null $default
+   *
+   * @return mixed
+   */
+  public function getConfigItem($section, $item, $default = null)
+  {
+    return $this->_config[self::CONFIG_KEY]->getItem($section, $item, $default);
+  }
+
+  /**
    * Check to see if a datastore is defined by name
    *
    * @param $name
@@ -392,7 +417,7 @@ class DalResolver implements IConnectionResolver
       $class = $section->getItem('construct_class');
       if($class)
       {
-        return new $class;
+        return new $class();
       }
 
       $callable = $section->getItem('construct_callable');
@@ -427,40 +452,40 @@ class DalResolver implements IConnectionResolver
 
   public function startPerformanceMetric($connection, $mode, $query = null)
   {
-    if($this->_storePerformanceData)
-    {
-      $time = microtime(true);
-      $this->_currentPerf[$time] = [
-        'c' => $connection,
-        'm' => $mode,
-        'q' => $query,
-        's' => $time
-      ];
-      return $time;
-    }
-    return 0;
+    $time = microtime(true);
+    $this->_currentPerf[$time] = [
+      'c' => $connection,
+      'm' => $mode,
+      'q' => $query,
+      's' => $time,
+    ];
+    return $time;
   }
 
   public function closePerformanceMetric($uniqueid)
   {
-    if($this->_storePerformanceData)
+    //Slow Query Threshold in ms
+    $slowQueryTime = $this->getConfigItem("log", "slow_queries", null);
+    if($this->_storePerformanceData || $slowQueryTime !== null)
     {
       if(isset($this->_currentPerf[$uniqueid]))
       {
-        $perf = $this->_currentPerf[$uniqueid];
-        $this->writePerformanceMetric(
-          $perf['c'],
-          microtime(true) - $perf['s'],
-          $perf['m'],
-          $perf['q']
-        );
-        unset($this->_currentPerf[$uniqueid]);
-        return true;
+        $met = $this->_currentPerf[$uniqueid];
+        $time = microtime(true) - $met['s'];
+
+        if($this->_storePerformanceData || ($time * 1000) > $slowQueryTime)
+        {
+          $this->writePerformanceMetric($met['c'], $time, $met['m'], $met['q']);
+        }
       }
-      throw new DalException(
-        "You cannot close performance metrics that are not open"
-      );
+      else
+      {
+        throw new DalException(
+          "You cannot close performance metrics that are not open"
+        );
+      }
     }
+    unset($this->_currentPerf[$uniqueid]);
     return true;
   }
 
@@ -468,24 +493,21 @@ class DalResolver implements IConnectionResolver
     $connection, $processTime, $mode = self::MODE_READ, $query = null
   )
   {
-    if($this->_storePerformanceData)
+    if(!is_scalar($connection))
     {
-      if(!is_scalar($connection))
-      {
-        $conn = array_search(
-          $connection,
-          (array)$this->_objectCache[self::TYPE_CONNECTION],
-          true
-        );
-        $connection = !$conn ? get_class($connection) : $conn;
-      }
-      $this->_perfData[] = [
-        't' => $processTime * 1000,
-        'q' => $query,
-        'c' => $connection,
-        'm' => $mode
-      ];
+      $conn = array_search(
+        $connection,
+        (array)$this->_objectCache[self::TYPE_CONNECTION],
+        true
+      );
+      $connection = !$conn ? get_class($connection) : $conn;
     }
+    $this->_perfData[] = [
+      't' => $processTime * 1000,
+      'q' => $query,
+      'c' => $connection,
+      'm' => $mode,
+    ];
     return $this;
   }
 

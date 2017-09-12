@@ -245,6 +245,7 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
 
     if($del === 1)
     {
+      $dao->markDaoAsLoaded(false);
       return $dao;
     }
     else if($del === 0)

@@ -2,6 +2,7 @@
 namespace Packaged\Dal\Foundation;
 
 use Packaged\Dal\DataTypes\Counter;
+use Packaged\Dal\Exceptions\Dao\DaoException;
 use Packaged\Dal\ISanitizableDao;
 use Packaged\DocBlock\DocBlockParser;
 
@@ -231,6 +232,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
    * @param $value
    *
    * @return string
+   * @throws DaoException
    */
   public function getPropertySerialized($property, $value)
   {
@@ -242,6 +244,10 @@ abstract class AbstractSanitizableDao extends AbstractDao
         {
           case self::SERIALIZATION_JSON:
             $value = json_encode($value);
+            if(json_last_error() !== JSON_ERROR_NONE)
+            {
+              throw new DaoException('Failed to serialize property "' . $property . '". ' . json_last_error_msg());
+            }
             break;
           case self::SERIALIZATION_PHP:
             $value = serialize($value);
@@ -261,6 +267,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
    * @param $value
    *
    * @return mixed
+   * @throws DaoException
    */
   public function getPropertyUnserialized($property, $value)
   {
@@ -273,6 +280,10 @@ abstract class AbstractSanitizableDao extends AbstractDao
         {
           case self::SERIALIZATION_JSON:
             $value = json_decode($value);
+            if(json_last_error() !== JSON_ERROR_NONE)
+            {
+              error_log('Failed to unserialize property "' . $property . '". ' . json_last_error_msg());
+            }
             break;
           case self::SERIALIZATION_PHP:
             $value = unserialize($value);

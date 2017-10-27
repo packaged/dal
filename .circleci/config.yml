@@ -1,11 +1,15 @@
 defaults: &defaults
-  working_directory: ~/${CIRCLE_PROJECT_REPONAME}
+  working_directory: ~/_repo
   steps:
+    # common php steps
     - run: echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
-    - run: if [ -n "$APK_PACKAGES" ]; then apk -U add wget $APK_PACKAGES; fi;
-    - run: if [ -n "$PHP_MODULES" ]; then docker-php-ext-install $PHP_MODULES; fi;
+    - run: if [ -n "$ADD_PACKAGES" ]; then apk -U add $ADD_PACKAGES; fi;
+    - run: if [ -n "$ADD_MODULES" ]; then docker-php-ext-install $ADD_MODULES; fi;
     - run: echo "date.timezone = UTC" >> $(php --ini |grep Scan |awk '{print $NF}')/timezone.ini
     - run: curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
+
+    # custom steps here
+    - run: apk -U add wget
     - run:
         name: install dockerize
         command: wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
@@ -19,6 +23,8 @@ defaults: &defaults
         command: dockerize -wait tcp://localhost:9160 -timeout 1m
     - checkout
     - run: php .circleci/.mysql.php
+
+    # run tests
     - run: composer install -n --prefer-dist
     - run: php vendor/phpunit/phpunit/phpunit -c phpunit.xml --log-junit /tmp/test-results/phpunit/junit.xml
     - store_test_results:
@@ -31,8 +37,8 @@ jobs:
     docker:
       - image: php:5.6-alpine
         environment:
-          APK_PACKAGES: "php5-apcu php5-memcache"
-          PHP_MODULES: "mysqli pdo pdo_mysql"
+          ADD_PACKAGES: "php5-apcu php5-memcache"
+          ADD_MODULES: "mysqli pdo pdo_mysql"
       - image: cassandra:2.1
         environment:
           CASSANDRA_START_RPC: yes
@@ -46,8 +52,8 @@ jobs:
     docker:
       - image: php:7.0-alpine
         environment:
-          APK_PACKAGES: "php7-apcu php7-memcached"
-          PHP_MODULES: "mysqli pdo pdo_mysql"
+          ADD_PACKAGES: "php7-apcu php7-memcached"
+          ADD_MODULES: "mysqli pdo pdo_mysql"
       - image: cassandra:2.1
         environment:
           CASSANDRA_START_RPC: yes
@@ -61,8 +67,8 @@ jobs:
     docker:
       - image: php:7.1-alpine
         environment:
-          APK_PACKAGES: "php7-apcu php7-memcached"
-          PHP_MODULES: "mysqli pdo pdo_mysql"
+          ADD_PACKAGES: "php7-apcu php7-memcached"
+          ADD_MODULES: "mysqli pdo pdo_mysql"
       - image: cassandra:2.1
         environment:
           CASSANDRA_START_RPC: yes

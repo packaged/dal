@@ -8,7 +8,7 @@ defaults: &defaults
     - run: echo "date.timezone = UTC" >> $(php --ini |grep Scan |awk '{print $NF}')/timezone.ini
     - run: curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
 
-    # custom steps here
+    # pre-checkout steps
     - run: apk -U add wget
     - run:
         name: install dockerize
@@ -21,7 +21,11 @@ defaults: &defaults
     - run:
         name: Wait for Cassandra
         command: dockerize -wait tcp://localhost:9160 -timeout 1m
+
+    # checkout
     - checkout
+
+    # post-checkout steps
     - run: php .circleci/.mysql.php
 
     # run tests

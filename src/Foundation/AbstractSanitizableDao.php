@@ -246,7 +246,14 @@ abstract class AbstractSanitizableDao extends AbstractDao
             $value = json_encode($value);
             if(json_last_error() !== JSON_ERROR_NONE)
             {
-              throw new DaoException('Failed to serialize property "' . $property . '". ' . json_last_error_msg());
+              throw new DaoException(
+                sprintf(
+                  'Failed to serialize property "%s" in "%s". %s',
+                  $property,
+                  get_class($this),
+                  json_last_error_msg()
+                )
+              );
             }
             break;
           case self::SERIALIZATION_PHP:
@@ -282,7 +289,14 @@ abstract class AbstractSanitizableDao extends AbstractDao
             $value = json_decode($value);
             if(json_last_error() !== JSON_ERROR_NONE)
             {
-              error_log('Failed to unserialize property "' . $property . '". ' . json_last_error_msg());
+              error_log(
+                sprintf(
+                  'Failed to unserialize property "%s" in "%s". %s',
+                  $property,
+                  get_class($this),
+                  json_last_error_msg()
+                )
+              );
             }
             break;
           case self::SERIALIZATION_PHP:

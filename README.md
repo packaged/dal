@@ -3,7 +3,7 @@ Data Access Layer
 
 [![Latest Stable Version](https://poser.pugx.org/packaged/dal/version.png)](https://packagist.org/packages/packaged/dal)
 [![Total Downloads](https://poser.pugx.org/packaged/dal/d/total.png)](https://packagist.org/packages/packaged/dal)
-[![CircleCI](https://circleci.com/gh/packaged/dal.svg?style=svg)](https://circleci.com/gh/packaged/dal)
+[![CircleCI](https://circleci.com/gh/packaged/dal.svg?style=shield)](https://circleci.com/gh/packaged/dal)
 [![Dependency Status](https://www.versioneye.com/php/packaged:dal/badge.png)](https://www.versioneye.com/php/packaged:dal)
 [![Coverage Status](https://coveralls.io/repos/packaged/dal/badge.png)](https://coveralls.io/r/packaged/dal)
 

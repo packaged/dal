@@ -16,11 +16,8 @@ defaults: &defaults
         environment:
           DOCKERIZE_VERSION: v0.5.0
     - run:
-        name: Wait for MySQL
-        command: dockerize -wait tcp://localhost:3306 -timeout 1m
-    - run:
-        name: Wait for Cassandra
-        command: dockerize -wait tcp://localhost:9160 -timeout 1m
+        name: Wait for services to start
+        command: dockerize -wait tcp://localhost:3306 -wait tcp://localhost:9160 -timeout 1m
 
     # checkout
     - checkout

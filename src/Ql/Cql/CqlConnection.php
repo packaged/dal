@@ -334,9 +334,9 @@ class CqlConnection
   }
 
   /**
-   * @param            $mode
-   * @param            $consistency
-   * @param            $query
+   * @param string     $mode
+   * @param int        $consistency
+   * @param string     $query
    * @param array|null $values
    *
    * @return array|mixed

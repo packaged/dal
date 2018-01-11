@@ -303,18 +303,12 @@ class CqlConnection
    */
   public function runQuery($query, array $values = null)
   {
-    $perfId = $this->getResolver()->startPerformanceMetric(
-      $this,
+    $this->_prepareAndExecute(
       DalResolver::MODE_WRITE,
-      $query
+      $this->_config()->getItem('write_consistency', ConsistencyLevel::ONE),
+      $query,
+      $values
     );
-    $prep = $this->prepare($query);
-    $this->execute(
-      $prep,
-      $values ?: [],
-      $this->_config()->getItem('write_consistency', ConsistencyLevel::ONE)
-    );
-    $this->getResolver()->closePerformanceMetric($perfId);
     return 1;
   }
 
@@ -331,17 +325,37 @@ class CqlConnection
    */
   public function fetchQueryResults($query, array $values = null)
   {
-    $perfId = $this->getResolver()->startPerformanceMetric(
-      $this,
+    return $this->_prepareAndExecute(
       DalResolver::MODE_READ,
-      $query
+      $this->_config()->getItem('read_consistency', ConsistencyLevel::ONE),
+      $query,
+      $values
     );
-    $prep = $this->prepare($query);
-    $results = $this->execute(
-      $prep,
-      $values ?: [],
-      $this->_config()->getItem('read_consistency', ConsistencyLevel::ONE)
-    );
+  }
+
+  /**
+   * @param            $mode
+   * @param            $consistency
+   * @param            $query
+   * @param array|null $values
+   *
+   * @return array|mixed
+   * @throws CqlException
+   * @throws \Exception
+   * @throws \Packaged\Dal\Exceptions\DalException
+   */
+  protected function _prepareAndExecute($mode, $consistency, $query, array $values = null)
+  {
+    $perfId = $this->getResolver()->startPerformanceMetric($this, $mode, $query);
+    if($values)
+    {
+      $prep = $this->prepare($query);
+      $results = $this->execute($prep, $values, $consistency);
+    }
+    else
+    {
+      $results = $this->runRawQuery($query, $consistency);
+    }
     $this->getResolver()->closePerformanceMetric($perfId);
     return $results;
   }

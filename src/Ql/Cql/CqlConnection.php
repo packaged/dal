@@ -95,6 +95,7 @@ class CqlConnection
    * @return static
    *
    * @throws ConnectionException
+   * @throws \Exception
    */
   public function connect()
   {
@@ -216,7 +217,7 @@ class CqlConnection
   }
 
   /**
-   * @return CacheItem
+   * @return string|bool
    */
   protected function _getKeyspaceCacheKey()
   {
@@ -241,8 +242,6 @@ class CqlConnection
    * Disconnect the open connection
    *
    * @return static
-   *
-   * @throws ConnectionException
    */
   public function disconnect()
   {
@@ -263,6 +262,12 @@ class CqlConnection
     return $this;
   }
 
+  /**
+   * @param string $keyspace
+   * @param bool   $force
+   *
+   * @throws CqlException
+   */
   protected function _setKeyspace($keyspace, $force = false)
   {
     if($keyspace)
@@ -292,21 +297,18 @@ class CqlConnection
    * @param array $values
    *
    * @return int number of affected rows
+   * @throws CqlException
+   * @throws \Exception
+   * @throws \Packaged\Dal\Exceptions\DalException
    */
   public function runQuery($query, array $values = null)
   {
-    $perfId = $this->getResolver()->startPerformanceMetric(
-      $this,
+    $this->_prepareAndExecute(
       DalResolver::MODE_WRITE,
-      $query
+      $this->_config()->getItem('write_consistency', ConsistencyLevel::ONE),
+      $query,
+      $values
     );
-    $prep = $this->prepare($query);
-    $this->execute(
-      $prep,
-      $values ?: [],
-      $this->_config()->getItem('write_consistency', ConsistencyLevel::ONE)
-    );
-    $this->getResolver()->closePerformanceMetric($perfId);
     return 1;
   }
 
@@ -317,20 +319,43 @@ class CqlConnection
    * @param array $values
    *
    * @return array
+   * @throws CqlException
+   * @throws \Exception
+   * @throws \Packaged\Dal\Exceptions\DalException
    */
   public function fetchQueryResults($query, array $values = null)
   {
-    $perfId = $this->getResolver()->startPerformanceMetric(
-      $this,
+    return $this->_prepareAndExecute(
       DalResolver::MODE_READ,
-      $query
+      $this->_config()->getItem('read_consistency', ConsistencyLevel::ONE),
+      $query,
+      $values
     );
-    $prep = $this->prepare($query);
-    $results = $this->execute(
-      $prep,
-      $values ?: [],
-      $this->_config()->getItem('read_consistency', ConsistencyLevel::ONE)
-    );
+  }
+
+  /**
+   * @param string     $mode
+   * @param int        $consistency
+   * @param string     $query
+   * @param array|null $values
+   *
+   * @return array|mixed
+   * @throws CqlException
+   * @throws \Exception
+   * @throws \Packaged\Dal\Exceptions\DalException
+   */
+  protected function _prepareAndExecute($mode, $consistency, $query, array $values = null)
+  {
+    $perfId = $this->getResolver()->startPerformanceMetric($this, $mode, $query);
+    if($values)
+    {
+      $prep = $this->prepare($query);
+      $results = $this->execute($prep, $values, $consistency);
+    }
+    else
+    {
+      $results = $this->runRawQuery($query, $consistency);
+    }
     $this->getResolver()->closePerformanceMetric($perfId);
     return $results;
   }
@@ -386,6 +411,7 @@ class CqlConnection
    *
    * @return CqlStatement
    * @throws CqlException
+   * @throws \Exception
    */
   public function prepare(
     $query, $compression = Compression::NONE, $retries = null
@@ -426,6 +452,7 @@ class CqlConnection
    * @param int    $retries
    *
    * @return array The query results
+   * @throws \Exception
    */
   public function runRawQuery(
     $query, $consistency = ConsistencyLevel::QUORUM, $retries = null

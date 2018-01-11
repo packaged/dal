@@ -95,6 +95,7 @@ class CqlConnection
    * @return static
    *
    * @throws ConnectionException
+   * @throws \Exception
    */
   public function connect()
   {
@@ -216,7 +217,7 @@ class CqlConnection
   }
 
   /**
-   * @return CacheItem
+   * @return string|bool
    */
   protected function _getKeyspaceCacheKey()
   {
@@ -241,8 +242,6 @@ class CqlConnection
    * Disconnect the open connection
    *
    * @return static
-   *
-   * @throws ConnectionException
    */
   public function disconnect()
   {
@@ -263,6 +262,12 @@ class CqlConnection
     return $this;
   }
 
+  /**
+   * @param string $keyspace
+   * @param bool   $force
+   *
+   * @throws CqlException
+   */
   protected function _setKeyspace($keyspace, $force = false)
   {
     if($keyspace)
@@ -292,6 +297,9 @@ class CqlConnection
    * @param array $values
    *
    * @return int number of affected rows
+   * @throws CqlException
+   * @throws \Exception
+   * @throws \Packaged\Dal\Exceptions\DalException
    */
   public function runQuery($query, array $values = null)
   {
@@ -317,6 +325,9 @@ class CqlConnection
    * @param array $values
    *
    * @return array
+   * @throws CqlException
+   * @throws \Exception
+   * @throws \Packaged\Dal\Exceptions\DalException
    */
   public function fetchQueryResults($query, array $values = null)
   {
@@ -386,6 +397,7 @@ class CqlConnection
    *
    * @return CqlStatement
    * @throws CqlException
+   * @throws \Exception
    */
   public function prepare(
     $query, $compression = Compression::NONE, $retries = null
@@ -426,6 +438,7 @@ class CqlConnection
    * @param int    $retries
    *
    * @return array The query results
+   * @throws \Exception
    */
   public function runRawQuery(
     $query, $consistency = ConsistencyLevel::QUORUM, $retries = null
@@ -437,8 +450,7 @@ class CqlConnection
     }
     return RetryHelper::retry(
       $retries,
-      function () use ($query, $consistency)
-      {
+      function () use ($query, $consistency) {
         $this->connect()->_setKeyspace($this->_config()->getItem('keyspace'));
         $result = $this->_client->execute_cql3_query(
           $query,

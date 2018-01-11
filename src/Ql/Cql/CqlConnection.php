@@ -464,7 +464,8 @@ class CqlConnection
     }
     return RetryHelper::retry(
       $retries,
-      function () use ($query, $consistency) {
+      function () use ($query, $consistency)
+      {
         $this->connect()->_setKeyspace($this->_config()->getItem('keyspace'));
         $result = $this->_client->execute_cql3_query(
           $query,

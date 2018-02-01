@@ -95,7 +95,7 @@ class QlDaoCollectionTest extends \PHPUnit_Framework_TestCase
       array_values($collection->distinct('username'))
     );
 
-    $collection->loadWhere(['username' => 'Test']);
+    $collection->where(['username' => 'Test'])->load();
     $this->assertCount(2, $collection);
 
     $collection = MockQlDao::collection(['username' => 'Test']);

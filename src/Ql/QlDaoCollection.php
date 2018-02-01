@@ -138,6 +138,8 @@ class QlDaoCollection extends DaoCollection
   }
 
   /**
+   * @deprecated
+   *
    * @param mixed ...$params expressions to pass to where clause
    *
    * @return $this

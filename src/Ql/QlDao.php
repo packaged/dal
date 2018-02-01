@@ -50,6 +50,8 @@ abstract class QlDao extends AbstractSanitizableDao
   }
 
   /**
+   * @deprecated
+   *
    * @param $params
    *
    * @return QlDaoCollection
@@ -142,7 +144,7 @@ abstract class QlDao extends AbstractSanitizableDao
    */
   public static function each(...$params)
   {
-    return static::loadWhere(...$params)->getRawArray();
+    return static::collection(...$params)->getRawArray();
   }
 
   /**

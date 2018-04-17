@@ -17,6 +17,6 @@ class ConnectionException extends DalException
    */
   public static function from(\Exception $e)
   {
-    return new self($e->getMessage(), $e->getCode(), $e);
+    return new static($e->getMessage(), $e->getCode(), $e);
   }
 }

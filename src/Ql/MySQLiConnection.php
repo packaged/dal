@@ -2,6 +2,7 @@
 namespace Packaged\Dal\Ql;
 
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
+use Packaged\Dal\Exceptions\Connection\DuplicateKeyException;
 use Packaged\Helpers\ValueAs;
 
 class MySQLiConnection extends AbstractQlConnection
@@ -109,6 +110,10 @@ class MySQLiConnection extends AbstractQlConnection
 
   protected function _isRecoverableException(\Exception $e)
   {
+    if($e instanceof DuplicateKeyException)
+    {
+      return false;
+    }
     $code = (string)$e->getCode();
     if(($code === '0') || ($code === '1064'))
     {

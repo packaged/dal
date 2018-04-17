@@ -4,6 +4,7 @@ namespace Tests\Ql;
 use Packaged\Config\Provider\ConfigSection;
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
+use Packaged\Dal\Exceptions\Connection\DuplicateKeyException;
 use Packaged\Dal\Exceptions\DalException;
 use Packaged\Dal\Ql\AbstractQlConnection;
 use Tests\Ql\Mocks\FailingPrepareRawConnection;
@@ -316,5 +317,35 @@ abstract class AbstractQlConnectionTest extends \PHPUnit_Framework_TestCase
       'Not currently in a transaction'
     );
     $connection->rollback();
+  }
+
+  public function testDuplicateKey()
+  {
+    $connection = $this->_getConnection();
+    $connection->setResolver(new DalResolver());
+    $connection->connect();
+    $connection->switchDatabase('packaged_dal');
+
+    $connection->runQuery("DROP TABLE IF EXISTS duplicate_key_test");
+    $connection->runQuery(
+      "CREATE TABLE duplicate_key_test ("
+      . "id INT NOT NULL PRIMARY KEY"
+      . ")"
+    );
+
+    $query = "INSERT INTO duplicate_key_test (id) VALUES (1)";
+    $connection->runQuery($query);
+
+    // Run it again, should cause a DuplicateKeyException
+    $this->setExpectedException(DuplicateKeyException::class, "Duplicate entry '1' for key 'PRIMARY'");
+    try
+    {
+      $connection->runQuery($query);
+    }
+    catch(\Exception $e)
+    {
+      $this->assertEquals(1, $connection->getRunCount());
+      throw $e;
+    }
   }
 }

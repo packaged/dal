@@ -338,6 +338,14 @@ abstract class AbstractQlConnectionTest extends \PHPUnit_Framework_TestCase
 
     // Run it again, should cause a DuplicateKeyException
     $this->setExpectedException(DuplicateKeyException::class, "Duplicate entry '1' for key 'PRIMARY'");
-    $connection->runQuery($query);
+    try
+    {
+      $connection->runQuery($query);
+    }
+    catch(\Exception $e)
+    {
+      $this->assertEquals(1, $connection->getRunCount());
+      throw $e;
+    }
   }
 }

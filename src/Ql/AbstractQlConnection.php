@@ -5,6 +5,7 @@ use Packaged\Config\ConfigurableInterface;
 use Packaged\Config\ConfigurableTrait;
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
+use Packaged\Dal\Exceptions\Connection\DuplicateKeyException;
 use Packaged\Dal\IResolverAware;
 use Packaged\Dal\Traits\ResolverAwareTrait;
 
@@ -444,10 +445,14 @@ abstract class AbstractQlConnection
   /**
    * @param \Exception $e
    *
-   * @return \Exception
+   * @return ConnectionException
    */
   protected function _sanitizeException(\Exception $e)
   {
+    if(preg_match("/^.*Duplicate entry .* for key /", $e->getMessage()))
+    {
+      return DuplicateKeyException::from($e);
+    }
     return ConnectionException::from($e);
   }
 

@@ -2,6 +2,7 @@
 namespace Packaged\Dal\Ql;
 
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
+use Packaged\Dal\Exceptions\Connection\DuplicateKeyException;
 use Packaged\Dal\Exceptions\Connection\PdoException;
 use Packaged\Helpers\Strings;
 use Packaged\Helpers\ValueAs;
@@ -215,7 +216,15 @@ class PdoConnection extends AbstractQlConnection
     {
       return new PdoException($e->getMessage(), 2006, $e);
     }
-    return PdoException::from($e);
+
+    $e = PdoException::from($e);
+
+    if(preg_match("/^.*Duplicate entry .* for key /", $e->getMessage()))
+    {
+      return DuplicateKeyException::from($e);
+    }
+
+    return $e;
   }
 
   public function getLastInsertId($name = null)
@@ -225,6 +234,11 @@ class PdoConnection extends AbstractQlConnection
 
   protected function _isRecoverableException(\Exception $e)
   {
+    if($e instanceof DuplicateKeyException)
+    {
+      return false;
+    }
+
     $code = $e->getCode();
     $p = $e->getPrevious();
     if(($code === 0) || Strings::startsWith($code, 42)

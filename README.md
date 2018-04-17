@@ -56,7 +56,7 @@ Getting Started
     $user->id = 4;
     $user->load();
     
-    $tbUsers = User::loadWhere(['name' => ['Test','Testing']]);
+    $tbUsers = User::collection(['name' => ['Test','Testing']]);
     foreach($tbUsers as $user)
     {
     echo "Located $user->name\n";

@@ -417,11 +417,11 @@ abstract class AbstractQlConnection
         }
         else
         {
-          $this->disconnect();
-          error_log(
-            'Connection Error: (' . $exception->getCode() . ') '
-            . $exception->getMessage()
-          );
+          if(!($exception instanceof DuplicateKeyException))
+          {
+            $this->disconnect();
+            error_log('Connection Error: (' . $exception->getCode() . ') ' . $exception->getMessage());
+          }
           throw $exception;
         }
       }

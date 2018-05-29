@@ -39,7 +39,7 @@ jobs:
     docker:
       - image: php:5.6-alpine
         environment:
-          ADD_PACKAGES: "alpine-sdk php5-dev zlib-dev libmemcached-dev php5-apcu"
+          ADD_PACKAGES: "alpine-sdk php5-dev autoconf zlib-dev libmemcached-dev php5-apcu"
           ADD_MODULES: "mysqli pdo pdo_mysql"
           ADD_PECL: "memcached-2.2.0"
       - image: cassandra:2.1

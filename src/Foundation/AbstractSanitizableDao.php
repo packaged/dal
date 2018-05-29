@@ -286,17 +286,20 @@ abstract class AbstractSanitizableDao extends AbstractDao
         switch($type)
         {
           case self::SERIALIZATION_JSON:
-            $value = json_decode($value);
-            if(json_last_error() !== JSON_ERROR_NONE)
+            if(!in_array($value, [null, ''], true))
             {
-              error_log(
-                sprintf(
-                  'Failed to unserialize property "%s" in "%s". %s',
-                  $property,
-                  get_class($this),
-                  json_last_error_msg()
-                )
-              );
+              $value = json_decode($value);
+              if(json_last_error() !== JSON_ERROR_NONE)
+              {
+                error_log(
+                  sprintf(
+                    'Failed to unserialize property "%s" in "%s". %s',
+                    $property,
+                    get_class($this),
+                    json_last_error_msg()
+                  )
+                );
+              }
             }
             break;
           case self::SERIALIZATION_PHP:

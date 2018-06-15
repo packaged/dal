@@ -19,6 +19,11 @@ class FailingPrepareRawConnection
     return true;
   }
 
+  public function close()
+  {
+    return true;
+  }
+
   public function prepare()
   {
     $exception = new ConnectionException(

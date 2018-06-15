@@ -25,18 +25,21 @@ class MySQLiConnection extends AbstractQlConnection
 
   protected function _disconnect()
   {
+    if($this->_connection)
+    {
+      $this->_connection->close();
+    }
     $this->_connection = null;
   }
 
   public function _connect()
   {
-    $options = array_replace(
-      $this->_defaultOptions(),
-      ValueAs::arr($this->_config()->getItem('options'))
-    );
+    $options = array_replace($this->_defaultOptions(), ValueAs::arr($this->_config()->getItem('options')));
 
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+    $this->_connection = null;
     $connection = new \mysqli();
+    $connection->init();
 
     foreach($options as $key => $value)
     {
@@ -50,6 +53,12 @@ class MySQLiConnection extends AbstractQlConnection
       $this->_selectedDb ?: $this->_config()->getItem('database', ''),
       $this->_config()->getItem('port', 3306)
     );
+
+    $charSet = $this->_config()->getItem('charset');
+    if($charSet)
+    {
+      $connection->set_charset($charSet);
+    }
 
     $this->_connection = $connection;
   }

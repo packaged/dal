@@ -457,6 +457,16 @@ abstract class AbstractQlConnection
   }
 
   /**
+   * Return the configuration for this connection
+   *
+   * @return \Packaged\Config\ConfigSectionInterface
+   */
+  public function getConfig()
+  {
+    return $this->_config();
+  }
+
+  /**
    * @param \Exception $e
    *
    * @return bool

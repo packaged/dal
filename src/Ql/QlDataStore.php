@@ -85,8 +85,7 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
   {
     $ids = array_filter(
       $dao->getId(true),
-      function ($value)
-      {
+      function ($value) {
         return $value !== null;
       }
     );
@@ -379,5 +378,15 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
   {
     $this->_connection = $connection;
     return $this;
+  }
+
+  /**
+   * Returns the configuration for this datastore
+   *
+   * @return \Packaged\Config\ConfigSectionInterface
+   */
+  public function getConfig()
+  {
+    return $this->_config();
   }
 }

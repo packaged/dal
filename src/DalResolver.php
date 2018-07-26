@@ -452,7 +452,7 @@ class DalResolver implements IConnectionResolver
 
   public function startPerformanceMetric($connection, $mode, $query = null)
   {
-    $time = microtime(true);
+    $time = (string)microtime(true);
     $this->_currentPerf[$time] = [
       'c' => $connection,
       'm' => $mode,
@@ -464,6 +464,8 @@ class DalResolver implements IConnectionResolver
 
   public function closePerformanceMetric($uniqueid)
   {
+    $uniqueid = (string)$uniqueid;
+
     //Slow Query Threshold in ms
     $slowQueryTime = $this->getConfigItem("log", "slow_queries", null);
     if($this->_storePerformanceData || $slowQueryTime !== null)

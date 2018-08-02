@@ -54,7 +54,7 @@ class CqlDataStore extends QlDataStore
   public function save(IDao $dao)
   {
     $dao = $this->_verifyDao($dao);
-    parent::save($dao);
+    return parent::save($dao);
   }
 
   protected function _prepareQuery(IStatement $stmt, QlDao $dao)

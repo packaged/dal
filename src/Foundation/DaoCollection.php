@@ -70,7 +70,7 @@ class DaoCollection implements IDaoCollection
    */
   public static function create($daoClass)
   {
-    $collection = new static;
+    $collection = new static();
     if(is_object($daoClass))
     {
       $collection->_dao = $daoClass;
@@ -125,12 +125,12 @@ class DaoCollection implements IDaoCollection
    *
    * @param \Closure $callback
    *
-   * @return $this
+   * @return array an array containing all the elements returned
    */
   public function each(\Closure $callback)
   {
     $this->_prepareDaos();
-    array_map($callback, $this->_daos);
+    return array_map($callback, $this->_daos);
   }
 
   /**
@@ -199,6 +199,7 @@ class DaoCollection implements IDaoCollection
   /**
    * (PHP 5 &gt;= 5.0.0)<br/>
    * Retrieve an external iterator
+   *
    * @link http://php.net/manual/en/iteratoraggregate.getiterator.php
    * @return Traversable An instance of an object implementing <b>Iterator</b>
    *                     or
@@ -213,6 +214,7 @@ class DaoCollection implements IDaoCollection
   /**
    * (PHP 5 &gt;= 5.0.0)<br/>
    * Whether a offset exists
+   *
    * @link http://php.net/manual/en/arrayaccess.offsetexists.php
    *
    * @param mixed $offset <p>
@@ -233,6 +235,7 @@ class DaoCollection implements IDaoCollection
   /**
    * (PHP 5 &gt;= 5.0.0)<br/>
    * Offset to retrieve
+   *
    * @link http://php.net/manual/en/arrayaccess.offsetget.php
    *
    * @param mixed $offset <p>
@@ -250,6 +253,7 @@ class DaoCollection implements IDaoCollection
   /**
    * (PHP 5 &gt;= 5.0.0)<br/>
    * Offset to set
+   *
    * @link http://php.net/manual/en/arrayaccess.offsetset.php
    *
    * @param mixed $offset <p>
@@ -277,6 +281,7 @@ class DaoCollection implements IDaoCollection
   /**
    * (PHP 5 &gt;= 5.0.0)<br/>
    * Offset to unset
+   *
    * @link http://php.net/manual/en/arrayaccess.offsetunset.php
    *
    * @param mixed $offset <p>
@@ -294,6 +299,7 @@ class DaoCollection implements IDaoCollection
   /**
    * (PHP 5 &gt;= 5.4.0)<br/>
    * Specify data which should be serialized to JSON
+   *
    * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
    * @return mixed data which can be serialized by <b>json_encode</b>,
    * which is a value of any type other than a resource.
@@ -334,6 +340,7 @@ class DaoCollection implements IDaoCollection
   /**
    * (PHP 5 &gt;= 5.1.0)<br/>
    * Count elements of an object
+   *
    * @link http://php.net/manual/en/countable.count.php
    * @return int The custom count as an integer.
    * </p>

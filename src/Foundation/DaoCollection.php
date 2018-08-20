@@ -125,7 +125,7 @@ class DaoCollection implements IDaoCollection
    *
    * @param \Closure $callback
    *
-   * @return $this
+   * @return array an array containing all the elements returned
    */
   public function each(\Closure $callback)
   {

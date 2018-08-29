@@ -264,8 +264,21 @@ class QlDaoCollection extends DaoCollection
   {
     if($this->isEmpty() && !$this->_isLoaded)
     {
-      //Run a sub query if a limit is specified
-      if($this->_query->hasClause('LIMIT'))
+      $useSubQuery = $this->_query->hasClause('LIMIT') || $this->_query->hasClause('GROUP BY');
+      $removeOrderBy = $this->_query->hasClause('LIMIT');
+      $orderByClause = null;
+
+      if($removeOrderBy)
+      {
+        //Remove order by for improved query performance
+        $orderByClause = $this->_query->getClause('ORDER BY');
+        if($orderByClause !== null)
+        {
+          $this->_query->removeClause($orderByClause->getAction());
+        }
+      }
+
+      if($useSubQuery)
       {
         $builder = $this->_getQueryBuilder();
         $aggregateQuery = $builder::select($expression)
@@ -276,13 +289,6 @@ class QlDaoCollection extends DaoCollection
       }
       else
       {
-        //Remove order by for improved query performance
-        $orderByClause = $this->_query->getClause('ORDER BY');
-        if($orderByClause !== null)
-        {
-          $this->_query->removeClause($orderByClause->getAction());
-        }
-
         $originalClause = $this->_query->getClause('SELECT');
         $this->_query->addClause(
           (new SelectClause())->addExpression($expression)
@@ -291,11 +297,11 @@ class QlDaoCollection extends DaoCollection
           Arrays::first($this->_getDataStore()->getData($this->_query))
         );
         $this->_query->addClause($originalClause);
+      }
 
-        if($orderByClause !== null)
-        {
-          $this->_query->addClause($orderByClause);
-        }
+      if($removeOrderBy && $orderByClause !== null)
+      {
+        $this->_query->addClause($orderByClause);
       }
 
       return $result;

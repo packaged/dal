@@ -80,6 +80,21 @@ jobs:
           MYSQL_ALLOW_EMPTY_PASSWORD: yes
           MYSQL_ROOT_HOST: "%"
       - image: memcached:1.4
+  build-php72:
+    <<: *defaults
+    docker:
+      - image: php:7.2-alpine
+        environment:
+          ADD_PACKAGES: "php7-apcu php7-memcached"
+          ADD_MODULES: "mysqli pdo pdo_mysql"
+      - image: cassandra:2.1
+        environment:
+          CASSANDRA_START_RPC: yes
+      - image: circleci/mysql:5.6
+        environment:
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          MYSQL_ROOT_HOST: "%"
+      - image: memcached:1.4
 
 workflows:
   version: 2
@@ -88,3 +103,4 @@ workflows:
       - build-php56
       - build-php70
       - build-php71
+      - build-php72

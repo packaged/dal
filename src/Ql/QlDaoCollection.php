@@ -264,14 +264,6 @@ class QlDaoCollection extends DaoCollection
   {
     if($this->isEmpty() && !$this->_isLoaded)
     {
-      $orderBy = $this->_query->getClause('ORDER BY');
-
-      //Remove order by for improved query performance
-      if($orderBy !== null)
-      {
-        $this->_query->removeClause('ORDER BY');
-      }
-
       //Run a sub query if a limit is specified
       if($this->_query->hasClause('LIMIT'))
       {
@@ -284,6 +276,13 @@ class QlDaoCollection extends DaoCollection
       }
       else
       {
+        //Remove order by for improved query performance
+        $orderByClause = $this->_query->getClause('ORDER BY');
+        if($orderByClause !== null)
+        {
+          $this->_query->removeClause($orderByClause->getAction());
+        }
+
         $originalClause = $this->_query->getClause('SELECT');
         $this->_query->addClause(
           (new SelectClause())->addExpression($expression)
@@ -292,11 +291,11 @@ class QlDaoCollection extends DaoCollection
           Arrays::first($this->_getDataStore()->getData($this->_query))
         );
         $this->_query->addClause($originalClause);
-      }
 
-      if($orderBy !== null)
-      {
-        $this->_query->addClause($orderBy);
+        if($orderByClause !== null)
+        {
+          $this->_query->addClause($orderByClause);
+        }
       }
 
       return $result;

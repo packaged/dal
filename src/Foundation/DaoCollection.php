@@ -12,7 +12,7 @@ class DaoCollection implements IDaoCollection
   /**
    * @var IDao[]
    */
-  protected $_daos;
+  protected $_daos = [];
 
   /**
    * @var IDao

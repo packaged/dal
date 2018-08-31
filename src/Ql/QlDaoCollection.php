@@ -265,7 +265,7 @@ class QlDaoCollection extends DaoCollection
     if($this->isEmpty() && !$this->_isLoaded)
     {
       $useSubQuery = $this->_query->hasClause('LIMIT') || $this->_query->hasClause('GROUP BY');
-      $removeOrderBy = $this->_query->hasClause('LIMIT');
+      $removeOrderBy = !$this->_query->hasClause('LIMIT');
       $orderByClause = null;
 
       if($removeOrderBy)

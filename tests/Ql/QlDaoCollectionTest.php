@@ -7,6 +7,7 @@ use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\Ql\QlDaoCollection;
 use Packaged\Helpers\ValueAs;
 use Packaged\QueryBuilder\Assembler\QueryAssembler;
+use Packaged\QueryBuilder\Clause\GroupByClause;
 use Packaged\QueryBuilder\Clause\LimitClause;
 use Tests\Ql\Mocks\MockQlDao;
 use Tests\Ql\Mocks\MockQlDataStore;
@@ -135,6 +136,22 @@ class QlDaoCollectionTest extends \PHPUnit_Framework_TestCase
     $datastore->getConnection()->runQuery("TRUNCATE " . $u->getTableName());
 
     Dao::unsetDalResolver();
+  }
+
+  public function testGroupedCount()
+  {
+    Dao::setDalResolver(new DalResolver());
+    $datastore = new MockQlDataStore();
+    $connection = new MockPdoConnection();
+    $connection->config();
+    $datastore->setConnection($connection);
+    MockQlDao::getDalResolver()->addDataStore('mockql', $datastore);
+
+    $connection->setResolver(MockQlDao::getDalResolver());
+
+    $group = new GroupByClause();
+    $group->addField('id');
+    $this->assertEquals(0, MockQlDao::collection()->addClause($group)->count());
   }
 
   public function testDynamicTable()

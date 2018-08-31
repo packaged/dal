@@ -11,6 +11,7 @@ use Packaged\QueryBuilder\Builder\Traits\JoinTrait;
 use Packaged\QueryBuilder\Builder\Traits\LimitTrait;
 use Packaged\QueryBuilder\Builder\Traits\OrderByTrait;
 use Packaged\QueryBuilder\Builder\Traits\WhereTrait;
+use Packaged\QueryBuilder\Clause\GroupByClause;
 use Packaged\QueryBuilder\Clause\IClause;
 use Packaged\QueryBuilder\Clause\SelectClause;
 use Packaged\QueryBuilder\SelectExpression\AllSelectExpression;
@@ -278,6 +279,22 @@ class QlDaoCollection extends DaoCollection
         }
       }
 
+      // remove all fields from query that are not in group by
+      $originalClause = $this->_query->getClause('SELECT');
+
+      /** @var GroupByClause $grpClause */
+      $newClause = new SelectClause();
+      $this->_query->addClause($newClause);
+
+      $grpClause = $this->_query->getClause('GROUPBY');
+      if($grpClause)
+      {
+        foreach($grpClause->getFields() as $grpField)
+        {
+          $newClause->addField($grpField->getField());
+        }
+      }
+
       if($useSubQuery)
       {
         $builder = $this->_getQueryBuilder();
@@ -289,15 +306,13 @@ class QlDaoCollection extends DaoCollection
       }
       else
       {
-        $originalClause = $this->_query->getClause('SELECT');
-        $this->_query->addClause(
-          (new SelectClause())->addExpression($expression)
-        );
+        $newClause->addExpression($expression);
         $result = Arrays::first(
           Arrays::first($this->_getDataStore()->getData($this->_query))
         );
-        $this->_query->addClause($originalClause);
       }
+
+      $this->_query->addClause($originalClause);
 
       if($removeOrderBy && $orderByClause !== null)
       {

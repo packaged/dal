@@ -297,6 +297,10 @@ class QlDaoCollection extends DaoCollection
 
       if($useSubQuery)
       {
+        if(!$grpClause)
+        {
+          $newClause->addExpression(AllSelectExpression::create());
+        }
         $builder = $this->_getQueryBuilder();
         $aggregateQuery = $builder::select($expression)
           ->from(SubQuerySelectExpression::create($this->_query, '_'));

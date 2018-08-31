@@ -154,6 +154,20 @@ class QlDaoCollectionTest extends \PHPUnit_Framework_TestCase
     $this->assertEquals(0, MockQlDao::collection()->addClause($group)->count());
   }
 
+  public function testLimitCount()
+  {
+    Dao::setDalResolver(new DalResolver());
+    $datastore = new MockQlDataStore();
+    $connection = new MockPdoConnection();
+    $connection->config();
+    $datastore->setConnection($connection);
+    MockQlDao::getDalResolver()->addDataStore('mockql', $datastore);
+
+    $connection->setResolver(MockQlDao::getDalResolver());
+
+    $this->assertEquals(0, MockQlDao::collection()->limit(10)->count());
+  }
+
   public function testDynamicTable()
   {
     $dao = new MockQlDao();

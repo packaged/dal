@@ -7,6 +7,7 @@ use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\Ql\QlDaoCollection;
 use Packaged\Helpers\ValueAs;
 use Packaged\QueryBuilder\Assembler\QueryAssembler;
+use Packaged\QueryBuilder\Clause\GroupByClause;
 use Packaged\QueryBuilder\Clause\LimitClause;
 use Tests\Ql\Mocks\MockQlDao;
 use Tests\Ql\Mocks\MockQlDataStore;
@@ -135,6 +136,106 @@ class QlDaoCollectionTest extends \PHPUnit_Framework_TestCase
     $datastore->getConnection()->runQuery("TRUNCATE " . $u->getTableName());
 
     Dao::unsetDalResolver();
+  }
+
+  public function testGroupedCount()
+  {
+    Dao::setDalResolver(new DalResolver());
+    $datastore = new MockQlDataStore();
+    $connection = new MockPdoConnection();
+    $connection->config();
+    $datastore->setConnection($connection);
+    MockQlDao::getDalResolver()->addDataStore('mockql', $datastore);
+
+    $connection->setResolver(MockQlDao::getDalResolver());
+
+    $u = new MockQlDao();
+    $datastore->getConnection()
+      ->connect()
+      ->runQuery("TRUNCATE " . $u->getTableName());
+
+    $u = new MockQlDao();
+    $u->boolTest = true;
+    $u->save();
+    $u = new MockQlDao();
+    $u->boolTest = true;
+    $u->save();
+    $u = new MockQlDao();
+    $u->boolTest = false;
+    $u->save();
+
+    $group = new GroupByClause();
+    $group->addField('boolTest');
+    $this->assertEquals(2, MockQlDao::collection()->addClause($group)->count());
+  }
+
+  public function testLimitCount()
+  {
+    Dao::setDalResolver(new DalResolver());
+    $datastore = new MockQlDataStore();
+    $connection = new MockPdoConnection();
+    $connection->config();
+    $datastore->setConnection($connection);
+    MockQlDao::getDalResolver()->addDataStore('mockql', $datastore);
+
+    $connection->setResolver(MockQlDao::getDalResolver());
+
+    $u = new MockQlDao();
+    $datastore->getConnection()
+      ->connect()
+      ->runQuery("TRUNCATE " . $u->getTableName());
+
+    $u = new MockQlDao();
+    $u->boolTest = true;
+    $u->save();
+    $u = new MockQlDao();
+    $u->boolTest = true;
+    $u->save();
+    $u = new MockQlDao();
+    $u->boolTest = false;
+    $u->save();
+
+    $connection->setResolver(MockQlDao::getDalResolver());
+
+    $this->assertEquals(2, MockQlDao::collection()->limit(2)->count());
+  }
+
+  public function testGroupLimitCount()
+  {
+    Dao::setDalResolver(new DalResolver());
+    $datastore = new MockQlDataStore();
+    $connection = new MockPdoConnection();
+    $connection->config();
+    $datastore->setConnection($connection);
+    MockQlDao::getDalResolver()->addDataStore('mockql', $datastore);
+
+    $connection->setResolver(MockQlDao::getDalResolver());
+
+    $u = new MockQlDao();
+    $datastore->getConnection()
+      ->connect()
+      ->runQuery("TRUNCATE " . $u->getTableName());
+
+    $u = new MockQlDao();
+    $u->username = 'user1';
+    $u->save();
+    $u = new MockQlDao();
+    $u->username = 'user2';
+    $u->save();
+    $u = new MockQlDao();
+    $u->username = 'user2';
+    $u->save();
+    $u = new MockQlDao();
+    $u->username = 'user3';
+    $u->save();
+
+    $connection->setResolver(MockQlDao::getDalResolver());
+
+    $this->assertEquals(3, MockQlDao::collection()->limit(3)->count());
+
+    $group = new GroupByClause();
+    $group->addField('username');
+    $this->assertEquals(2, MockQlDao::collection()->addClause($group)->limit(2)->count());
   }
 
   public function testDynamicTable()

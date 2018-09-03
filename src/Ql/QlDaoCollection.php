@@ -17,6 +17,7 @@ use Packaged\QueryBuilder\Clause\SelectClause;
 use Packaged\QueryBuilder\SelectExpression\AllSelectExpression;
 use Packaged\QueryBuilder\SelectExpression\AverageSelectExpression;
 use Packaged\QueryBuilder\SelectExpression\CountSelectExpression;
+use Packaged\QueryBuilder\SelectExpression\FieldSelectExpression;
 use Packaged\QueryBuilder\SelectExpression\ISelectExpression;
 use Packaged\QueryBuilder\SelectExpression\MaxSelectExpression;
 use Packaged\QueryBuilder\SelectExpression\MinSelectExpression;
@@ -299,7 +300,14 @@ class QlDaoCollection extends DaoCollection
       {
         if(!$grpClause)
         {
-          $newClause->addExpression(AllSelectExpression::create());
+          if($expression instanceof FieldSelectExpression && $expression->getField())
+          {
+            $newClause->addExpression(FieldSelectExpression::create($expression->getField()));
+          }
+          else
+          {
+            $newClause->addExpression(AllSelectExpression::create());
+          }
         }
         $builder = $this->_getQueryBuilder();
         $aggregateQuery = $builder::select($expression)

@@ -149,9 +149,24 @@ class QlDaoCollectionTest extends \PHPUnit_Framework_TestCase
 
     $connection->setResolver(MockQlDao::getDalResolver());
 
+    $u = new MockQlDao();
+    $datastore->getConnection()
+      ->connect()
+      ->runQuery("TRUNCATE " . $u->getTableName());
+
+    $u = new MockQlDao();
+    $u->boolTest = true;
+    $u->save();
+    $u = new MockQlDao();
+    $u->boolTest = true;
+    $u->save();
+    $u = new MockQlDao();
+    $u->boolTest = false;
+    $u->save();
+
     $group = new GroupByClause();
-    $group->addField('id');
-    $this->assertEquals(0, MockQlDao::collection()->addClause($group)->count());
+    $group->addField('boolTest');
+    $this->assertEquals(2, MockQlDao::collection()->addClause($group)->count());
   }
 
   public function testLimitCount()
@@ -165,7 +180,62 @@ class QlDaoCollectionTest extends \PHPUnit_Framework_TestCase
 
     $connection->setResolver(MockQlDao::getDalResolver());
 
-    $this->assertEquals(0, MockQlDao::collection()->limit(10)->count());
+    $u = new MockQlDao();
+    $datastore->getConnection()
+      ->connect()
+      ->runQuery("TRUNCATE " . $u->getTableName());
+
+    $u = new MockQlDao();
+    $u->boolTest = true;
+    $u->save();
+    $u = new MockQlDao();
+    $u->boolTest = true;
+    $u->save();
+    $u = new MockQlDao();
+    $u->boolTest = false;
+    $u->save();
+
+    $connection->setResolver(MockQlDao::getDalResolver());
+
+    $this->assertEquals(2, MockQlDao::collection()->limit(2)->count());
+  }
+
+  public function testGroupLimitCount()
+  {
+    Dao::setDalResolver(new DalResolver());
+    $datastore = new MockQlDataStore();
+    $connection = new MockPdoConnection();
+    $connection->config();
+    $datastore->setConnection($connection);
+    MockQlDao::getDalResolver()->addDataStore('mockql', $datastore);
+
+    $connection->setResolver(MockQlDao::getDalResolver());
+
+    $u = new MockQlDao();
+    $datastore->getConnection()
+      ->connect()
+      ->runQuery("TRUNCATE " . $u->getTableName());
+
+    $u = new MockQlDao();
+    $u->username = 'user1';
+    $u->save();
+    $u = new MockQlDao();
+    $u->username = 'user2';
+    $u->save();
+    $u = new MockQlDao();
+    $u->username = 'user2';
+    $u->save();
+    $u = new MockQlDao();
+    $u->username = 'user3';
+    $u->save();
+
+    $connection->setResolver(MockQlDao::getDalResolver());
+
+    $this->assertEquals(3, MockQlDao::collection()->limit(3)->count());
+
+    $group = new GroupByClause();
+    $group->addField('username');
+    $this->assertEquals(2, MockQlDao::collection()->addClause($group)->limit(2)->count());
   }
 
   public function testDynamicTable()

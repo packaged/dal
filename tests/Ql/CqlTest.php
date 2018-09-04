@@ -35,6 +35,10 @@ class CqlTest extends \PHPUnit_Framework_TestCase
   public static function setUpBeforeClass()
   {
     self::$_connection = new CqlConnection();
+    self::$_connection->setConfig('connect_timeout', 10000);
+    self::$_connection->setConfig('receive_timeout', 10000);
+    self::$_connection->setConfig('send_timeout', 10000);
+
     self::$_connection->setResolver(new DalResolver());
     self::$_connection->connect();
     self::$_connection->runQuery(

@@ -257,9 +257,9 @@ class QlDaoCollection extends DaoCollection
     );
   }
 
-  public function count()
+  public function count($property = null, $distinct = false)
   {
-    return (int)$this->_getAggregate(__FUNCTION__, new CountSelectExpression());
+    return (int)$this->_getAggregate(__FUNCTION__, CountSelectExpression::create($property)->setDistinct($distinct));
   }
 
   protected function _getAggregate($method, ISelectExpression $expression)

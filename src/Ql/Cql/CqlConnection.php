@@ -165,7 +165,7 @@ class CqlConnection
           $keyspace = $this->_config()->getItem('keyspace');
           if($keyspace)
           {
-            $this->_setKeyspace($keyspace, !$this->_socket->isPersistent());
+            $this->_setKeyspace($keyspace, !$this->_isPersistent());
           }
         }
         catch(TException $e)
@@ -232,6 +232,12 @@ class CqlConnection
    */
   public function disconnect()
   {
+    $keyspaceCacheKey = $this->_getKeyspaceCacheKey();
+    if($keyspaceCacheKey && !$this->_isPersistent())
+    {
+      $this->_getKeyspaceCache()->deleteKey($keyspaceCacheKey);
+    }
+
     $this->_client = null;
     if($this->_transport instanceof TTransport)
     {
@@ -239,13 +245,9 @@ class CqlConnection
     }
     $this->_transport = null;
     $this->_protocol = null;
+    $this->_socket = null;
     $this->_prepareCache = [];
     $this->_connected = false;
-    $keyspaceCacheKey = $this->_getKeyspaceCacheKey();
-    if($keyspaceCacheKey)
-    {
-      $this->_getKeyspaceCache()->deleteKey($keyspaceCacheKey);
-    }
     return $this;
   }
 

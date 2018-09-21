@@ -51,7 +51,6 @@ class CqlConnection
   /**
    * @var TFramedTransport
    */
-
   protected $_transport;
   /**
    * @var TBinaryProtocolAccelerated
@@ -233,7 +232,7 @@ class CqlConnection
   public function disconnect()
   {
     $keyspaceCacheKey = $this->_getKeyspaceCacheKey();
-    if($keyspaceCacheKey && !$this->_isPersistent())
+    if($keyspaceCacheKey)
     {
       $this->_getKeyspaceCache()->deleteKey($keyspaceCacheKey);
     }
@@ -544,6 +543,9 @@ class CqlConnection
         }
 
         return $return;
+      },
+      function () {
+        $this->disconnect();
       }
     );
   }

@@ -15,15 +15,23 @@ class EphemeralConnection extends AbstractCacheConnection
    * Open the connection
    *
    * @return static
-   *
-   * @throws ConnectionException
    */
   public function connect()
   {
-    $this->_pool = $this->_config()->getItem('pool_name', 'misc');
-    if(!isset(self::$cachePool[$this->_pool]))
+    if(!$this->isConnected())
     {
-      self::$cachePool[$this->_pool] = [];
+      try
+      {
+        $this->_pool = $this->_config()->getItem('pool_name', 'misc');
+      }
+      catch(\Exception $e)
+      {
+        $this->_pool = 'misc';
+      }
+      if(!isset(self::$cachePool[$this->_pool]))
+      {
+        self::$cachePool[$this->_pool] = [];
+      }
     }
     return $this;
   }
@@ -60,6 +68,7 @@ class EphemeralConnection extends AbstractCacheConnection
    */
   public function deleteKey($key)
   {
+    $this->connect();
     unset(self::$cachePool[$this->_pool][$key]);
     return true;
   }
@@ -80,6 +89,7 @@ class EphemeralConnection extends AbstractCacheConnection
    */
   public function getItem($key)
   {
+    $this->connect();
     $item = new CacheItem($key);
     if(isset(self::$cachePool[$this->_pool][$key]))
     {
@@ -100,6 +110,7 @@ class EphemeralConnection extends AbstractCacheConnection
    */
   public function clear()
   {
+    $this->connect();
     self::$cachePool[$this->_pool] = [];
     return true;
   }
@@ -114,6 +125,7 @@ class EphemeralConnection extends AbstractCacheConnection
    */
   public function saveItem(ICacheItem $item, $ttl = null)
   {
+    $this->connect();
     self::$cachePool[$this->_pool][$item->getKey()] = $item->get();
     return true;
   }

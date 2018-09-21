@@ -51,7 +51,6 @@ class CqlConnection
   /**
    * @var TFramedTransport
    */
-
   protected $_transport;
   /**
    * @var TBinaryProtocolAccelerated
@@ -72,21 +71,13 @@ class CqlConnection
   /**
    * @var ICacheConnection
    */
-  protected static $_keyspaceCache;
+  private static $_keyspaceCache;
+  private $_keyspaceCacheLocal;
 
   public function setStrictRecoverable($flag)
   {
     $this->_strictRecoverable = (bool)$flag;
     return $this;
-  }
-
-  public function __construct()
-  {
-    $config = new ConfigSection(
-      'cql_keyspace', ['pool_name' => 'cql_keyspace']
-    );
-    self::$_keyspaceCache = new EphemeralConnection();
-    self::$_keyspaceCache->configure($config);
   }
 
   /**
@@ -134,7 +125,7 @@ class CqlConnection
           $this->_socket = new DalSocket(
             $host,
             (int)$this->_config()->getItem('port', 9160),
-            ValueAs::bool($this->_config()->getItem('persist', false))
+            $this->_isPersistent()
           );
           $this->_socket->setConnectTimeout(
             (int)$this->_config()->getItem('connect_timeout', 1000)
@@ -173,7 +164,7 @@ class CqlConnection
           $keyspace = $this->_config()->getItem('keyspace');
           if($keyspace)
           {
-            $this->_setKeyspace($keyspace, !$this->_socket->isPersistent());
+            $this->_setKeyspace($keyspace, !$this->_isPersistent());
           }
         }
         catch(TException $e)
@@ -211,11 +202,6 @@ class CqlConnection
     return $this;
   }
 
-  public function setKeyspaceCache(ICacheConnection $cache)
-  {
-    self::$_keyspaceCache = $cache;
-  }
-
   /**
    * @return string|bool
    */
@@ -245,6 +231,12 @@ class CqlConnection
    */
   public function disconnect()
   {
+    $keyspaceCacheKey = $this->_getKeyspaceCacheKey();
+    if($keyspaceCacheKey)
+    {
+      $this->_getKeyspaceCache()->deleteKey($keyspaceCacheKey);
+    }
+
     $this->_client = null;
     if($this->_transport instanceof TTransport)
     {
@@ -252,14 +244,62 @@ class CqlConnection
     }
     $this->_transport = null;
     $this->_protocol = null;
+    $this->_socket = null;
     $this->_prepareCache = [];
     $this->_connected = false;
-    $keyspaceCacheKey = $this->_getKeyspaceCacheKey();
-    if($keyspaceCacheKey)
-    {
-      self::$_keyspaceCache->deleteKey($keyspaceCacheKey);
-    }
     return $this;
+  }
+
+  /**
+   * @return bool
+   */
+  private function _isPersistent()
+  {
+    try
+    {
+      return ValueAs::bool($this->_config()->getItem('persist', false));
+    }
+    catch(\Exception $e)
+    {
+      return false;
+    }
+  }
+
+  public function setKeyspaceCache(ICacheConnection $cache)
+  {
+    if($this->_isPersistent())
+    {
+      self::$_keyspaceCache = $cache;
+    }
+    else
+    {
+      $this->_keyspaceCacheLocal = $cache;
+    }
+  }
+
+  /**
+   * @return ICacheConnection
+   */
+  private function _getKeyspaceCache()
+  {
+    if($this->_isPersistent())
+    {
+      if(!self::$_keyspaceCache)
+      {
+        self::$_keyspaceCache = new EphemeralConnection();
+        self::$_keyspaceCache->configure(new ConfigSection('cql_keyspace', ['pool_name' => 'cql_keyspace']));
+      }
+      return self::$_keyspaceCache;
+    }
+    else
+    {
+      if(!$this->_keyspaceCacheLocal)
+      {
+        $this->_keyspaceCacheLocal = new EphemeralConnection();
+        $this->_keyspaceCacheLocal->configure(new ConfigSection('cql_keyspace', ['pool_name' => 'cql_keyspace']));
+      }
+      return $this->_keyspaceCacheLocal;
+    }
   }
 
   /**
@@ -274,13 +314,14 @@ class CqlConnection
     {
       try
       {
+        $cacheStore = $this->_getKeyspaceCache();
         $cacheKey = $this->_getKeyspaceCacheKey();
         /** @var CacheItem $cacheItem */
-        $cacheItem = self::$_keyspaceCache->getItem($cacheKey);
+        $cacheItem = $cacheStore->getItem($cacheKey);
         if($force || $cacheItem->get() !== $keyspace)
         {
           $this->_client->set_keyspace($keyspace);
-          self::$_keyspaceCache->saveItem($cacheItem->hydrate($keyspace));
+          $cacheStore->saveItem($cacheItem->hydrate($keyspace));
         }
       }
       catch(\Exception $e)
@@ -464,8 +505,7 @@ class CqlConnection
     }
     return RetryHelper::retry(
       $retries,
-      function () use ($query, $consistency)
-      {
+      function () use ($query, $consistency) {
         $this->connect()->_setKeyspace($this->_config()->getItem('keyspace'));
         $result = $this->_client->execute_cql3_query(
           $query,
@@ -503,6 +543,9 @@ class CqlConnection
         }
 
         return $return;
+      },
+      function () {
+        $this->disconnect();
       }
     );
   }

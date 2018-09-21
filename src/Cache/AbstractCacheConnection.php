@@ -72,15 +72,6 @@ abstract class AbstractCacheConnection
   }
 
   /**
-   * Delete a key from the cache pool
-   *
-   * @param $key
-   *
-   * @return bool
-   */
-  abstract public function deleteKey($key);
-
-  /**
    * Save multiple items
    *
    * @param array $items

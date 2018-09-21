@@ -63,6 +63,15 @@ interface ICacheConnection extends IDataConnection
   public function deleteItem(ICacheItem $key);
 
   /**
+   * Delete a key from the cache pool
+   *
+   * @param $key
+   *
+   * @return bool
+   */
+  public function deleteKey($key);
+
+  /**
    * Save multiple items
    *
    * @param array $items

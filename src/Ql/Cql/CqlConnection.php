@@ -546,6 +546,7 @@ class CqlConnection
       },
       function () {
         $this->disconnect();
+        return true;
       }
     );
   }

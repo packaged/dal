@@ -12,6 +12,17 @@ use Tests\Ql\Mocks\PDO\MockPdoConnection;
 
 class QlDaoTest extends \PHPUnit_Framework_TestCase
 {
+  protected function setUp()
+  {
+    $resolver = new DalResolver();
+    $resolver->boot();
+
+    $connection = new MockPdoConnection();
+    $connection->config();
+    $connection->setResolver($resolver);
+    $connection->runQuery('TRUNCATE TABLE `mock_ql_daos`');
+  }
+
   public function testStatics()
   {
     $datastore = new MockQlDataStore();

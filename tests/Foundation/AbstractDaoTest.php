@@ -1,5 +1,5 @@
 <?php
-namespace Foundation;
+namespace Tests\Foundation;
 
 use Packaged\Config\ConfigProviderInterface;
 use Packaged\Dal\DalResolver;

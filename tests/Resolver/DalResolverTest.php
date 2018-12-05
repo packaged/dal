@@ -1,8 +1,16 @@
 <?php
 
+namespace Tests\Resolver;
+
+use Packaged\Config\Provider\ConfigProvider;
+use Packaged\Config\Provider\ConfigSection;
+use Packaged\Config\Provider\Ini\IniConfigProvider;
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Exceptions\DalException;
 use Packaged\Helpers\Path;
+use PHPUnit_Framework_TestCase;
+use Tests\Connection\ConfigurableConnection;
+use Tests\DataStore\ConfigurableDataStore;
 
 class ConnectionResolverTest extends PHPUnit_Framework_TestCase
 {
@@ -11,14 +19,14 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
     $this->setExpectedException(
       '\Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException'
     );
-    $resolver = new \Packaged\Dal\DalResolver();
+    $resolver = new DalResolver();
     $resolver->getConnection('test');
   }
 
   public function testSetAndGetConnection()
   {
     $interface = '\Packaged\Dal\IDataConnection';
-    $resolver = new \Packaged\Dal\DalResolver();
+    $resolver = new DalResolver();
     $resolver->addConnection('test', $this->getMock($interface));
     $this->assertInstanceOf($interface, $resolver->getConnection('test'));
   }
@@ -28,26 +36,25 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
     $this->setExpectedException(
       '\Packaged\Dal\Exceptions\DalResolver\DataStoreNotFoundException'
     );
-    $resolver = new \Packaged\Dal\DalResolver();
+    $resolver = new DalResolver();
     $resolver->getDataStore('test');
   }
 
   public function testSetAndGetDataStore()
   {
     $interface = '\Packaged\Dal\IDataStore';
-    $resolver = new \Packaged\Dal\DalResolver();
+    $resolver = new DalResolver();
     $resolver->addDataStore('test', $this->getMock($interface));
     $this->assertInstanceOf($interface, $resolver->getDataStore('test'));
   }
 
   public function testCallable()
   {
-    $resolver = new \Packaged\Dal\DalResolver();
+    $resolver = new DalResolver();
 
     $resolver->addConnectionCallable(
       'test',
-      function ()
-      {
+      function () {
         return $this->getMock('\Packaged\Dal\IDataConnection');
       }
     );
@@ -63,8 +70,7 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
 
     $resolver->addDataStoreCallable(
       'test',
-      function ()
-      {
+      function () {
         return $this->getMock('\Packaged\Dal\IDataStore');
       }
     );
@@ -84,11 +90,10 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
     $this->setExpectedException(
       '\Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException'
     );
-    $resolver = new \Packaged\Dal\DalResolver();
+    $resolver = new DalResolver();
     $resolver->addConnectionCallable(
       'test',
-      function ()
-      {
+      function () {
         return 'broken';
       }
     );
@@ -100,11 +105,10 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
     $this->setExpectedException(
       '\Packaged\Dal\Exceptions\DalResolver\DataStoreNotFoundException'
     );
-    $resolver = new \Packaged\Dal\DalResolver();
+    $resolver = new DalResolver();
     $resolver->addDataStoreCallable(
       'test',
-      function ()
-      {
+      function () {
         return 'broken';
       }
     );
@@ -113,16 +117,13 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
 
   public function testConfigurations()
   {
-    $connectionConfig = new \Packaged\Config\Provider\Ini\IniConfigProvider(
-      Path::build(__DIR__, 'resources', 'connections.ini')
+    $connectionConfig = new IniConfigProvider(
+      Path::build(__DIR__, '../resources', 'connections.ini')
     );
-    $datastoreConfig = new \Packaged\Config\Provider\Ini\IniConfigProvider(
-      Path::build(__DIR__, 'resources', 'datastores.ini')
+    $datastoreConfig = new IniConfigProvider(
+      Path::build(__DIR__, '../resources', 'datastores.ini')
     );
-    $resolver = new \Packaged\Dal\DalResolver(
-      $connectionConfig,
-      $datastoreConfig
-    );
+    $resolver = new DalResolver($connectionConfig, $datastoreConfig);
 
     $this->assertFalse($resolver->hasConnection('conX'));
     $this->assertTrue($resolver->hasConnection('con1'));
@@ -149,11 +150,11 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
 
   public function testAddConnectionConfig()
   {
-    $config = new \Packaged\Config\Provider\ConfigSection('connection_test');
+    $config = new ConfigSection('connection_test');
     $config->addItem('construct_class', ConfigurableConnection::class);
     $config->addItem('host', '127.0.0.1');
 
-    $resolver = new \Packaged\Dal\DalResolver();
+    $resolver = new DalResolver();
     $this->assertNull($resolver->getConnectionConfig('invalid_connection'));
 
     $resolver->addConnectionConfig($config);
@@ -173,12 +174,12 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
 
   public function testAddDataStoreConfig()
   {
-    $config = new \Packaged\Config\Provider\ConfigSection('datastore_test');
+    $config = new ConfigSection('datastore_test');
     $config->addItem('construct_class', ConfigurableDataStore::class);
     $unique = uniqid();
     $config->addItem('unique', $unique);
 
-    $resolver = new \Packaged\Dal\DalResolver();
+    $resolver = new DalResolver();
     $this->assertNull($resolver->getDataStoreConfig('invalid_datastore'));
 
     $resolver->addDataStoreConfig($config);
@@ -188,7 +189,7 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
       $resolver->getDataStoreConfig('datastore_test')
     );
 
-    $config2 = new \Packaged\Config\Provider\ConfigSection('datastore_test');
+    $config2 = new ConfigSection('datastore_test');
     $config2->addItem('construct_class', ConfigurableDataStore::class);
     $unique = uniqid();
     $config2->addItem('unique', $unique);
@@ -242,11 +243,9 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
 
   public function testSlowQueries()
   {
-    $config = new \Packaged\Config\Provider\ConfigProvider();
+    $config = new ConfigProvider();
     $config->addSection(
-      new \Packaged\Config\Provider\ConfigSection(
-        "log", ["slow_queries" => 400]
-      )
+      new ConfigSection("log", ["slow_queries" => 400])
     );
     $dal = new DalResolver(null, null, $config);
     $this->assertFalse($dal->isCollectingPerformanceMetrics());
@@ -271,117 +270,5 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
     $perfData = reset($perfData);
     $this->assertEquals('test', $perfData['c']);
     $this->assertEquals('SLEEP', $perfData['q']);
-  }
-}
-
-class ConfigurableConnection
-  implements \Packaged\Dal\IDataConnection,
-             \Packaged\Config\ConfigurableInterface
-{
-  use \Packaged\Config\ConfigurableTrait;
-
-  public static function create()
-  {
-    return new static();
-  }
-
-  public function getConfig()
-  {
-    return $this->_config();
-  }
-
-  /**
-   * Open the connection
-   *
-   * @return static
-   *
-   * @throws \Packaged\Dal\Exceptions\Connection\ConnectionException
-   */
-  public function connect()
-  {
-    return $this;
-  }
-
-  /**
-   * Check to see if the connection is already open
-   *
-   * @return bool
-   */
-  public function isConnected()
-  {
-    return true;
-  }
-
-  /**
-   * Disconnect the open connection
-   *
-   * @return static
-   *
-   * @throws \Packaged\Dal\Exceptions\Connection\ConnectionException
-   */
-  public function disconnect()
-  {
-    return $this;
-  }
-}
-
-class ConfigurableDataStore implements \Packaged\Dal\IDataStore,
-                                       \Packaged\Config\ConfigurableInterface
-{
-  use \Packaged\Config\ConfigurableTrait;
-
-  public function getConfig()
-  {
-    return $this->_config();
-  }
-
-  /**
-   * Save a DAO to the data store
-   *
-   * @param \Packaged\Dal\IDao $dao
-   *
-   * @return array of changed properties
-   *
-   * @throws \Packaged\Dal\Exceptions\DataStore\DataStoreException
-   */
-  public function save(\Packaged\Dal\IDao $dao)
-  {
-  }
-
-  /**
-   * Hydrate a DAO from the data store
-   *
-   * @param \Packaged\Dal\IDao $dao
-   *
-   * @return \Packaged\Dal\IDao Loaded DAO
-   *
-   * @throws \Packaged\Dal\Exceptions\DataStore\DaoNotFoundException
-   */
-  public function load(\Packaged\Dal\IDao $dao)
-  {
-  }
-
-  /**
-   * Delete the DAO from the data store
-   *
-   * @param \Packaged\Dal\IDao $dao
-   *
-   * @return \Packaged\Dal\IDao
-   *
-   * @throws \Packaged\Dal\Exceptions\DataStore\DataStoreException
-   */
-  public function delete(\Packaged\Dal\IDao $dao)
-  {
-  }
-
-  /**
-   * Does the object exist in the data store
-   *
-   * @param \Packaged\Dal\IDao $dao
-   *
-   * @return bool
-   */
-  public function exists(\Packaged\Dal\IDao $dao)
-  {
   }
 }

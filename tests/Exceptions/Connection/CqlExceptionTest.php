@@ -1,5 +1,5 @@
 <?php
-namespace Exceptions\Connection;
+namespace Tests\Exceptions\Connection;
 
 use cassandra\AuthenticationException;
 use cassandra\AuthorizationException;

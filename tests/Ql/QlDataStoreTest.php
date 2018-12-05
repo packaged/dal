@@ -188,17 +188,19 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
    * @throws ConnectionNotFoundException
    * @throws ConnectionException
    */
-  public function testDeleteNewFailure()
+  public function testDeleteNewSuccess()
   {
-    $this->setExpectedException(DataStoreException::class, 'Cannot delete object.  ID property has changed.');
-
     $datastore = new MockQlDataStore();
     $connection = new MockAbstractQlDataConnection();
     $datastore->setConnection($connection);
 
     $dao = new MockQlDao();
-    $dao->id = 3;
-    $datastore->delete($dao);
+    $dao->display = 'test';
+    $datastore->save($dao);
+
+    $delDao = new MockQlDao();
+    $delDao->id = $dao->id;
+    $datastore->delete($delDao);
   }
 
   /**

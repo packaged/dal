@@ -95,6 +95,11 @@ interface IDao extends \JsonSerializable
   public function getId($forceArray = false);
 
   /**
+   * @return bool
+   */
+  public function isDaoLoaded();
+
+  /**
    * Get the data store for this dao
    *
    * @return IDataStore

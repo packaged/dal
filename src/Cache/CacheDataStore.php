@@ -60,19 +60,15 @@ class CacheDataStore extends AbstractDataStore implements ConfigurableInterface
   }
 
   /**
-   * Delete the DAO from the data store
-   *
    * @param IDao $dao
    *
-   * @return IDao
-   *
+   * @throws ConnectionNotFoundException
    * @throws DataStoreException
    */
-  public function delete(IDao $dao)
+  protected function _doDelete(IDao $dao)
   {
     $dao = $this->_verifyDao($dao);
     $this->_connectedConnection()->deleteItem(CacheItem::fromDao($dao));
-    return $dao;
   }
 
   /**

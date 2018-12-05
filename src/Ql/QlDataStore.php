@@ -226,9 +226,22 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
    * @return IDao
    *
    * @throws DataStoreException
+   * @throws ConnectionNotFoundException
    */
   public function delete(IDao $dao)
   {
+    $changes = $dao->getDaoChanges();
+    if($changes)
+    {
+      foreach($dao->getDaoIDProperties() as $idKey)
+      {
+        if(array_key_exists($idKey, $changes))
+        {
+          throw new DataStoreException("Cannot delete object.  ID property has changed.");
+        }
+      }
+    }
+
     $dao = $this->_verifyDao($dao);
     $qb = static::_getQueryBuilderClass();
 

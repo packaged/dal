@@ -12,6 +12,17 @@ use Tests\Ql\Mocks\PDO\MockPdoConnection;
 
 class QlDaoTest extends \PHPUnit_Framework_TestCase
 {
+  protected function setUp()
+  {
+    $resolver = new DalResolver();
+    $resolver->boot();
+
+    $connection = new MockPdoConnection();
+    $connection->config();
+    $connection->setResolver($resolver);
+    $connection->runQuery('TRUNCATE TABLE `mock_ql_daos`');
+  }
+
   public function testStatics()
   {
     $datastore = new MockQlDataStore();
@@ -144,9 +155,37 @@ class QlDaoTest extends \PHPUnit_Framework_TestCase
     $mock->getDataStore();
   }
 
-  protected function tearDown()
+  public function testChangeKey()
   {
-    Dao::unsetDalResolver();
-    parent::tearDown();
+    $datastore = new MockQlDataStore();
+    $connection = new MockPdoConnection();
+    $connection->config();
+    $datastore->setConnection($connection);
+
+    $resolver = new DalResolver();
+    $resolver->boot();
+    $resolver->addDataStore('mockql', $datastore);
+
+    $connection->setResolver($resolver);
+
+    $dao = new MockQlDao();
+    $dao->username = 'Test One';
+    $dao->display = 'Test One';
+    $dao->save();
+
+    $oldId = $dao->id;
+
+    $dao->id = 999;
+    $dao->save();
+
+    $this->assertEquals(999, $dao->id);
+
+    $loadDao = MockQlDao::loadOneWhere(['id' => 999]);
+    $this->assertInstanceOf(MockQlDao::class, $loadDao);
+    $this->assertEquals(999, $loadDao->id);
+
+    // check old id gone
+    $missingDao = MockQlDao::loadOneWhere(['id' => $oldId]);
+    $this->assertNull($missingDao);
   }
 }

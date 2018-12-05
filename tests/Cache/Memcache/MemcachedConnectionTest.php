@@ -1,5 +1,5 @@
 <?php
-namespace Cache\Memcache;
+namespace Tests\Cache\Memcache;
 
 use Packaged\Config\Provider\ConfigSection;
 use Packaged\Dal\Cache\CacheItem;

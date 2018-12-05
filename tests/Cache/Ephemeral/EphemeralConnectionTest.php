@@ -1,5 +1,5 @@
 <?php
-namespace Cache\Ephemeral;
+namespace Tests\Cache\Ephemeral;
 
 use Packaged\Config\Provider\ConfigSection;
 use Packaged\Dal\Cache\CacheItem;

@@ -4,6 +4,7 @@ namespace Packaged\Dal\Ql;
 use Packaged\Config\ConfigurableInterface;
 use Packaged\Config\ConfigurableTrait;
 use Packaged\Dal\DataTypes\Counter;
+use Packaged\Dal\Exceptions\Connection\ConnectionException;
 use Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException;
 use Packaged\Dal\Exceptions\DataStore\DaoNotFoundException;
 use Packaged\Dal\Exceptions\DataStore\DataStoreException;
@@ -41,6 +42,8 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
    * @return array of changed properties
    *
    * @throws DataStoreException
+   * @throws ConnectionNotFoundException
+   * @throws ConnectionException
    */
   public function save(IDao $dao)
   {
@@ -113,7 +116,7 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
       }
       $qb = static::_getQueryBuilderClass();
       $statement = $qb::update($dao->getTableName(), $data)
-        ->where($dao->getId(true));
+        ->where($dao->getLoadedDaoId());
     }
     else
     {
@@ -182,8 +185,11 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
    *
    * @return IDao Loaded DAO
    *
-   * @throws DaoNotFoundException
    * @throws DataStoreException
+   * @throws ConnectionNotFoundException
+   * @throws TooManyResultsException
+   * @throws DaoNotFoundException
+   * @throws ConnectionException
    */
   public function load(IDao $dao)
   {
@@ -226,8 +232,10 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
    * @return IDao
    *
    * @throws DataStoreException
+   * @throws ConnectionNotFoundException
+   * @throws ConnectionException
    */
-  public function delete(IDao $dao)
+  protected function _doDelete(IDao $dao)
   {
     $dao = $this->_verifyDao($dao);
     $qb = static::_getQueryBuilderClass();
@@ -263,6 +271,9 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
    * @param IDao $dao
    *
    * @return bool
+   * @throws ConnectionNotFoundException
+   * @throws DataStoreException
+   * @throws ConnectionException
    */
   public function exists(IDao $dao)
   {
@@ -304,6 +315,13 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
     );
   }
 
+  /**
+   * @param IStatement $statement
+   *
+   * @return array
+   * @throws ConnectionNotFoundException
+   * @throws ConnectionException
+   */
   public function getData(IStatement $statement)
   {
     $assembler = $this->_assemble($statement);
@@ -314,6 +332,13 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
     return $results;
   }
 
+  /**
+   * @param IStatement $statement
+   *
+   * @return int
+   * @throws ConnectionNotFoundException
+   * @throws ConnectionException
+   */
   public function execute(IStatement $statement)
   {
     $assembler = $this->_assemble($statement);
@@ -333,7 +358,8 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
    * Get the connection, and connect if not connected
    *
    * @return IQlDataConnection
-   * @throws \Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException
+   * @throws ConnectionNotFoundException
+   * @throws ConnectionException
    */
   protected function _connectedConnection()
   {

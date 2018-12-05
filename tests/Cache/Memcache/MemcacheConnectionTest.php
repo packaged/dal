@@ -1,5 +1,5 @@
 <?php
-namespace Cache\Memcache;
+namespace Tests\Cache\Memcache;
 
 use Packaged\Dal\Cache\CacheItem;
 use Packaged\Dal\Cache\Memcache\MemcacheConnection;

@@ -1,5 +1,5 @@
 <?php
-namespace Foundation;
+namespace Tests\Foundation;
 
 use Packaged\Dal\Foundation\DaoCollection;
 use Packaged\Helpers\ValueAs;

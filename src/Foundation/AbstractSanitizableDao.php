@@ -551,21 +551,30 @@ abstract class AbstractSanitizableDao extends AbstractDao
     $id = [];
     foreach($this->getDaoIDProperties() as $property)
     {
+      $value = $this->getDaoProperty($property);
       if($serialized)
       {
-        $id[$property] = $this->getPropertySerialized(
-          $property,
-          $this->getDaoProperty($property)
-        );
+        $id[$property] = $this->getPropertySerialized($property, $value);
       }
       else
       {
-        $id[$property] = $this->getDaoProperty($property);
+        $id[$property] = $value;
       }
     }
     if(!$forceArray && count($id) === 1)
     {
       return reset($id);
+    }
+    return $id;
+  }
+
+  public function getLoadedDaoId()
+  {
+    $id = [];
+    foreach($this->getDaoIDProperties() as $property)
+    {
+      $value = isset($this->_savedData[$property]) ? $this->_savedData[$property] : null;
+      $id[$property] = $value;
     }
     return $id;
   }

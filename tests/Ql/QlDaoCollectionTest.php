@@ -1,7 +1,6 @@
 <?php
 namespace Tests\Ql;
 
-use Foundation\MockAbstractDao;
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\Ql\QlDaoCollection;
@@ -9,6 +8,7 @@ use Packaged\Helpers\ValueAs;
 use Packaged\QueryBuilder\Assembler\QueryAssembler;
 use Packaged\QueryBuilder\Clause\GroupByClause;
 use Packaged\QueryBuilder\Clause\LimitClause;
+use Tests\Foundation\MockAbstractDao;
 use Tests\Ql\Mocks\MockQlDao;
 use Tests\Ql\Mocks\MockQlDataStore;
 use Tests\Ql\Mocks\PDO\MockPdoConnection;

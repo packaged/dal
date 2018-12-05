@@ -47,7 +47,7 @@ class FileSystemDataStore extends AbstractDataStore
       $dao->hydrateDao(
         [
           'content'  => $dao->content,
-          'filesize' => mb_strlen($dao->content)
+          'filesize' => mb_strlen($dao->content),
         ],
         true
       );
@@ -63,20 +63,10 @@ class FileSystemDataStore extends AbstractDataStore
     return $dao;
   }
 
-  /**
-   * Delete a file from the filesystem
-   *
-   * @param IDao $dao
-   *
-   * @return FileSystemDao
-   *
-   * @throws DataStoreException
-   */
-  public function delete(IDao $dao)
+  protected function _doDelete(IDao $dao)
   {
     $dao = $this->_verifyDao($dao);
     unlink($dao->filepath);
-    return $dao;
   }
 
   /**

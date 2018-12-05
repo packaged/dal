@@ -3,9 +3,11 @@ namespace Tests\Ql;
 
 use Packaged\Config\Provider\ConfigSection;
 use Packaged\Dal\DalResolver;
+use Packaged\Dal\Exceptions\Connection\ConnectionException;
 use Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException;
 use Packaged\Dal\Exceptions\DataStore\DaoNotFoundException;
 use Packaged\Dal\Exceptions\DataStore\DataStoreException;
+use Packaged\Dal\Exceptions\DataStore\TooManyResultsException;
 use Packaged\Dal\Foundation\AbstractDao;
 use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\Ql\PdoConnection;
@@ -20,14 +22,24 @@ use Tests\Ql\Mocks\MockQlDataStore;
 
 class QlDataStoreTest extends \PHPUnit_Framework_TestCase
 {
+  /**
+   * @throws ConnectionException
+   * @throws ConnectionNotFoundException
+   * @throws DaoNotFoundException
+   * @throws DataStoreException
+   * @throws TooManyResultsException
+   */
   public function testInvalidDao()
   {
     $this->setExpectedException(DataStoreException::class);
     $dao = $this->getMockForAbstractClass(AbstractDao::class);
-    $fs = new MockQlDataStore();
-    $fs->load($dao);
+    $datastore = new MockQlDataStore();
+    $datastore->load($dao);
   }
 
+  /**
+   * @throws ConnectionNotFoundException
+   */
   public function testGetConnection()
   {
     $resolver = new DalResolver();
@@ -50,6 +62,9 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     Dao::unsetDalResolver();
   }
 
+  /**
+   * @throws ConnectionNotFoundException
+   */
   public function testUnconfiguredGetConnection()
   {
     $datastore = new QlDataStore();
@@ -57,6 +72,13 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     $datastore->getConnection();
   }
 
+  /**
+   * @throws ConnectionException
+   * @throws ConnectionNotFoundException
+   * @throws DaoNotFoundException
+   * @throws DataStoreException
+   * @throws TooManyResultsException
+   */
   public function testLoad()
   {
     $datastore = new MockQlDataStore();
@@ -90,6 +112,13 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     );
   }
 
+  /**
+   * @throws ConnectionException
+   * @throws ConnectionNotFoundException
+   * @throws DaoNotFoundException
+   * @throws DataStoreException
+   * @throws TooManyResultsException
+   */
   public function testLoadNone()
   {
     $datastore = new MockQlDataStore();
@@ -109,6 +138,13 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     $datastore->load($dao);
   }
 
+  /**
+   * @throws ConnectionException
+   * @throws ConnectionNotFoundException
+   * @throws DaoNotFoundException
+   * @throws DataStoreException
+   * @throws TooManyResultsException
+   */
   public function testLoadTooMany()
   {
     $datastore = new MockQlDataStore();
@@ -128,6 +164,8 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
 
   /**
    * @throws DataStoreException
+   * @throws ConnectionNotFoundException
+   * @throws ConnectionException
    */
   public function testDeleteUnsavedFailure()
   {
@@ -148,6 +186,7 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
   /**
    * @throws DataStoreException
    * @throws ConnectionNotFoundException
+   * @throws ConnectionException
    */
   public function testDeleteNewFailure()
   {
@@ -162,6 +201,11 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     $datastore->delete($dao);
   }
 
+  /**
+   * @throws ConnectionException
+   * @throws ConnectionNotFoundException
+   * @throws DataStoreException
+   */
   public function testDelete()
   {
     $datastore = new MockQlDataStore();
@@ -194,6 +238,11 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     );
   }
 
+  /**
+   * @throws ConnectionException
+   * @throws ConnectionNotFoundException
+   * @throws DataStoreException
+   */
   public function testDeleteNone()
   {
     $datastore = new MockQlDataStore();
@@ -216,6 +265,11 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     $this->assertEquals([3], $connection->getExecutedQueryValues());
   }
 
+  /**
+   * @throws ConnectionException
+   * @throws ConnectionNotFoundException
+   * @throws DataStoreException
+   */
   public function testDeleteTooMany()
   {
     $datastore = new MockQlDataStore();
@@ -236,6 +290,13 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     );
   }
 
+  /**
+   * @throws ConnectionException
+   * @throws ConnectionNotFoundException
+   * @throws DaoNotFoundException
+   * @throws DataStoreException
+   * @throws TooManyResultsException
+   */
   public function testSave()
   {
     $datastore = new MockQlDataStore();
@@ -290,6 +351,10 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     );
   }
 
+  /**
+   * @throws ConnectionException
+   * @throws ConnectionNotFoundException
+   */
   public function testGetData()
   {
     $dao = new MockQlDao();
@@ -303,6 +368,11 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     );
   }
 
+  /**
+   * @throws ConnectionException
+   * @throws ConnectionNotFoundException
+   * @throws DataStoreException
+   */
   public function testExecute()
   {
     $datastore = new MockQlDataStore();

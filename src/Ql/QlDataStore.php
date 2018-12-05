@@ -116,7 +116,7 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
       }
       $qb = static::_getQueryBuilderClass();
       $statement = $qb::update($dao->getTableName(), $data)
-        ->where($dao->getId(true));
+        ->where($dao->getLoadedDaoId());
     }
     else
     {

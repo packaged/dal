@@ -92,7 +92,7 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
         return $value !== null;
       }
     );
-    return !empty($ids);
+    return count($ids) === count($dao->getDaoIDProperties());
   }
 
   protected function _prepareQuery(IStatement $stmt, QlDao $dao)

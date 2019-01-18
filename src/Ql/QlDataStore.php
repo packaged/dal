@@ -71,10 +71,14 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
       $ids = $dao->getDaoIDProperties();
       foreach($ids as $idField)
       {
-        $id = $connection->getLastInsertId($idField);
-        if(!empty($id))
+        if($dao->{$idField} === null)
         {
-          $dao->setDaoProperty($idField, $id);
+          $id = $connection->getLastInsertId($idField);
+          if(!empty($id))
+          {
+            $dao->setDaoProperty($idField, $id);
+          }
+          break;
         }
       }
     }

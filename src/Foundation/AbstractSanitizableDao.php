@@ -70,12 +70,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
     {
       foreach(static::$_counters[$this->_calledClass] as $property)
       {
-        $this->_addCustomSerializer(
-          $property,
-          'counter',
-          [$this, '_serializeCounter'],
-          [$this, '_unserializeCounter']
-        );
+        $this->_addCustomSerializer($property, 'counter', [$this, '_serializeCounter'], [$this, '_unserializeCounter']);
       }
     }
   }
@@ -151,9 +146,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
           $result = $validator($value);
           if($result === false)
           {
-            throw new \Exception(
-              "An unknown error occurred when validating $key"
-            );
+            throw new \Exception("An unknown error occurred when validating $key");
           }
         }
         catch(\Exception $e)
@@ -202,10 +195,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
 
     foreach($properties as $property)
     {
-      $exceptions = $this->validateDaoProperty(
-        $property,
-        $this->getDaoProperty($property)
-      );
+      $exceptions = $this->validateDaoProperty($property, $this->getDaoProperty($property));
 
       if($exceptions !== true)
       {
@@ -328,17 +318,12 @@ abstract class AbstractSanitizableDao extends AbstractDao
       return parent::hydrateDao($data);
     }
 
-    $hydratable = array_intersect_key(
-      $data,
-      array_flip($this->getDaoProperties())
-    );
-    foreach($hydratable as $key => $value)
+    foreach($this->getDaoProperties() as $key)
     {
-      if($serialized)
+      if(isset($data[$key]))
       {
-        $value = $this->getPropertyUnserialized($key, $value);
+        $this->setDaoProperty($key, $serialized ? $this->getPropertyUnserialized($key, $data[$key]) : $data[$key]);
       }
-      $this->setDaoProperty($key, $value);
     }
     $this->postHydrateDao();
     return $this;
@@ -529,10 +514,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
     $data = [];
     foreach($this->getDaoProperties() as $property)
     {
-      $data[$property] = $this->getPropertySerialized(
-        $property,
-        $this->getDaoProperty($property)
-      );
+      $data[$property] = $this->getPropertySerialized($property, $this->getDaoProperty($property));
     }
     return $data;
   }
@@ -552,14 +534,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
     foreach($this->getDaoIDProperties() as $property)
     {
       $value = $this->getDaoProperty($property);
-      if($serialized)
-      {
-        $id[$property] = $this->getPropertySerialized($property, $value);
-      }
-      else
-      {
-        $id[$property] = $value;
-      }
+      $id[$property] = $serialized ? $this->getPropertySerialized($property, $value) : $value;
     }
     if(!$forceArray && count($id) === 1)
     {

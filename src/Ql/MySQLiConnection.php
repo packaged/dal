@@ -46,13 +46,28 @@ class MySQLiConnection extends AbstractQlConnection
       $connection->options($key, $value);
     }
 
-    $connection->real_connect(
-      $this->_config()->getItem('hostname', '127.0.0.1'),
-      $this->_config()->getItem('username', 'root'),
-      $this->_config()->getItem('password', ''),
-      $this->_selectedDb ?: $this->_config()->getItem('database', ''),
-      $this->_config()->getItem('port', 3306)
-    );
+    $socket = $this->_config()->getItem('socket');
+    if($socket)
+    {
+      $connection->real_connect(
+        null,
+        $this->_config()->getItem('username', 'root'),
+        $this->_config()->getItem('password', ''),
+        $this->_selectedDb ?: $this->_config()->getItem('database', ''),
+        null,
+        $socket
+      );
+    }
+    else
+    {
+      $connection->real_connect(
+        $this->_config()->getItem('hostname', '127.0.0.1'),
+        $this->_config()->getItem('username', 'root'),
+        $this->_config()->getItem('password', ''),
+        $this->_selectedDb ?: $this->_config()->getItem('database', ''),
+        $this->_config()->getItem('port', 3306)
+      );
+    }
 
     $charSet = $this->_config()->getItem('charset');
     if($charSet)

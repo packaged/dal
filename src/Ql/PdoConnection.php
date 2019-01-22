@@ -30,12 +30,21 @@ class PdoConnection extends AbstractQlConnection
     $dsn = $this->_config()->getItem('dsn', null);
     if($dsn === null)
     {
-      $dsn = sprintf(
-        "mysql:host=%s;dbname=%s;port=%d",
-        $this->_config()->getItem('hostname', '127.0.0.1'),
-        $this->_selectedDb ?: $this->_config()->getItem('database', ''),
-        $this->_config()->getItem('port', 3306)
-      );
+      $socket = $this->_config()->getItem('socket');
+      if($socket)
+      {
+        $db = $this->_selectedDb ?: $this->_config()->getItem('database', '');
+        $dsn = sprintf("mysql:unix_socket=%s%s", $socket, $db ? ";dbname=" . $db : "");
+      }
+      else
+      {
+        $dsn = sprintf(
+          "mysql:host=%s;dbname=%s;port=%d",
+          $this->_config()->getItem('hostname', '127.0.0.1'),
+          $this->_selectedDb ?: $this->_config()->getItem('database', ''),
+          $this->_config()->getItem('port', 3306)
+        );
+      }
     }
 
     $options = array_replace(

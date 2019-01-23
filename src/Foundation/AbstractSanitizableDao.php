@@ -5,6 +5,7 @@ use Packaged\Dal\DataTypes\Counter;
 use Packaged\Dal\Exceptions\Dao\DaoException;
 use Packaged\Dal\ISanitizableDao;
 use Packaged\DocBlock\DocBlockParser;
+use Packaged\Helpers\Arrays;
 
 abstract class AbstractSanitizableDao extends AbstractDao
   implements ISanitizableDao
@@ -14,7 +15,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
   const SERIALIZATION_PHP = 'php';
 
   /**
-   * @var callable[]
+   * @var callable[][]
    */
   protected $_sanetizers = [
     'filters'     => [],
@@ -310,21 +311,36 @@ abstract class AbstractSanitizableDao extends AbstractDao
    * @param bool  $serialized Data is serialised format
    *
    * @return $this
+   * @throws DaoException
    */
   public function hydrateDao(array $data, $serialized = false)
   {
     if(empty($this->_sanetizers['serializers']))
     {
+      /** @noinspection PhpIncompatibleReturnTypeInspection */
       return parent::hydrateDao($data);
     }
 
-    foreach($this->getDaoProperties() as $key)
+    $serializedProperties = $serialized ? Arrays::fuse(array_keys($this->_sanetizers['serializers'])) : [];
+    foreach($this->getDaoProperties() as $property)
     {
-      if(array_key_exists($key, $data))
+      if(!isset($serializedProperties[$property]) && array_key_exists($property, $data))
       {
-        $this->setDaoProperty($key, $serialized ? $this->getPropertyUnserialized($key, $data[$key]) : $data[$key]);
+        $this->setDaoProperty($property, $data[$property]);
       }
     }
+
+    if($serializedProperties)
+    {
+      foreach($serializedProperties as $property)
+      {
+        if(array_key_exists($property, $data))
+        {
+          $this->setDaoProperty($property, $this->getPropertyUnserialized($property, $data[$property]));
+        }
+      }
+    }
+
     $this->postHydrateDao();
     return $this;
   }

@@ -320,7 +320,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
 
     foreach($this->getDaoProperties() as $key)
     {
-      if(isset($data[$key]))
+      if(array_key_exists($key, $data))
       {
         $this->setDaoProperty($key, $serialized ? $this->getPropertyUnserialized($key, $data[$key]) : $data[$key]);
       }

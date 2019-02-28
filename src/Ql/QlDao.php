@@ -155,15 +155,15 @@ abstract class QlDao extends AbstractSanitizableDao
   public function getTableNameExcludeDirs()
   {
     return [
-      'Dal',
-      'Dao',
-      'Daos',
       'Database',
       'Mappers',
-      'Mocks',
-      'Models',
-      'Ql',
       'Storage',
+      'Models',
+      'Mocks',
+      'Daos',
+      'Dao',
+      'Dal',
+      'Ql',
     ];
   }
 

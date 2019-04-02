@@ -11,7 +11,7 @@ class FileSystemDataStoreTest extends \PHPUnit_Framework_TestCase
 {
   protected function _getResourceLocation($filename)
   {
-    return Path::build(dirname(__DIR__), 'resources', 'FileSystem', $filename);
+    return Path::system(dirname(__DIR__), 'resources', 'FileSystem', $filename);
   }
 
   protected function setUp()
@@ -46,7 +46,7 @@ class FileSystemDataStoreTest extends \PHPUnit_Framework_TestCase
       '\Packaged\Dal\Exceptions\DataStore\DaoNotFoundException'
     );
     $file = new FileSystemDao(
-      Path::build(dirname(dirname(__DIR__)), 'missing.file')
+      Path::system(dirname(dirname(__DIR__)), 'missing.file')
     );
     $file->load();
   }

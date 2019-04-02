@@ -23,7 +23,7 @@ class Phid
     }
 
     return uniqid(
-      Path::buildCustom(':', [$prefix, 'PHID', $append]) . ':',
+      Path::custom(':', [$prefix, 'PHID', $append]) . ':',
       $moreEntropy
     );
   }

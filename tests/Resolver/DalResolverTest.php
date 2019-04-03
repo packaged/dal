@@ -118,10 +118,10 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
   public function testConfigurations()
   {
     $connectionConfig = new IniConfigProvider(
-      Path::build(__DIR__, '../resources', 'connections.ini')
+      Path::system(__DIR__, '../resources', 'connections.ini')
     );
     $datastoreConfig = new IniConfigProvider(
-      Path::build(__DIR__, '../resources', 'datastores.ini')
+      Path::system(__DIR__, '../resources', 'datastores.ini')
     );
     $resolver = new DalResolver($connectionConfig, $datastoreConfig);
 

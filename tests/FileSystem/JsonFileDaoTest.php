@@ -11,7 +11,7 @@ class JsonFileDaoTest extends \PHPUnit_Framework_TestCase
 {
   protected function _getResourceLocation($filename)
   {
-    return Path::build(dirname(__DIR__), 'resources', 'FileSystem', $filename);
+    return Path::system(dirname(__DIR__), 'resources', 'FileSystem', $filename);
   }
 
   protected function setUp()

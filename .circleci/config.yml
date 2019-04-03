@@ -3,9 +3,17 @@ defaults: &defaults
   steps:
     # common php steps
     - run: echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
-    - run: if [ -n "$ADD_PACKAGES" ]; then apk update && apk add $ADD_PACKAGES; fi;
+    - run: if [ -n "$ADD_PACKAGES" ]; then apk -U add $ADD_PACKAGES; fi;
     - run: if [ -n "$ADD_MODULES" ]; then docker-php-ext-install $ADD_MODULES; fi;
-    - run: if [ -n "$ADD_PECL" ]; then pecl install $ADD_PECL; fi;
+    - run: |
+        if [ -n "$ADD_PECL" ]; then
+          docker-php-source extract \
+          && apk add --no-cache --virtual .phpize-deps-configure $PHPIZE_DEPS $ADD_PHPIZE_DEPS \
+          && printf "\n" | pecl install $ADD_PECL \
+          && docker-php-ext-enable $(echo $ADD_PECL | sed -E 's/-[0-9]+(\.[0-9]+)*//g') \
+          && apk del .phpize-deps-configure \
+          && docker-php-source delete
+        fi;
     - run: echo "date.timezone = UTC" >> $(php --ini |grep Scan |awk '{print $NF}')/timezone.ini
     - run: curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
 
@@ -39,8 +47,8 @@ jobs:
     docker:
       - image: php:5.6-alpine
         environment:
-          ADD_PACKAGES: "alpine-sdk php5-dev autoconf zlib-dev libmemcached-dev php5-apcu"
           ADD_MODULES: "mysqli pdo pdo_mysql"
+          ADD_PHPIZE_DEPS: "zlib-dev libmemcached-dev"
           ADD_PECL: "memcached-2.2.0"
       - image: cassandra:2.1
         environment:

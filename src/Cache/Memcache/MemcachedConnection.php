@@ -12,7 +12,14 @@ class MemcachedConnection extends MemcacheConnection
 
   protected function _newConnection()
   {
-    return new \Memcached($this->_config()->getItem('pool_name', null));
+    $connection = new \Memcached($this->_config()->getItem('pool_name', null));
+    $user = $this->_config()->getItem('sasl_user', '');
+    $pass = $this->_config()->getItem('sasl_pass', '');
+    if($user || $pass)
+    {
+      $this->_connection->setSaslAuthData($user, $pass);
+    }
+    return $connection;
   }
 
   protected function _addServer($server, $port, $persist, $weight, $timeout)

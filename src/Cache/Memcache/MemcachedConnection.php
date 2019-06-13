@@ -2,6 +2,8 @@
 namespace Packaged\Dal\Cache\Memcache;
 
 use Packaged\Dal\Cache\ICacheItem;
+use Packaged\Dal\Exceptions\Connection\ConnectionException;
+use Packaged\Helpers\ValueAs;
 
 class MemcachedConnection extends MemcacheConnection
 {
@@ -17,7 +19,8 @@ class MemcachedConnection extends MemcacheConnection
     $pass = $this->_config()->getItem('sasl_pass', '');
     if($user || $pass)
     {
-      $this->_connection->setSaslAuthData($user, $pass);
+      $connection->setOption(\Memcached::OPT_BINARY_PROTOCOL, true);
+      $connection->setSaslAuthData($user, $pass);
     }
     return $connection;
   }
@@ -66,6 +69,11 @@ class MemcachedConnection extends MemcacheConnection
    */
   public function saveItem(ICacheItem $item, $ttl = null)
   {
-    return $this->_connection->set($item->getKey(), $item->get(), $ttl);
+    $result = $this->_connection->set($item->getKey(), $item->get(), $ttl);
+    if((!$result) && ValueAs::bool($this->_config()->getItem('throw', false)))
+    {
+      throw new ConnectionException($this->_connection->getResultMessage(), $this->_connection->getResultCode());
+    }
+    return $result;
   }
 }

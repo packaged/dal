@@ -12,7 +12,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
 {
   const SERIALIZATION_NONE = 'none';
   const SERIALIZATION_JSON = 'json';
-  const SERIALIZATION_JSON_ASSOC = 'json_assoc';
+  const SERIALIZATION_JSON_ARRAY = 'json_array';
   const SERIALIZATION_PHP = 'php';
 
   /**
@@ -234,7 +234,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
       {
         switch($type)
         {
-          case self::SERIALIZATION_JSON_ASSOC:
+          case self::SERIALIZATION_JSON_ARRAY:
           case self::SERIALIZATION_JSON:
             $value = json_encode($value);
             if(json_last_error() !== JSON_ERROR_NONE)
@@ -279,7 +279,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
         $asArray = false;
         switch($type)
         {
-          case self::SERIALIZATION_JSON_ASSOC:
+          case self::SERIALIZATION_JSON_ARRAY:
             $asArray = true;
           case self::SERIALIZATION_JSON:
             if(!in_array($value, [null, ''], true))

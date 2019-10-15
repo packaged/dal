@@ -387,7 +387,7 @@ class CqlConnection
    */
   protected function _prepareAndExecute($mode, $consistency, $query, array $values = null)
   {
-    $perfId = $this->getResolver()->startPerformanceMetric($this, $mode, $query);
+    $perfId = $this->getResolver()->startPerformanceMetric($this, $mode, $query, $values);
     if($values)
     {
       $prep = $this->prepare($query);

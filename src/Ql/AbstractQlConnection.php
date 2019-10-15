@@ -131,13 +131,15 @@ abstract class AbstractQlConnection
    * @return int number of affected rows
    *
    * @throws ConnectionException
+   * @throws \Packaged\Dal\Exceptions\DalException
    */
   public function runQuery($query, array $values = null)
   {
     $perfId = $this->getResolver()->startPerformanceMetric(
       $this,
       DalResolver::MODE_WRITE,
-      $query
+      $query,
+      $values
     );
 
     $result = $this->_performWithRetries(
@@ -164,13 +166,15 @@ abstract class AbstractQlConnection
    * @return array
    *
    * @throws ConnectionException
+   * @throws \Packaged\Dal\Exceptions\DalException
    */
   public function fetchQueryResults($query, array $values = null)
   {
     $perfId = $this->getResolver()->startPerformanceMetric(
       $this,
       DalResolver::MODE_READ,
-      $query
+      $query,
+      $values
     );
 
     $result = $this->_performWithRetries(
@@ -303,6 +307,8 @@ abstract class AbstractQlConnection
   /**
    * @param string $cacheKey
    * @param mixed  $statement
+   *
+   * @throws \Exception
    */
   protected function _addStmtCache($cacheKey, $statement)
   {

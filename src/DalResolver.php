@@ -10,6 +10,9 @@ use Packaged\Dal\Exceptions\DalException;
 use Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException;
 use Packaged\Dal\Exceptions\DalResolver\DataStoreNotFoundException;
 use Packaged\Dal\Foundation\Dao;
+use Packaged\Helpers\ValueAs;
+use PDO;
+use function class_exists;
 
 /**
  * Standard Packaged Connection Resolver
@@ -249,8 +252,7 @@ class DalResolver implements IConnectionResolver
     {
       if(is_callable($this->_objectCache[self::TYPE_DATASTORE][$name]))
       {
-        $this->_objectCache[self::TYPE_DATASTORE][$name] = $this->_objectCache[self::TYPE_DATASTORE][$name](
-        );
+        $this->_objectCache[self::TYPE_DATASTORE][$name] = $this->_objectCache[self::TYPE_DATASTORE][$name]();
       }
 
       if($this->_objectCache[self::TYPE_DATASTORE][$name] instanceof IDataStore)
@@ -450,7 +452,7 @@ class DalResolver implements IConnectionResolver
     return (bool)$this->_storePerformanceData;
   }
 
-  public function startPerformanceMetric($connection, $mode, $query = null)
+  public function startPerformanceMetric($connection, $mode, $query = null, array $values = null)
   {
     $uniqueId = uniqid('', true);
     $this->_currentPerf[$uniqueId] = [
@@ -459,6 +461,12 @@ class DalResolver implements IConnectionResolver
       'q' => $query,
       's' => microtime(true),
     ];
+
+    if($this->getConfigItem("log", "query_values", false))
+    {
+      $this->_currentPerf[$uniqueId]['v'] = $values;
+    }
+
     return $uniqueId;
   }
 
@@ -476,7 +484,7 @@ class DalResolver implements IConnectionResolver
 
         if($this->_storePerformanceData || ($time * 1000) > $slowQueryTime)
         {
-          $this->writePerformanceMetric($met['c'], $time, $met['m'], $met['q']);
+          $this->writePerformanceMetric($met['c'], $time, $met['m'], $met['q'], isset($met['v']) ? $met['v'] : []);
         }
       }
       else
@@ -491,7 +499,7 @@ class DalResolver implements IConnectionResolver
   }
 
   public function writePerformanceMetric(
-    $connection, $processTime, $mode = self::MODE_READ, $query = null
+    $connection, $processTime, $mode = self::MODE_READ, $query = null, array $values = null
   )
   {
     if(!is_scalar($connection))
@@ -510,6 +518,11 @@ class DalResolver implements IConnectionResolver
       'c' => $connection,
       'm' => $mode,
     ];
+
+    if($values !== null && $values !== [] && ValueAs::bool($this->getConfigItem("log", "emulate_prepare")))
+    {
+      //TODO: Emulate prepared statement
+    }
 
     $log = $this->getConfigItem("log", "location", 'memory');
     if($log == 'error_log')

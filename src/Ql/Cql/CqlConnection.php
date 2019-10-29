@@ -705,7 +705,7 @@ class CqlConnection
     }
 
     error_log(
-      'Exception As Recoverable: (' . $e->getCode() . ') ' . $e->getMessage()
+      'Exception As Recoverable: (' . $e->getCode() . ') ' . $e->getMessage() . PHP_EOL . $e->getTraceAsString()
     );
 
     return true;

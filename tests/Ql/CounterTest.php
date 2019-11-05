@@ -2,14 +2,13 @@
 namespace Tests\Ql;
 
 use Packaged\Dal\DalResolver;
-use Packaged\Dal\DataTypes\Counter;
 use Packaged\Dal\Foundation\Dao;
-use Packaged\Dal\Ql\QlDao;
-use Packaged\Dal\Ql\QlDataStore;
+use PHPUnit_Framework_TestCase;
+use Tests\Ql\Mocks\MockCounterDao;
 use Tests\Ql\Mocks\MockQlDataStore;
 use Tests\Ql\Mocks\PDO\MockPdoConnection;
 
-class CounterTest extends \PHPUnit_Framework_TestCase
+class CounterTest extends PHPUnit_Framework_TestCase
 {
   public function testCounters()
   {
@@ -127,69 +126,5 @@ class CounterTest extends \PHPUnit_Framework_TestCase
 
     $json = json_encode($dao);
     $this->assertEquals('{"id":"test1","c1":"6","c2":"-8","c3":"0"}', $json);
-  }
-}
-
-class MockCounterDao extends QlDao
-{
-  protected $_dataStoreName = 'mockql';
-  protected $_ttl;
-
-  public $id;
-  /**
-   * @counter
-   * @var Counter
-   */
-  public $c1;
-  /**
-   * @counter
-   * @var Counter
-   */
-  public $c2;
-  /**
-   * @counter
-   * @var Counter
-   */
-  public $c3;
-
-  protected $_dataStore;
-
-  protected $_tableName = 'mock_counter_daos';
-
-  public function getTableName()
-  {
-    return $this->_tableName;
-  }
-
-  public function setTableName($table)
-  {
-    $this->_tableName = $table;
-    return $this;
-  }
-
-  public function getTtl()
-  {
-    return $this->_ttl;
-  }
-
-  public function setTtl($ttl)
-  {
-    $this->_ttl = $ttl;
-    return $this;
-  }
-
-  public function setDataStore(QlDataStore $store)
-  {
-    $this->_dataStore = $store;
-    return $this;
-  }
-
-  public function getDataStore()
-  {
-    if($this->_dataStore === null)
-    {
-      return parent::getDataStore();
-    }
-    return $this->_dataStore;
   }
 }

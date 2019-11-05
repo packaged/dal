@@ -1,6 +1,7 @@
 <?php
 namespace Tests\Cache;
 
+use Exception;
 use Packaged\Config\Provider\ConfigSection;
 use Packaged\Dal\Cache\CacheDao;
 use Packaged\Dal\Cache\CacheDataStore;
@@ -8,9 +9,10 @@ use Packaged\Dal\Cache\CacheItem;
 use Packaged\Dal\Cache\Ephemeral\EphemeralConnection;
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Foundation\Dao;
-use Packaged\Dal\IDataConnection;
+use PHPUnit_Framework_TestCase;
+use Tests\Cache\Mocks\MockCacheDataStore;
 
-class CacheDataStoreTest extends \PHPUnit_Framework_TestCase
+class CacheDataStoreTest extends PHPUnit_Framework_TestCase
 {
   public function testInvalidDao()
   {
@@ -67,7 +69,7 @@ class CacheDataStoreTest extends \PHPUnit_Framework_TestCase
       $datastore->load($dao);
       $this->assertTrue(false);
     }
-    catch(\Exception $e)
+    catch(Exception $e)
     {
       $this->assertFalse($datastore->exists($dao));
     }
@@ -121,14 +123,5 @@ class CacheDataStoreTest extends \PHPUnit_Framework_TestCase
     $this->assertSame($connection, $datastore->getConnection());
 
     Dao::unsetDalResolver();
-  }
-}
-
-class MockCacheDataStore extends CacheDataStore
-{
-  public function setConnection(IDataConnection $connection)
-  {
-    $this->_connection = $connection;
-    return $this;
   }
 }

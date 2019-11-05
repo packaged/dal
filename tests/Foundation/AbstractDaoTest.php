@@ -1,12 +1,14 @@
 <?php
 namespace Tests\Foundation;
 
-use Packaged\Config\ConfigProviderInterface;
 use Packaged\Dal\DalResolver;
-use Packaged\Dal\Foundation\AbstractDao;
 use Packaged\Dal\Foundation\Dao;
+use PHPUnit_Framework_TestCase;
+use Tests\Foundation\Mocks\MockAbstractBaseDao;
+use Tests\Foundation\Mocks\MockAbstractDao;
+use Tests\Foundation\Mocks\MockMultiIdAbstractDao;
 
-class AbstractDaoTest extends \PHPUnit_Framework_TestCase
+class AbstractDaoTest extends PHPUnit_Framework_TestCase
 {
   public function testGetProperties()
   {
@@ -120,43 +122,5 @@ class AbstractDaoTest extends \PHPUnit_Framework_TestCase
       '{"name":"Brooke","email":"nobody@example.com"}',
       json_encode($dao)
     );
-  }
-}
-
-class MockAbstractBaseDao extends AbstractDao
-{
-}
-
-class MockAbstractDao extends AbstractDao
-{
-  public $name;
-  public $email = 'nobody@example.com';
-
-  public function init()
-  {
-    $this->_setDataStoreName('test');
-  }
-
-  public function getDaoIDProperties()
-  {
-    return ['email'];
-  }
-}
-
-
-class MockMultiIdAbstractDao extends AbstractDao
-{
-  public $name;
-  public $status = 'active';
-  public $email = 'nobody@example.com';
-
-  public function init()
-  {
-    $this->_setDataStoreName('test');
-  }
-
-  public function getDaoIDProperties()
-  {
-    return ['status', 'email'];
   }
 }

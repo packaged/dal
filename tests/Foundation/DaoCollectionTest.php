@@ -1,11 +1,15 @@
 <?php
 namespace Tests\Foundation;
 
+use ArrayIterator;
 use Packaged\Dal\Foundation\DaoCollection;
 use Packaged\Helpers\ValueAs;
-use Ql\MockCqlDao;
+use PHPUnit_Framework_TestCase;
+use stdClass;
+use Tests\Foundation\Mocks\MockAbstractDao;
+use Tests\Foundation\Mocks\MockDaoCollection;
 
-class DaoCollectionTest extends \PHPUnit_Framework_TestCase
+class DaoCollectionTest extends PHPUnit_Framework_TestCase
 {
   public function testCreateClass()
   {
@@ -36,8 +40,7 @@ class DaoCollectionTest extends \PHPUnit_Framework_TestCase
     $collection = MockDaoCollection::create();
     $collection->setDummyData();
     $collection->each(
-      function ($data)
-      {
+      function ($data) {
         $this->assertObjectHasAttribute('name', $data);
       }
     );
@@ -170,7 +173,7 @@ class DaoCollectionTest extends \PHPUnit_Framework_TestCase
     $this->assertFalse(isset($collection[8]));
     $collection[8] = $removal;
     $this->assertTrue(isset($collection[8]));
-    $new = new \stdClass();
+    $new = new stdClass();
     $new->name = 'Brooke';
     $collection[] = $new;
     /**
@@ -184,7 +187,7 @@ class DaoCollectionTest extends \PHPUnit_Framework_TestCase
     $collection = MockDaoCollection::create();
     $collection->setDummyData();
     $this->assertEquals(
-      new \ArrayIterator($collection->getDaos()),
+      new ArrayIterator($collection->getDaos()),
       $collection->getIterator()
     );
   }
@@ -195,53 +198,4 @@ class DaoCollectionTest extends \PHPUnit_Framework_TestCase
     $collection->setDummyData();
     $this->assertEquals($collection->getDaos(), $collection->getRawArray());
   }
-}
-
-class MockDaoCollection extends DaoCollection
-{
-  public function setDaos(array $daos)
-  {
-    $this->_daos = $daos;
-    return $this;
-  }
-
-  public function getDaos()
-  {
-    return $this->_daos;
-  }
-
-  public function setDummyData()
-  {
-    $this->_daos = [];
-    $this->_daos[1] = ValueAs::obj(['name' => 'Test', 'id' => 1]);
-    $this->_daos[2] = ValueAs::obj(['name' => 'Test', 'id' => 2]);
-    $user = new MockUsr();
-    $user->name = 'User';
-    $user->id = 5;
-    $this->_daos[5] = $user;
-    $mock = new MockAbstractDao();
-    $mock->name = 'Testing';
-    $mock->id = 8;
-    $this->_daos[8] = $mock;
-  }
-
-  /**
-   * @param null $daoClass
-   *
-   * @return static
-   */
-  public static function create($daoClass = null)
-  {
-    if($daoClass === null)
-    {
-      $daoClass = MockCqlDao::class;
-    }
-    return parent::create($daoClass);
-  }
-}
-
-class MockUsr
-{
-  public $name;
-  public $id;
 }

@@ -3,21 +3,20 @@ namespace Tests\Ql;
 
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Foundation\Dao;
-use Packaged\Dal\Ql\QlDaoCollection;
-use Packaged\Helpers\ValueAs;
 use Packaged\QueryBuilder\Assembler\QueryAssembler;
 use Packaged\QueryBuilder\Clause\GroupByClause;
 use Packaged\QueryBuilder\Clause\LimitClause;
-use Tests\Foundation\MockAbstractDao;
+use PDO;
+use PHPUnit_Framework_TestCase;
 use Tests\Ql\Mocks\MockQlDao;
 use Tests\Ql\Mocks\MockQlDataStore;
 use Tests\Ql\Mocks\PDO\MockPdoConnection;
 
-class QlDaoCollectionTest extends \PHPUnit_Framework_TestCase
+class QlDaoCollectionTest extends PHPUnit_Framework_TestCase
 {
   public function testHydrated()
   {
-    $collection = MockQlDaoCollection::create();
+    $collection = Mocks\MockQlDaoCollection::create();
     $collection->setDummyData();
     $this->assertEquals(4, $collection->count());
     $this->assertEquals(1, $collection->min('id'));
@@ -36,7 +35,7 @@ class QlDaoCollectionTest extends \PHPUnit_Framework_TestCase
     Dao::setDalResolver($resolver);
     $datastore = new MockQlDataStore();
     $connection = new MockPdoConnection();
-    $connection->addConfig('options', [\PDO::ATTR_EMULATE_PREPARES => true]);
+    $connection->addConfig('options', [PDO::ATTR_EMULATE_PREPARES => true]);
     $connection->config();
     $connection->connect();
     $connection->setResolver($resolver);
@@ -254,49 +253,5 @@ class QlDaoCollectionTest extends \PHPUnit_Framework_TestCase
       'SELECT random3.* FROM random3 WHERE X = "y"',
       QueryAssembler::stringify($collection)
     );
-  }
-}
-
-class MockQlDaoCollection extends QlDaoCollection
-{
-  public function setDaos(array $daos)
-  {
-    $this->_daos = $daos;
-    return $this;
-  }
-
-  public function getDaos()
-  {
-    return $this->_daos;
-  }
-
-  public function setDummyData()
-  {
-    $this->_daos = [];
-    $this->_daos[1] = ValueAs::obj(['name' => 'Test', 'id' => 1]);
-    $this->_daos[2] = ValueAs::obj(['name' => 'Test', 'id' => 2]);
-    $user = new \stdClass();
-    $user->name = 'User';
-    $user->id = 5;
-    $this->_daos[5] = $user;
-    $mock = new MockAbstractDao();
-    $mock->name = 'Testing';
-    $mock->id = 8;
-    $this->_daos[8] = $mock;
-    $this->_isLoaded = true;
-  }
-
-  /**
-   * @param null $daoClass
-   *
-   * @return static
-   */
-  public static function create($daoClass = null)
-  {
-    if($daoClass === null)
-    {
-      $daoClass = MockQlDao::class;
-    }
-    return parent::create($daoClass);
   }
 }

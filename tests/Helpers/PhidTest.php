@@ -2,8 +2,11 @@
 namespace Tests\Helpers;
 
 use Packaged\Dal\Helpers\Phid;
+use PHPUnit_Framework_TestCase;
+use Tests\Helpers\Mocks\MyTestClass;
+use Tests\Helpers\Mocks\RandomClassOne;
 
-class PhidTest extends \PHPUnit_Framework_TestCase
+class PhidTest extends PHPUnit_Framework_TestCase
 {
   /**
    * @dataProvider generateProvider
@@ -43,12 +46,4 @@ class PhidTest extends \PHPUnit_Framework_TestCase
       strlen(Phid::generate(new RandomClassOne(), null, null, true))
     );
   }
-}
-
-class RandomClassOne
-{
-}
-
-class MyTestClass
-{
 }

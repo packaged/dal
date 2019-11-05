@@ -100,15 +100,16 @@ abstract class AbstractDao implements IDao
     $changes = [];
     foreach($current as $key => $val)
     {
-      if($val !== $this->_savedData[$key])
+      $savedVal = Arrays::value($this->_savedData, $key);
+      if($val !== $savedVal)
       {
         if($this->$key instanceof Counter && !$this->$key->hasChanged())
         {
           continue;
         }
         $changes[$key] = [
-          'from' => Arrays::value($this->_savedData, $key),
-          'to'   => Arrays::value($current, $key)
+          'from' => $savedVal,
+          'to'   => $val,
         ];
       }
     }
@@ -402,6 +403,7 @@ abstract class AbstractDao implements IDao
   /**
    * (PHP 5 &gt;= 5.4.0)<br/>
    * Specify data which should be serialized to JSON
+   *
    * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
    * @return mixed data which can be serialized by <b>json_encode</b>,
    * which is a value of any type other than a resource.

@@ -24,6 +24,7 @@ use Packaged\Dal\Exceptions\Connection\CqlException;
 use Packaged\Dal\IResolverAware;
 use Packaged\Dal\Ql\IQLDataConnection;
 use Packaged\Dal\Traits\ResolverAwareTrait;
+use Packaged\Helpers\ExceptionHelper;
 use Packaged\Helpers\RetryHelper;
 use Packaged\Helpers\Strings;
 use Packaged\Helpers\ValueAs;
@@ -705,7 +706,8 @@ class CqlConnection
     }
 
     error_log(
-      'Exception As Recoverable: (' . $e->getCode() . ') ' . $e->getMessage() . PHP_EOL . $e->getTraceAsString()
+      'Exception As Recoverable: (' . $e->getCode() . ') ' . $e->getMessage()
+      . PHP_EOL . ExceptionHelper::getTraceAsString($e)
     );
 
     return true;

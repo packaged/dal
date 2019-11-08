@@ -481,7 +481,6 @@ class CqlConnection
       }
       Log::error(
         'CqlConnection Error: (' . $e->getCode() . ') ' . $e->getMessage()
-        . PHP_EOL . ExceptionHelper::getTraceAsString($e->getPrevious() ?: $e)
       );
       $this->disconnect();
       throw $e;
@@ -656,7 +655,6 @@ class CqlConnection
       }
       Log::error(
         'CqlConnection Error: (' . $e->getCode() . ') ' . $e->getMessage()
-        . PHP_EOL . ExceptionHelper::getTraceAsString($e->getPrevious() ?: $e)
       );
       $this->disconnect();
       throw $e;

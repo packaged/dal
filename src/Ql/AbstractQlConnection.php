@@ -406,7 +406,6 @@ abstract class AbstractQlConnection
             {
               Log::error(
                 'Connection error during transaction: ' . '(' . $exception->getCode() . ') ' . $exception->getMessage()
-                . PHP_EOL . ExceptionHelper::getTraceAsString($exception->getPrevious() ?: $exception)
               );
               throw $exception;
             }
@@ -424,7 +423,6 @@ abstract class AbstractQlConnection
             $this->disconnect();
             Log::error(
               'Connection Error: (' . $exception->getCode() . ') ' . $exception->getMessage()
-              . PHP_EOL . ExceptionHelper::getTraceAsString($exception->getPrevious() ?: $exception)
             );
           }
           throw $exception;

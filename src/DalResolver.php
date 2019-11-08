@@ -10,6 +10,7 @@ use Packaged\Dal\Exceptions\DalException;
 use Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException;
 use Packaged\Dal\Exceptions\DalResolver\DataStoreNotFoundException;
 use Packaged\Dal\Foundation\Dao;
+use Packaged\Log\Log;
 
 /**
  * Standard Packaged Connection Resolver
@@ -514,7 +515,7 @@ class DalResolver implements IConnectionResolver
     $log = $this->getConfigItem("log", "location", 'memory');
     if($log == 'error_log')
     {
-      error_log("DAL-PERF: " . json_encode($data));
+      Log::debug("DAL-PERF: " . json_encode($data));
     }
     else if($log == 'memory')
     {

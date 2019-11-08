@@ -6,6 +6,7 @@ use Packaged\Dal\Exceptions\Dao\DaoException;
 use Packaged\Dal\ISanitizableDao;
 use Packaged\DocBlock\DocBlockParser;
 use Packaged\Helpers\Arrays;
+use Packaged\Log\Log;
 
 abstract class AbstractSanitizableDao extends AbstractDao
   implements ISanitizableDao
@@ -287,7 +288,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
               $value = json_decode($value, $asArray);
               if(json_last_error() !== JSON_ERROR_NONE)
               {
-                error_log(
+                Log::error(
                   sprintf(
                     'Failed to unserialize property "%s" in "%s". %s',
                     $property,

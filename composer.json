@@ -18,12 +18,16 @@
     "doctrine/inflector": "~1.0"
   },
   "require-dev": {
-    "phpunit/phpunit": "~4.6"
+    "phpunit/phpunit": "~5"
   },
   "autoload": {
     "psr-4": {
-      "Packaged\\Dal\\": "src",
-      "Tests\\": "tests"
+      "Packaged\\Dal\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Packaged\\Dal\\Tests\\": "tests"
     }
   }
 }

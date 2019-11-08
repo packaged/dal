@@ -1,10 +1,10 @@
 <?php
-namespace Tests\Helpers;
+namespace Packaged\Dal\Tests\Helpers;
 
 use Packaged\Dal\Helpers\Phid;
 use PHPUnit_Framework_TestCase;
-use Tests\Helpers\Mocks\MyTestClass;
-use Tests\Helpers\Mocks\RandomClassOne;
+use Packaged\Dal\Tests\Helpers\Mocks\MyTestClass;
+use Packaged\Dal\Tests\Helpers\Mocks\RandomClassOne;
 
 class PhidTest extends PHPUnit_Framework_TestCase
 {

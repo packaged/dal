@@ -1,5 +1,5 @@
 <?php
-namespace Tests\DataTypes;
+namespace Packaged\Dal\Tests\DataTypes;
 
 use Packaged\Dal\DataTypes\Counter;
 

@@ -1,5 +1,5 @@
 <?php
-namespace Tests\Ql;
+namespace Packaged\Dal\Tests\Ql;
 
 use cassandra\InvalidRequestException;
 use Packaged\Config\Provider\ConfigSection;
@@ -14,8 +14,8 @@ use Packaged\QueryBuilder\Builder\QueryBuilder;
 use Packaged\QueryBuilder\Expression\ValueExpression;
 use Packaged\QueryBuilder\Predicate\EqualPredicate;
 use PHPUnit_Framework_TestCase;
-use Tests\Ql\Mocks\Cql\MockCqlDao;
-use Tests\Ql\Mocks\MockAbstractQlDataConnection;
+use Packaged\Dal\Tests\Ql\Mocks\Cql\MockCqlDao;
+use Packaged\Dal\Tests\Ql\Mocks\MockAbstractQlDataConnection;
 
 class CqlTest extends PHPUnit_Framework_TestCase
 {

@@ -1,5 +1,5 @@
 <?php
-namespace Tests\Ql;
+namespace Packaged\Dal\Tests\Ql;
 
 use Packaged\Config\Provider\ConfigSection;
 use Packaged\Dal\DalResolver;
@@ -7,9 +7,9 @@ use Packaged\Dal\Exceptions\Connection\ConnectionException;
 use Packaged\Dal\Exceptions\Connection\DuplicateKeyException;
 use Packaged\Dal\Exceptions\DalException;
 use Packaged\Dal\Ql\AbstractQlConnection;
-use Tests\Ql\Mocks\FailingPrepareRawConnection;
-use Tests\Ql\Mocks\MockQlDao;
-use Tests\Ql\Mocks\MockQlDataStore;
+use Packaged\Dal\Tests\Ql\Mocks\FailingPrepareRawConnection;
+use Packaged\Dal\Tests\Ql\Mocks\MockQlDao;
+use Packaged\Dal\Tests\Ql\Mocks\MockQlDataStore;
 
 abstract class AbstractQlConnectionTest extends \PHPUnit_Framework_TestCase
 {

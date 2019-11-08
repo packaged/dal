@@ -1,5 +1,5 @@
 <?php
-namespace Tests\Ql;
+namespace Packaged\Dal\Tests\Ql;
 
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Foundation\Dao;
@@ -8,9 +8,9 @@ use Packaged\QueryBuilder\Clause\GroupByClause;
 use Packaged\QueryBuilder\Clause\LimitClause;
 use PDO;
 use PHPUnit_Framework_TestCase;
-use Tests\Ql\Mocks\MockQlDao;
-use Tests\Ql\Mocks\MockQlDataStore;
-use Tests\Ql\Mocks\PDO\MockPdoConnection;
+use Packaged\Dal\Tests\Ql\Mocks\MockQlDao;
+use Packaged\Dal\Tests\Ql\Mocks\MockQlDataStore;
+use Packaged\Dal\Tests\Ql\Mocks\PDO\MockPdoConnection;
 
 class QlDaoCollectionTest extends PHPUnit_Framework_TestCase
 {

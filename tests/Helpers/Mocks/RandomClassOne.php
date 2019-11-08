@@ -1,5 +1,5 @@
 <?php
-namespace Tests\Helpers\Mocks;
+namespace Packaged\Dal\Tests\Helpers\Mocks;
 
 class RandomClassOne
 {

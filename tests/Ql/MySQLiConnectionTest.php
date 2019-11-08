@@ -1,10 +1,10 @@
 <?php
-namespace Tests\Ql;
+namespace Packaged\Dal\Tests\Ql;
 
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
-use Tests\Ql\Mocks\FailingPrepareRawConnection;
-use Tests\Ql\Mocks\MySQLi\MockMySQLiConnection;
+use Packaged\Dal\Tests\Ql\Mocks\FailingPrepareRawConnection;
+use Packaged\Dal\Tests\Ql\Mocks\MySQLi\MockMySQLiConnection;
 
 class MySQLiConnectionTest extends AbstractQlConnectionTest
 {

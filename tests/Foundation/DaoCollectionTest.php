@@ -1,13 +1,13 @@
 <?php
-namespace Tests\Foundation;
+namespace Packaged\Dal\Tests\Foundation;
 
 use ArrayIterator;
 use Packaged\Dal\Foundation\DaoCollection;
 use Packaged\Helpers\ValueAs;
 use PHPUnit_Framework_TestCase;
 use stdClass;
-use Tests\Foundation\Mocks\MockAbstractDao;
-use Tests\Foundation\Mocks\MockDaoCollection;
+use Packaged\Dal\Tests\Foundation\Mocks\MockAbstractDao;
+use Packaged\Dal\Tests\Foundation\Mocks\MockDaoCollection;
 
 class DaoCollectionTest extends PHPUnit_Framework_TestCase
 {

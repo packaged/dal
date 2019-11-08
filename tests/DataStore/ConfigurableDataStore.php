@@ -1,5 +1,5 @@
 <?php
-namespace Tests\DataStore;
+namespace Packaged\Dal\Tests\DataStore;
 
 class ConfigurableDataStore implements \Packaged\Dal\IDataStore,
                                        \Packaged\Config\ConfigurableInterface

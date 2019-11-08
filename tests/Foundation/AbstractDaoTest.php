@@ -1,12 +1,12 @@
 <?php
-namespace Tests\Foundation;
+namespace Packaged\Dal\Tests\Foundation;
 
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Foundation\Dao;
+use Packaged\Dal\Tests\Foundation\Mocks\MockAbstractBaseDao;
+use Packaged\Dal\Tests\Foundation\Mocks\MockAbstractDao;
+use Packaged\Dal\Tests\Foundation\Mocks\MockMultiIdAbstractDao;
 use PHPUnit_Framework_TestCase;
-use Tests\Foundation\Mocks\MockAbstractBaseDao;
-use Tests\Foundation\Mocks\MockAbstractDao;
-use Tests\Foundation\Mocks\MockMultiIdAbstractDao;
 
 class AbstractDaoTest extends PHPUnit_Framework_TestCase
 {
@@ -105,7 +105,7 @@ class AbstractDaoTest extends PHPUnit_Framework_TestCase
   {
     $resolver = new DalResolver();
     $resolver->boot();
-    $resolver->addDataStore('test', $this->getMock('\Packaged\Dal\IDataStore'));
+    $resolver->addDataStore('test', $this->createMock('\Packaged\Dal\IDataStore'));
     $mock = new MockAbstractDao();
     $mock->init();
     $this->assertInstanceOf('\Packaged\Dal\IDataStore', $mock->getDataStore());

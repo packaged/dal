@@ -1,16 +1,16 @@
 <?php
 
-namespace Tests\Resolver;
+namespace Packaged\Dal\Tests\Resolver;
 
 use Packaged\Config\Provider\ConfigProvider;
 use Packaged\Config\Provider\ConfigSection;
 use Packaged\Config\Provider\Ini\IniConfigProvider;
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Exceptions\DalException;
+use Packaged\Dal\Tests\Connection\ConfigurableConnection;
+use Packaged\Dal\Tests\DataStore\ConfigurableDataStore;
 use Packaged\Helpers\Path;
 use PHPUnit_Framework_TestCase;
-use Tests\Connection\ConfigurableConnection;
-use Tests\DataStore\ConfigurableDataStore;
 
 class ConnectionResolverTest extends PHPUnit_Framework_TestCase
 {
@@ -27,7 +27,7 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
   {
     $interface = '\Packaged\Dal\IDataConnection';
     $resolver = new DalResolver();
-    $resolver->addConnection('test', $this->getMock($interface));
+    $resolver->addConnection('test', $this->createMock($interface));
     $this->assertInstanceOf($interface, $resolver->getConnection('test'));
   }
 
@@ -44,7 +44,7 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
   {
     $interface = '\Packaged\Dal\IDataStore';
     $resolver = new DalResolver();
-    $resolver->addDataStore('test', $this->getMock($interface));
+    $resolver->addDataStore('test', $this->createMock($interface));
     $this->assertInstanceOf($interface, $resolver->getDataStore('test'));
   }
 
@@ -55,7 +55,7 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
     $resolver->addConnectionCallable(
       'test',
       function () {
-        return $this->getMock('\Packaged\Dal\IDataConnection');
+        return $this->createMock('\Packaged\Dal\IDataConnection');
       }
     );
     $this->assertInstanceOf(
@@ -71,7 +71,7 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
     $resolver->addDataStoreCallable(
       'test',
       function () {
-        return $this->getMock('\Packaged\Dal\IDataStore');
+        return $this->createMock('\Packaged\Dal\IDataStore');
       }
     );
     $this->assertInstanceOf(

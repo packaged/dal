@@ -1,5 +1,5 @@
 <?php
-namespace Tests\Foundation\Mocks;
+namespace Packaged\Dal\Tests\Foundation\Mocks;
 
 class MockUsr
 {

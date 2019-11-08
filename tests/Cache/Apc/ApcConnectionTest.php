@@ -1,5 +1,5 @@
 <?php
-namespace Tests\Cache\Apc;
+namespace Packaged\Dal\Tests\Cache\Apc;
 
 use Packaged\Dal\Cache\Apc\ApcConnection;
 use Packaged\Dal\Cache\CacheItem;

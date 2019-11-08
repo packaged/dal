@@ -1,5 +1,5 @@
 <?php
-namespace Tests\Foundation\Mocks;
+namespace Packaged\Dal\Tests\Foundation\Mocks;
 
 use Packaged\Dal\Foundation\AbstractDao;
 

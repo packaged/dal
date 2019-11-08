@@ -1,12 +1,12 @@
 <?php
-namespace Tests\Ql;
+namespace Packaged\Dal\Tests\Ql;
 
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Foundation\Dao;
 use PHPUnit_Framework_TestCase;
-use Tests\Ql\Mocks\MockCounterDao;
-use Tests\Ql\Mocks\MockQlDataStore;
-use Tests\Ql\Mocks\PDO\MockPdoConnection;
+use Packaged\Dal\Tests\Ql\Mocks\MockCounterDao;
+use Packaged\Dal\Tests\Ql\Mocks\MockQlDataStore;
+use Packaged\Dal\Tests\Ql\Mocks\PDO\MockPdoConnection;
 
 class CounterTest extends PHPUnit_Framework_TestCase
 {

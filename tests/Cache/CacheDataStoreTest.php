@@ -1,5 +1,5 @@
 <?php
-namespace Tests\Cache;
+namespace Packaged\Dal\Tests\Cache;
 
 use Exception;
 use Packaged\Config\Provider\ConfigSection;
@@ -10,7 +10,7 @@ use Packaged\Dal\Cache\Ephemeral\EphemeralConnection;
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Foundation\Dao;
 use PHPUnit_Framework_TestCase;
-use Tests\Cache\Mocks\MockCacheDataStore;
+use Packaged\Dal\Tests\Cache\Mocks\MockCacheDataStore;
 
 class CacheDataStoreTest extends PHPUnit_Framework_TestCase
 {

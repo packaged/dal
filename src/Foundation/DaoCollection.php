@@ -1,10 +1,14 @@
 <?php
 namespace Packaged\Dal\Foundation;
 
+use ArrayIterator;
+use Closure;
+use JsonSerializable;
 use Packaged\Dal\IDao;
 use Packaged\Dal\IDaoCollection;
 use Packaged\Helpers\Arrays;
 use Packaged\Helpers\Objects;
+use RuntimeException;
 use Traversable;
 
 class DaoCollection implements IDaoCollection
@@ -53,7 +57,7 @@ class DaoCollection implements IDaoCollection
       }
       else
       {
-        throw new \RuntimeException(
+        throw new RuntimeException(
           "'$this->_daoClass' is not a valid DAO Class"
         );
       }
@@ -123,11 +127,11 @@ class DaoCollection implements IDaoCollection
   /**
    * Execute a callback over each dao in the collection
    *
-   * @param \Closure $callback
+   * @param Closure $callback
    *
    * @return array an array containing all the elements returned
    */
-  public function each(\Closure $callback)
+  public function each(Closure $callback)
   {
     $this->_prepareDaos();
     return array_map($callback, $this->_daos);
@@ -208,7 +212,7 @@ class DaoCollection implements IDaoCollection
   public function getIterator()
   {
     $this->_prepareDaos();
-    return new \ArrayIterator((array)$this->_daos);
+    return new ArrayIterator((array)$this->_daos);
   }
 
   /**
@@ -314,7 +318,7 @@ class DaoCollection implements IDaoCollection
     $response = [];
     foreach($this->_daos as $dao)
     {
-      if($dao instanceof \JsonSerializable)
+      if($dao instanceof JsonSerializable)
       {
         $response[] = $dao->jsonSerialize();
       }

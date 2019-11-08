@@ -28,6 +28,7 @@ use Packaged\Helpers\ExceptionHelper;
 use Packaged\Helpers\RetryHelper;
 use Packaged\Helpers\Strings;
 use Packaged\Helpers\ValueAs;
+use Packaged\Log\Log;
 use Thrift\Exception\TException;
 use Thrift\Exception\TTransportException;
 use Thrift\Protocol\TBinaryProtocolAccelerated;
@@ -478,7 +479,7 @@ class CqlConnection
         $this->disconnect();
         return $this->prepare($query, $compression, $retries - 1);
       }
-      error_log(
+      Log::error(
         'CqlConnection Error: (' . $e->getCode() . ') ' . $e->getMessage()
       );
       $this->disconnect();
@@ -652,7 +653,7 @@ class CqlConnection
           $retries - 1
         );
       }
-      error_log(
+      Log::error(
         'CqlConnection Error: (' . $e->getCode() . ') ' . $e->getMessage()
       );
       $this->disconnect();
@@ -705,7 +706,7 @@ class CqlConnection
       return false;
     }
 
-    error_log(
+    Log::error(
       'Exception As Recoverable: (' . $e->getCode() . ') ' . $e->getMessage()
       . PHP_EOL . ExceptionHelper::getTraceAsString($e->getPrevious() ?: $e)
     );

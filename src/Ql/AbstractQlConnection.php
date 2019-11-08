@@ -8,6 +8,8 @@ use Packaged\Dal\Exceptions\Connection\ConnectionException;
 use Packaged\Dal\Exceptions\Connection\DuplicateKeyException;
 use Packaged\Dal\IResolverAware;
 use Packaged\Dal\Traits\ResolverAwareTrait;
+use Packaged\Helpers\ExceptionHelper;
+use Packaged\Log\Log;
 
 abstract class AbstractQlConnection
   implements IQLDataConnection, ConfigurableInterface, ILastInsertId,
@@ -402,9 +404,8 @@ abstract class AbstractQlConnection
           {
             if($this->_inTransaction)
             {
-              error_log(
-                'Connection error during transaction: '
-                . '(' . $exception->getCode() . ') ' . $exception->getMessage()
+              Log::error(
+                'Connection error during transaction: ' . '(' . $exception->getCode() . ') ' . $exception->getMessage()
               );
               throw $exception;
             }
@@ -420,7 +421,9 @@ abstract class AbstractQlConnection
           if(!($exception instanceof DuplicateKeyException))
           {
             $this->disconnect();
-            error_log('Connection Error: (' . $exception->getCode() . ') ' . $exception->getMessage());
+            Log::error(
+              'Connection Error: (' . $exception->getCode() . ') ' . $exception->getMessage()
+            );
           }
           throw $exception;
         }

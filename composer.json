@@ -22,7 +22,11 @@
   },
   "autoload": {
     "psr-4": {
-      "Packaged\\Dal\\": "src",
+      "Packaged\\Dal\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
       "Packaged\\Dal\\Tests\\": "tests"
     }
   }

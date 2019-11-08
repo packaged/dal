@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Resolver;
+namespace Packaged\Dal\Tests\Resolver;
 
 use Packaged\Config\Provider\ConfigProvider;
 use Packaged\Config\Provider\ConfigSection;
@@ -9,8 +9,8 @@ use Packaged\Dal\DalResolver;
 use Packaged\Dal\Exceptions\DalException;
 use Packaged\Helpers\Path;
 use PHPUnit_Framework_TestCase;
-use Tests\Connection\ConfigurableConnection;
-use Tests\DataStore\ConfigurableDataStore;
+use Packaged\Dal\Tests\Connection\ConfigurableConnection;
+use Packaged\Dal\Tests\DataStore\ConfigurableDataStore;
 
 class ConnectionResolverTest extends PHPUnit_Framework_TestCase
 {

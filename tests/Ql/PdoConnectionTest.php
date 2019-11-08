@@ -1,14 +1,14 @@
 <?php
-namespace Tests\Ql;
+namespace Packaged\Dal\Tests\Ql;
 
 use Packaged\Config\Provider\ConfigSection;
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
 use Packaged\Dal\Ql\PdoConnection;
-use Tests\Ql\Mocks\PDO\DelayedPreparesPdoConnection;
-use Tests\Ql\Mocks\PDO\MockPdoConnection;
-use Tests\Ql\Mocks\PDO\PrepareErrorPdoConnection;
-use Tests\Ql\Mocks\PDO\StmtCachePdoConnection;
+use Packaged\Dal\Tests\Ql\Mocks\PDO\DelayedPreparesPdoConnection;
+use Packaged\Dal\Tests\Ql\Mocks\PDO\MockPdoConnection;
+use Packaged\Dal\Tests\Ql\Mocks\PDO\PrepareErrorPdoConnection;
+use Packaged\Dal\Tests\Ql\Mocks\PDO\StmtCachePdoConnection;
 
 class PdoConnectionTest extends AbstractQlConnectionTest
 {

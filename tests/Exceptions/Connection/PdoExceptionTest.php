@@ -1,5 +1,5 @@
 <?php
-namespace Tests\Exceptions\Connection;
+namespace Packaged\Dal\Tests\Exceptions\Connection;
 
 use Packaged\Dal\Exceptions\Connection\PdoException;
 

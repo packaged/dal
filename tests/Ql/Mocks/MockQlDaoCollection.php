@@ -1,10 +1,10 @@
 <?php
-namespace Tests\Ql\Mocks;
+namespace Packaged\Dal\Tests\Ql\Mocks;
 
 use Packaged\Dal\Ql\QlDaoCollection;
 use Packaged\Helpers\ValueAs;
 use stdClass;
-use Tests\Foundation\Mocks\MockAbstractDao;
+use Packaged\Dal\Tests\Foundation\Mocks\MockAbstractDao;
 
 class MockQlDaoCollection extends QlDaoCollection
 {

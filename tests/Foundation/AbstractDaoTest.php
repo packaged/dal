@@ -1,12 +1,12 @@
 <?php
-namespace Tests\Foundation;
+namespace Packaged\Dal\Tests\Foundation;
 
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Foundation\Dao;
 use PHPUnit_Framework_TestCase;
-use Tests\Foundation\Mocks\MockAbstractBaseDao;
-use Tests\Foundation\Mocks\MockAbstractDao;
-use Tests\Foundation\Mocks\MockMultiIdAbstractDao;
+use Packaged\Dal\Tests\Foundation\Mocks\MockAbstractBaseDao;
+use Packaged\Dal\Tests\Foundation\Mocks\MockAbstractDao;
+use Packaged\Dal\Tests\Foundation\Mocks\MockMultiIdAbstractDao;
 
 class AbstractDaoTest extends PHPUnit_Framework_TestCase
 {

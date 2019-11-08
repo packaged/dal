@@ -1,5 +1,5 @@
 <?php
-namespace Tests\Connection;
+namespace Packaged\Dal\Tests\Connection;
 
 class ConfigurableConnection
   implements \Packaged\Dal\IDataConnection,

@@ -1,5 +1,5 @@
 <?php
-namespace Tests\Helpers;
+namespace Packaged\Dal\Tests\Helpers;
 
 use Packaged\Dal\Helpers\Base36TimeKey;
 

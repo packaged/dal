@@ -1,5 +1,5 @@
 <?php
-namespace Tests\Ql\Mocks\Cql;
+namespace Packaged\Dal\Tests\Ql\Mocks\Cql;
 
 use cassandra\CassandraClient;
 use cassandra\CqlPreparedResult;

@@ -1,10 +1,10 @@
 <?php
-namespace Tests\Foundation\Mocks;
+namespace Packaged\Dal\Tests\Foundation\Mocks;
 
 use Packaged\Dal\Foundation\DaoCollection;
 use Packaged\Helpers\ValueAs;
-use Tests\Foundation\Mocks;
-use Tests\Ql\Mocks\Cql\MockCqlDao;
+use Packaged\Dal\Tests\Foundation\Mocks;
+use Packaged\Dal\Tests\Ql\Mocks\Cql\MockCqlDao;
 
 class MockDaoCollection extends DaoCollection
 {

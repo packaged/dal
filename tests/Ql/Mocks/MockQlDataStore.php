@@ -1,5 +1,5 @@
 <?php
-namespace Tests\Ql\Mocks;
+namespace Packaged\Dal\Tests\Ql\Mocks;
 
 use Packaged\Dal\Ql\QlDataStore;
 

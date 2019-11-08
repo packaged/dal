@@ -1,5 +1,5 @@
 <?php
-namespace Tests\Ql\Mocks\PDO;
+namespace Packaged\Dal\Tests\Ql\Mocks\PDO;
 
 use Packaged\Dal\Ql\PdoConnection;
 

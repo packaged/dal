@@ -1,5 +1,5 @@
 <?php
-namespace Tests\Cache;
+namespace Packaged\Dal\Tests\Cache;
 
 use Packaged\Dal\Cache\CacheDao;
 use Packaged\Dal\Cache\CacheItem;

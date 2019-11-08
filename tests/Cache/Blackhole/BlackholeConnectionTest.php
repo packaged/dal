@@ -1,5 +1,5 @@
 <?php
-namespace Tests\Cache\Blackhole;
+namespace Packaged\Dal\Tests\Cache\Blackhole;
 
 use Packaged\Dal\Cache\Blackhole\BlackholeConnection;
 

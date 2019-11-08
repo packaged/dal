@@ -23,7 +23,7 @@
   "autoload": {
     "psr-4": {
       "Packaged\\Dal\\": "src",
-      "Tests\\": "tests"
+      "Packaged\\Dal\\Tests\\": "tests"
     }
   }
 }

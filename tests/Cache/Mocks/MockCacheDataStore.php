@@ -1,5 +1,5 @@
 <?php
-namespace Tests\Cache\Mocks;
+namespace Packaged\Dal\Tests\Cache\Mocks;
 
 use Packaged\Dal\Cache\CacheDataStore;
 use Packaged\Dal\IDataConnection;

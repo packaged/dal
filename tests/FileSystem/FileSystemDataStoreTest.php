@@ -1,5 +1,5 @@
 <?php
-namespace Tests\FileSystem;
+namespace Packaged\Dal\Tests\FileSystem;
 
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\FileSystem\FileSystemDao;

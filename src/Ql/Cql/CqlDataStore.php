@@ -1,12 +1,16 @@
 <?php
 namespace Packaged\Dal\Ql\Cql;
 
+use Exception;
+use Packaged\Dal\DataTypes\Counter;
 use Packaged\Dal\Exceptions\DataStore\DataStoreException;
 use Packaged\Dal\IDao;
 use Packaged\Dal\Ql\QlDao;
 use Packaged\Dal\Ql\QlDataStore;
 use Packaged\QueryBuilder\Assembler\CQL\CqlAssembler;
 use Packaged\QueryBuilder\Builder\CQL\CqlQueryBuilder;
+use Packaged\QueryBuilder\Expression\DecrementExpression;
+use Packaged\QueryBuilder\Expression\IncrementExpression;
 use Packaged\QueryBuilder\Statement\CQL\CqlInsertStatement;
 use Packaged\QueryBuilder\Statement\CQL\CqlUpdateStatement;
 use Packaged\QueryBuilder\Statement\IStatement;
@@ -40,6 +44,38 @@ class CqlDataStore extends QlDataStore
       return $qb::update($dao->getTableName(), $data)->where($dao->getId(true));
     }
     return null;
+  }
+
+  protected function _getCounterValue(QlDao $dao, $field, $value)
+  {
+    $newValue = $dao->{$field};
+    if($newValue instanceof Counter)
+    {
+      if($newValue->isIncrement())
+      {
+        $value = IncrementExpression::create($field, $newValue->getIncrement());
+      }
+      else if($newValue->isDecrement())
+      {
+        $value = DecrementExpression::create($field, $newValue->getDecrement());
+      }
+      else if($newValue->isFixedValue() && $newValue->hasChanged())
+      {
+        if($newValue->current() === null && $newValue->calculated() === 0)
+        {
+          //Allow counter row initialisation
+          $value = [
+            IncrementExpression::create($field, 1),
+            DecrementExpression::create($field, 1),
+          ];
+        }
+        else
+        {
+          throw new Exception('Setting counters to specific values in CQL is not supported');
+        }
+      }
+    }
+    return $value;
   }
 
   /**

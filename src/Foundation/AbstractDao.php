@@ -101,17 +101,21 @@ abstract class AbstractDao implements IDao
     foreach($current as $key => $val)
     {
       $savedVal = Arrays::value($this->_savedData, $key);
-      if($val !== $savedVal)
+      if($this->$key instanceof Counter)
       {
-        if($this->$key instanceof Counter && !$this->$key->hasChanged())
+        if(!$this->$key->hasChanged())
         {
           continue;
         }
-        $changes[$key] = [
-          'from' => $savedVal,
-          'to'   => $val,
-        ];
       }
+      else if($val === $savedVal)
+      {
+        continue;
+      }
+      $changes[$key] = [
+        'from' => $savedVal,
+        'to'   => $val,
+      ];
     }
     return $changes;
   }

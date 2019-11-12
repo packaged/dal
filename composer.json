@@ -14,7 +14,7 @@
     "packaged/helpers": "~1.23||~2.5",
     "packaged/docblock": "~0.1||~1.0",
     "packaged/log": "~1.0",
-    "packaged/querybuilder": "~0.18",
+    "packaged/querybuilder": "~0.21",
     "packaged/config": "~1.1",
     "packaged/cassandrathrift": "20.1.0.3",
     "doctrine/inflector": "~1.0"

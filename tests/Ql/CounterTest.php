@@ -3,10 +3,10 @@ namespace Packaged\Dal\Tests\Ql;
 
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Foundation\Dao;
-use PHPUnit_Framework_TestCase;
 use Packaged\Dal\Tests\Ql\Mocks\MockCounterDao;
 use Packaged\Dal\Tests\Ql\Mocks\MockQlDataStore;
 use Packaged\Dal\Tests\Ql\Mocks\PDO\MockPdoConnection;
+use PHPUnit_Framework_TestCase;
 
 class CounterTest extends PHPUnit_Framework_TestCase
 {
@@ -126,5 +126,14 @@ class CounterTest extends PHPUnit_Framework_TestCase
 
     $json = json_encode($dao);
     $this->assertEquals('{"id":"test1","c1":"6","c2":"-8","c3":"0"}', $json);
+  }
+
+  public function testUnusedCounter()
+  {
+    $dao = new MockCounterDao();
+    $dao->id = "novalue";
+    $this->assertArrayNotHasKey('c1', $dao->save());
+    $dao->c1->increment(1)->decrement(1);
+    $this->assertArrayHasKey('c1', $dao->save());
   }
 }

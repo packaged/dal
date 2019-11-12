@@ -78,6 +78,18 @@ abstract class AbstractSanitizableDao extends AbstractDao
     }
   }
 
+  public function markDaoDatasetAsSaved()
+  {
+    foreach($this->getDaoPropertyData(false) as $field => $value)
+    {
+      if($value instanceof Counter)
+      {
+        $value->resetWithValue($value->hasChanged() ? $value->calculated() : $value->current());
+      }
+    }
+    return parent::markDaoDatasetAsSaved();
+  }
+
   protected function _postStartup()
   {
     foreach($this->getDaoProperties() as $property)

@@ -3,16 +3,21 @@ namespace Packaged\Dal\DataTypes;
 
 class Counter implements IDataType, \JsonSerializable
 {
+  protected $_value = 0;
+  protected $_adjust = 0;
+  protected $_adjusted = false;
+
   public function __construct($original)
+  {
+    $this->resetWithValue($original);
+  }
+
+  public function resetWithValue($original)
   {
     $this->_value = $original;
     $this->_adjust = 0;
     $this->_adjusted = false;
   }
-
-  protected $_adjusted = false;
-  protected $_value = 0;
-  protected $_adjust = 0;
 
   public function current()
   {

@@ -16,7 +16,7 @@
     "packaged/log": "~1.0",
     "packaged/querybuilder": "~0.18",
     "packaged/config": "~1.1",
-    "packaged/cassandrathrift": "20.1.0.3",
+    "packaged/cassandrathrift": "~21",
     "doctrine/inflector": "~1.0"
   },
   "require-dev": {

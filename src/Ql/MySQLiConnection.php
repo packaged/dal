@@ -3,6 +3,7 @@ namespace Packaged\Dal\Ql;
 
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
 use Packaged\Dal\Exceptions\Connection\DuplicateKeyException;
+use Packaged\Dal\Exceptions\Connection\PdoException;
 use Packaged\Helpers\ValueAs;
 
 class MySQLiConnection extends AbstractQlConnection
@@ -170,7 +171,14 @@ class MySQLiConnection extends AbstractQlConnection
   protected function _fetchQueryResults($query, array $values = null)
   {
     $stmt = $this->_executeQuery($query, $values);
-    $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $rows = $stmt->get_result();
+    if($rows === false) //get_result() returns false on error
+    {
+      throw new PDOException(
+        $this->_connection->error, $this->_connection->errno
+      );
+    }
+    $rows->fetch_all(MYSQLI_ASSOC);
     $stmt->free_result();
     return $rows;
   }

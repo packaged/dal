@@ -170,14 +170,14 @@ class MySQLiConnection extends AbstractQlConnection
   protected function _fetchQueryResults($query, array $values = null)
   {
     $stmt = $this->_executeQuery($query, $values);
-    $rows = $stmt->get_result();
-    if($rows === false) //get_result() returns false on error
+    $result = $stmt->get_result();
+    if($result === false) //get_result() returns false on error
     {
       throw new ConnectionException(
         $this->_connection->error, $this->_connection->errno
       );
     }
-    $rows->fetch_all(MYSQLI_ASSOC);
+    $rows = $result->fetch_all(MYSQLI_ASSOC);
     $stmt->free_result();
     return $rows;
   }

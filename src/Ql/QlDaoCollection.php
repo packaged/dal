@@ -102,7 +102,9 @@ class QlDaoCollection extends DaoCollection
 
   public function removeClause($action)
   {
-    return $this->_query->removeClause($action);
+    $this->_query->removeClause($action);
+    $this->clear();
+    return $this;
   }
 
   /**
@@ -140,11 +142,11 @@ class QlDaoCollection extends DaoCollection
   }
 
   /**
-   * @deprecated
-   *
    * @param mixed ...$params expressions to pass to where clause
    *
    * @return $this
+   * @deprecated
+   *
    */
   public function loadWhere(...$params)
   {

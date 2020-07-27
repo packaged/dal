@@ -87,10 +87,10 @@ jobs:
           MYSQL_ALLOW_EMPTY_PASSWORD: yes
           MYSQL_ROOT_HOST: "%"
       - image: memcached:1.4
-  build-phpRC:
+  build-php74:
     <<: *defaults
     docker:
-      - image: php:rc-alpine
+      - image: php:7.4-alpine
         environment:
           ADD_PACKAGES: "php7-apcu php7-memcached"
           ADD_MODULES: "mysqli pdo pdo_mysql"
@@ -110,4 +110,4 @@ workflows:
       - build-php71
       - build-php72
       - build-php73
-      - build-phpRC
+      - build-php74

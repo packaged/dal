@@ -83,10 +83,13 @@ class QlDaoCollection extends DaoCollection
     return $this->_query;
   }
 
-  public function addClause(IClause $clause)
+  public function addClause(IClause $clause, $clear = true)
   {
     $this->_query->addClause($clause);
-    $this->clear();
+    if($clear)
+    {
+      $this->clear();
+    }
     return $this;
   }
 
@@ -100,10 +103,13 @@ class QlDaoCollection extends DaoCollection
     return $this->_query->hasClause($action);
   }
 
-  public function removeClause($action)
+  public function removeClause($action, $clear = true)
   {
     $this->_query->removeClause($action);
-    $this->clear();
+    if($clear)
+    {
+      $this->clear();
+    }
     return $this;
   }
 
@@ -186,8 +192,7 @@ class QlDaoCollection extends DaoCollection
     if($where)
     {
       $builder = $this->_getQueryBuilder();
-      $query = $builder::deleteFrom($dao->getTableName())
-        ->addClause($where);
+      $query = $builder::deleteFrom($dao->getTableName())->addClause($where);
       $dao->getDataStore()->execute($query);
       return $this;
     }
@@ -212,7 +217,7 @@ class QlDaoCollection extends DaoCollection
       $limit = $this->getClause('LIMIT');
       $this->limit(1);
       $this->load();
-      $this->removeClause('LIMIT');
+      $this->removeClause('LIMIT', false);
       if($limit !== null)
       {
         $this->_query->addClause($limit);

@@ -239,18 +239,14 @@ class DalResolver implements IConnectionResolver
   {
     if(!isset($this->_objectCache[self::TYPE_DATASTORE][$name]))
     {
-      $this->_objectCache[self::TYPE_DATASTORE][$name] = $this->_fromConfiguration(
-        self::TYPE_DATASTORE,
-        $name
-      );
+      $this->_objectCache[self::TYPE_DATASTORE][$name] = $this->_fromConfiguration(self::TYPE_DATASTORE, $name);
     }
 
     if(isset($this->_objectCache[self::TYPE_DATASTORE][$name]))
     {
       if(is_callable($this->_objectCache[self::TYPE_DATASTORE][$name]))
       {
-        $this->_objectCache[self::TYPE_DATASTORE][$name] = $this->_objectCache[self::TYPE_DATASTORE][$name](
-        );
+        $this->_objectCache[self::TYPE_DATASTORE][$name] = $this->_objectCache[self::TYPE_DATASTORE][$name]();
       }
 
       if($this->_objectCache[self::TYPE_DATASTORE][$name] instanceof IDataStore)

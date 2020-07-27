@@ -10,12 +10,12 @@ use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\Ql\Cql\CqlConnection;
 use Packaged\Dal\Ql\Cql\CqlDao;
 use Packaged\Dal\Ql\Cql\CqlDaoCollection;
+use Packaged\Dal\Tests\Ql\Mocks\Cql\MockCqlDao;
+use Packaged\Dal\Tests\Ql\Mocks\MockAbstractQlDataConnection;
 use Packaged\QueryBuilder\Builder\QueryBuilder;
 use Packaged\QueryBuilder\Expression\ValueExpression;
 use Packaged\QueryBuilder\Predicate\EqualPredicate;
 use PHPUnit_Framework_TestCase;
-use Packaged\Dal\Tests\Ql\Mocks\Cql\MockCqlDao;
-use Packaged\Dal\Tests\Ql\Mocks\MockAbstractQlDataConnection;
 
 class CqlTest extends PHPUnit_Framework_TestCase
 {
@@ -138,10 +138,7 @@ class CqlTest extends PHPUnit_Framework_TestCase
     Mocks\Cql\MockCqlDao::collection(['id' => $first->id])->delete();
     $this->assertNotEquals($count, $coll->count());
 
-    $this->setExpectedException(
-      DalException::class,
-      'Truncate is not supported'
-    );
+    $this->setExpectedException(DalException::class, 'Truncate is not supported');
     $coll->delete();
   }
 

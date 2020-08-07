@@ -48,5 +48,36 @@ class UniqueListTest extends PHPUnit_Framework_TestCase
 
     $testDao = MockSetDao::loadById('test1');
     $this->assertEquals(0, count(array_diff($testDao->s->calculated(), ['three', 'four'])));
+
+    $dao->s->remove('three', 'four')->add('one', 'two', 'five');
+    $datastore->save($dao);
+
+    $testDao = MockSetDao::loadById('test1');
+    $this->assertEquals(0, count(array_diff($testDao->s->calculated(), ['one', 'two', 'five'])));
+
+    $dao->s->remove('five')->add('five');
+    $changes = $datastore->save($dao);
+    $this->assertEmpty($changes);
+
+    $testDao = MockSetDao::loadById('test1');
+    $this->assertEquals(0, count(array_diff($testDao->s->calculated(), ['one', 'two', 'five'])));
+
+    $dao->s->setValue(['one'])->remove('one');
+    $datastore->save($dao);
+
+    $testDao = MockSetDao::loadById('test1');
+    $this->assertEquals(0, count(array_diff($testDao->s->calculated(), ['one'])));
+
+    $dao->s->setValue(['one'])->remove('one')->add('two');
+    $datastore->save($dao);
+
+    $testDao = MockSetDao::loadById('test1');
+    $this->assertEquals(0, count(array_diff($testDao->s->calculated(), ['two'])));
+
+    $dao->s->setValue(['one'])->add('two');
+    $datastore->save($dao);
+
+    $testDao = MockSetDao::loadById('test1');
+    $this->assertEquals(0, count(array_diff($testDao->s->calculated(), ['one', 'two'])));
   }
 }

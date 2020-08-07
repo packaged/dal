@@ -174,37 +174,40 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
 
     if($newValue instanceof UniqueList)
     {
-      if($newValue->isFixedValue())
+      $value = FieldSelectExpression::create($fieldName);
+      if($newValue->hasFixedValue())
       {
-        return StringExpression::create($dao->getPropertySerialized($fieldName, $newValue->calculated()));
-      }
-      else
-      {
-        if($newValue->hasAdditions())
+        if(empty($newValue->calculated()))
         {
-          $value = ConcatSelectExpression::create(
-            FieldSelectExpression::create($fieldName),
-            StringExpression::create(','),
-            StringExpression::create($dao->getPropertySerialized($fieldName, $newValue->getAdditions()))
-          );
+          return StringExpression::create('');
+        }
+        $value = StringExpression::create($dao->getPropertySerialized($fieldName, $newValue->calculated()));
+      }
 
-          if($newValue->hasRemovals())
-          {
-            return $this->_uniqueListRemovalExpression($dao, $fieldName, $value, $newValue->getRemovals());
-          }
-          return $value;
-        }
-        else if($newValue->hasRemovals())
+      if($newValue->hasAdditions())
+      {
+        $value = ConcatSelectExpression::create(
+          $value,
+          StringExpression::create(','),
+          StringExpression::create($dao->getPropertySerialized($fieldName, $newValue->getAdditions()))
+        );
+
+        if($newValue->hasRemovals())
         {
-          return $this->_uniqueListRemovalExpression(
-            $dao,
-            $fieldName,
-            FieldSelectExpression::create($fieldName),
-            $newValue->getRemovals()
-          );
+          return $this->_uniqueListRemovalExpression($dao, $fieldName, $value, $newValue->getRemovals());
         }
+        return $value;
       }
-      throw new DalException('Unable to determine expression for Unique List');
+      else if($newValue->hasRemovals())
+      {
+        return $this->_uniqueListRemovalExpression(
+          $dao,
+          $fieldName,
+          FieldSelectExpression::create($fieldName),
+          $newValue->getRemovals()
+        );
+      }
+      return $value;
     }
 
     return $value;
@@ -212,22 +215,23 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
 
   protected function _uniqueListRemovalExpression(QlDao $dao, $fieldName, $value, $removals)
   {
+    // add trailing comma
+    $value = ConcatSelectExpression::create($value, StringExpression::create(','));
+
     foreach($removals as $removal)
     {
-      $subject = ConcatSelectExpression::create($value, StringExpression::create(','));
-      $search = ConcatSelectExpression::create(
-        StringExpression::create($dao->getPropertySerialized($fieldName, $removal)),
-        StringExpression::create(',')
-      );
-      $replace = StringExpression::create('');
-
-      $value = TrimSelectExpression::create(
-        ReplaceSelectExpression::create($subject, $search, $replace),
-        ',',
-        'trailing'
+      $value = ReplaceSelectExpression::create(
+        $value,
+        ConcatSelectExpression::create(
+          StringExpression::create($dao->getPropertySerialized($fieldName, $removal)),
+          StringExpression::create(',')
+        ),
+        ''
       );
     }
-    return $value;
+
+    // remove trailing comma
+    return TrimSelectExpression::create($value, ',', 'trailing');
   }
 
   protected function _getDaoChanges(QlDao $dao, $includeIds = true)

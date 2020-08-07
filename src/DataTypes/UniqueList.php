@@ -33,6 +33,7 @@ class UniqueList implements IDataType, \JsonSerializable
     $this->_add = [];
     $this->_remove = [];
     $this->_adjusted = true;
+    return $this;
   }
 
   public function calculated()
@@ -44,11 +45,10 @@ class UniqueList implements IDataType, \JsonSerializable
   {
     foreach($values as $value)
     {
+      unset($this->_remove[$value]);
       if(!isset($this->_value[$value]))
       {
         $this->_add[$value] = true;
-        unset($this->_remove[$value]);
-        $this->_adjusted = true;
       }
     }
     return $this;
@@ -58,29 +58,28 @@ class UniqueList implements IDataType, \JsonSerializable
   {
     foreach($values as $value)
     {
+      unset($this->_add[$value]);
       if(isset($this->_value[$value]))
       {
         $this->_remove[$value] = true;
-        unset($this->_add[$value]);
-        $this->_adjusted = true;
       }
     }
     return $this;
   }
 
-  public function isFixedValue()
+  public function hasFixedValue()
   {
-    return $this->_adjusted && empty($this->_add) && empty($this->_remove);
+    return $this->_adjusted;
   }
 
   public function hasChanged()
   {
-    return (bool)$this->_adjusted;
+    return $this->_adjusted || !empty($this->_add) || !empty($this->_remove);
   }
 
   public function hasAdditions()
   {
-    return $this->_adjusted && !empty($this->_add);
+    return !empty($this->_add);
   }
 
   public function getAdditions()
@@ -90,7 +89,7 @@ class UniqueList implements IDataType, \JsonSerializable
 
   public function hasRemovals()
   {
-    return $this->_adjusted && !empty($this->_remove);
+    return !empty($this->_remove);
   }
 
   public function getRemovals()

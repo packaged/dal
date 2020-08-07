@@ -20,6 +20,7 @@ class UniqueList implements IDataType, \JsonSerializable
     $this->_add = [];
     $this->_remove = [];
     $this->_adjusted = false;
+    return $this;
   }
 
   public function current()

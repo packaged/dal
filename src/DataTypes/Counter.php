@@ -17,6 +17,7 @@ class Counter implements IDataType, \JsonSerializable
     $this->_value = $original;
     $this->_adjust = 0;
     $this->_adjusted = false;
+    return $this;
   }
 
   public function current()
@@ -29,6 +30,7 @@ class Counter implements IDataType, \JsonSerializable
     $this->_value = $value;
     $this->_adjust = 0;
     $this->_adjusted = true;
+    return $this;
   }
 
   public function calculated()

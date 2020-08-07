@@ -4,7 +4,9 @@ namespace Packaged\Dal\Ql;
 use Packaged\Config\ConfigurableInterface;
 use Packaged\Config\ConfigurableTrait;
 use Packaged\Dal\DataTypes\Counter;
+use Packaged\Dal\DataTypes\UniqueList;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
+use Packaged\Dal\Exceptions\DalException;
 use Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException;
 use Packaged\Dal\Exceptions\DataStore\DaoNotFoundException;
 use Packaged\Dal\Exceptions\DataStore\DataStoreException;
@@ -17,7 +19,12 @@ use Packaged\QueryBuilder\Builder\QueryBuilder;
 use Packaged\QueryBuilder\Expression\DecrementExpression;
 use Packaged\QueryBuilder\Expression\IncrementExpression;
 use Packaged\QueryBuilder\Expression\NumericExpression;
+use Packaged\QueryBuilder\Expression\StringExpression;
 use Packaged\QueryBuilder\SelectExpression\AllSelectExpression;
+use Packaged\QueryBuilder\SelectExpression\ConcatSelectExpression;
+use Packaged\QueryBuilder\SelectExpression\FieldSelectExpression;
+use Packaged\QueryBuilder\SelectExpression\ReplaceSelectExpression;
+use Packaged\QueryBuilder\SelectExpression\TrimSelectExpression;
 use Packaged\QueryBuilder\Statement\IStatement;
 
 class QlDataStore extends AbstractDataStore implements ConfigurableInterface
@@ -117,7 +124,7 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
       $data = $this->_getDaoChanges($dao);
       foreach($data as $field => $value)
       {
-        $data[$field] = $this->_getCounterValue($dao, $field, $value);
+        $data[$field] = $this->_getQlExpression($dao, $field, $value);
       }
       $qb = static::_getQueryBuilderClass();
       $statement = $qb::update($dao->getTableName(), $data)
@@ -137,7 +144,7 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
         {
           $statement->onDuplicateKeyUpdate(
             $field,
-            $this->_getCounterValue($dao, $field, $value)
+            $this->_getQlExpression($dao, $field, $value)
           );
         }
       }
@@ -145,23 +152,80 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
     return $statement;
   }
 
-  protected function _getCounterValue(QlDao $dao, $field, $value)
+  protected function _getQlExpression(QlDao $dao, $fieldName, $value)
   {
-    $newValue = $dao->{$field};
+    $newValue = $dao->{$fieldName};
     if($newValue instanceof Counter)
     {
-      if($newValue->isIncrement())
+      if($newValue->isFixedValue())
       {
-        $value = IncrementExpression::create($field, $newValue->getIncrement());
+        return NumericExpression::create($newValue->calculated());
+      }
+      else if($newValue->isIncrement())
+      {
+        return IncrementExpression::create($fieldName, $newValue->getIncrement());
       }
       else if($newValue->isDecrement())
       {
-        $value = DecrementExpression::create($field, $newValue->getDecrement());
+        return DecrementExpression::create($fieldName, $newValue->getDecrement());
       }
-      else if($newValue->isFixedValue())
+      throw new DalException('Unable to determine expression for Counter');
+    }
+
+    if($newValue instanceof UniqueList)
+    {
+      if($newValue->isFixedValue())
       {
-        $value = NumericExpression::create($newValue->calculated());
+        return StringExpression::create($dao->getPropertySerialized($fieldName, $newValue->calculated()));
       }
+      else
+      {
+        if($newValue->hasAdditions())
+        {
+          $value = ConcatSelectExpression::create(
+            FieldSelectExpression::create($fieldName),
+            StringExpression::create(','),
+            StringExpression::create($dao->getPropertySerialized($fieldName, $newValue->getAdditions()))
+          );
+
+          if($newValue->hasRemovals())
+          {
+            return $this->_uniqueListRemovalExpression($dao, $fieldName, $value, $newValue->getRemovals());
+          }
+          return $value;
+        }
+        else if($newValue->hasRemovals())
+        {
+          return $this->_uniqueListRemovalExpression(
+            $dao,
+            $fieldName,
+            FieldSelectExpression::create($fieldName),
+            $newValue->getRemovals()
+          );
+        }
+      }
+      throw new DalException('Unable to determine expression for Unique List');
+    }
+
+    return $value;
+  }
+
+  protected function _uniqueListRemovalExpression(QlDao $dao, $fieldName, $value, $removals)
+  {
+    foreach($removals as $removal)
+    {
+      $subject = ConcatSelectExpression::create($value, StringExpression::create(','));
+      $search = ConcatSelectExpression::create(
+        StringExpression::create($dao->getPropertySerialized($fieldName, $removal)),
+        StringExpression::create(',')
+      );
+      $replace = StringExpression::create('');
+
+      $value = TrimSelectExpression::create(
+        ReplaceSelectExpression::create($subject, $search, $replace),
+        ',',
+        'trailing'
+      );
     }
     return $value;
   }

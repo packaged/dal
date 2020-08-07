@@ -2,6 +2,7 @@
 namespace Packaged\Dal\Foundation;
 
 use Packaged\Dal\DataTypes\Counter;
+use Packaged\Dal\DataTypes\UniqueList;
 use Packaged\Dal\Exceptions\Dao\DaoException;
 use Packaged\Dal\ISanitizableDao;
 use Packaged\DocBlock\DocBlockParser;
@@ -26,12 +27,22 @@ abstract class AbstractSanitizableDao extends AbstractDao
   ];
 
   protected static $_counters = [];
+  protected static $_uniqueLists = [];
 
   public function hasCounter()
   {
     if(isset(static::$_counters[$this->_calledClass]))
     {
       return count(static::$_counters[$this->_calledClass]) > 0;
+    }
+    return false;
+  }
+
+  public function hasUniqueList()
+  {
+    if(isset(static::$_uniqueLists[$this->_calledClass]))
+    {
+      return count(static::$_uniqueLists[$this->_calledClass]) > 0;
     }
     return false;
   }
@@ -66,6 +77,36 @@ abstract class AbstractSanitizableDao extends AbstractDao
     return new Counter($data);
   }
 
+  protected function _serializeUniqueList($value)
+  {
+    if($value instanceof UniqueList)
+    {
+      $value = $value->calculated();
+    }
+    if(is_array($value))
+    {
+      return implode(',', $value);
+    }
+    return $value;
+  }
+
+  protected function _unserializeUniqueList($data)
+  {
+    if($data instanceof UniqueList)
+    {
+      return $data;
+    }
+    if($data && !is_array($data))
+    {
+      $data = explode(',', $data);
+    }
+    else
+    {
+      $data = [];
+    }
+    return new UniqueList($data);
+  }
+
   protected function _configure()
   {
     parent::_configure();
@@ -76,6 +117,18 @@ abstract class AbstractSanitizableDao extends AbstractDao
         $this->_addCustomSerializer($property, 'counter', [$this, '_serializeCounter'], [$this, '_unserializeCounter']);
       }
     }
+    if($this->hasUniqueList())
+    {
+      foreach(static::$_uniqueLists[$this->_calledClass] as $property)
+      {
+        $this->_addCustomSerializer(
+          $property,
+          'counter',
+          [$this, '_serializeUniqueList'],
+          [$this, '_unserializeUniqueList']
+        );
+      }
+    }
   }
 
   public function markDaoDatasetAsSaved()
@@ -83,6 +136,10 @@ abstract class AbstractSanitizableDao extends AbstractDao
     foreach($this->getDaoPropertyData(false) as $field => $value)
     {
       if($value instanceof Counter)
+      {
+        $value->resetWithValue($value->hasChanged() ? $value->calculated() : $value->current());
+      }
+      else if($value instanceof UniqueList)
       {
         $value->resetWithValue($value->hasChanged() ? $value->calculated() : $value->current());
       }
@@ -98,6 +155,10 @@ abstract class AbstractSanitizableDao extends AbstractDao
       if($docblock->hasTag('counter'))
       {
         static::$_counters[$this->_calledClass][] = $property;
+      }
+      if($docblock->hasTag('uniqueList'))
+      {
+        static::$_uniqueLists[$this->_calledClass][] = $property;
       }
     }
   }
@@ -335,7 +396,6 @@ abstract class AbstractSanitizableDao extends AbstractDao
   {
     if(empty($this->_sanetizers['serializers']))
     {
-      /** @noinspection PhpIncompatibleReturnTypeInspection */
       return parent::hydrateDao($data);
     }
 
@@ -372,6 +432,13 @@ abstract class AbstractSanitizableDao extends AbstractDao
       foreach(static::$_counters[get_called_class()] as $property)
       {
         $this->$property = $this->_unserializeCounter($this->$property);
+      }
+    }
+    if($this->hasUniqueList())
+    {
+      foreach(static::$_uniqueLists[get_called_class()] as $property)
+      {
+        $this->$property = $this->_unserializeUniqueList($this->$property);
       }
     }
   }

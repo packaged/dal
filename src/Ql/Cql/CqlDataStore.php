@@ -35,7 +35,7 @@ class CqlDataStore extends QlDataStore
     $data = $this->_getDaoChanges($dao, false);
     foreach($data as $field => $value)
     {
-      $data[$field] = $this->_getCounterValue($dao, $field, $value);
+      $data[$field] = $this->_getQlExpression($dao, $field, $value);
     }
 
     if($data)
@@ -46,18 +46,18 @@ class CqlDataStore extends QlDataStore
     return null;
   }
 
-  protected function _getCounterValue(QlDao $dao, $field, $value)
+  protected function _getQlExpression(QlDao $dao, $fieldName, $value)
   {
-    $newValue = $dao->{$field};
+    $newValue = $dao->{$fieldName};
     if($newValue instanceof Counter)
     {
       if($newValue->isIncrement())
       {
-        $value = IncrementExpression::create($field, $newValue->getIncrement());
+        $value = IncrementExpression::create($fieldName, $newValue->getIncrement());
       }
       else if($newValue->isDecrement())
       {
-        $value = DecrementExpression::create($field, $newValue->getDecrement());
+        $value = DecrementExpression::create($fieldName, $newValue->getDecrement());
       }
       else if($newValue->isFixedValue() && $newValue->hasChanged())
       {
@@ -65,8 +65,8 @@ class CqlDataStore extends QlDataStore
         {
           //Allow counter row initialisation
           $value = [
-            IncrementExpression::create($field, 1),
-            DecrementExpression::create($field, 1),
+            IncrementExpression::create($fieldName, 1),
+            DecrementExpression::create($fieldName, 1),
           ];
         }
         else

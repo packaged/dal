@@ -447,7 +447,7 @@ class CqlTest extends TestCase
     $conn = new CqlConnection();
     $conn->setResolver(new DalResolver());
     $conn->setConfig('persist', true);
-    $conn->setConfig('keyspace', 'dal_keyspace1');
+    $conn->setConfig('keyspace', 'packaged_dal_switch');
     $conn->connect();
     $conn->runQuery(
       'CREATE TABLE IF NOT EXISTS "test1" ("test_field" text, PRIMARY KEY ("test_field"))'

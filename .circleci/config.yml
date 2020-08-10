@@ -37,11 +37,9 @@ defaults: &defaults
     - run: composer install -n --prefer-dist
     - run: php .circleci/.mysql.php
     - run: php .circleci/.cassandra.php
-    - run: php vendor/phpunit/phpunit/phpunit -c phpunit.xml --log-junit "/tmp/test-results/phpunit/junit.xml" --coverage-clover "/tmp/coverage-report/clover.xml" --coverage-html "/tmp/coverage-report/html/"
+    - run: php vendor/phpunit/phpunit/phpunit -c phpunit.xml --log-junit "/tmp/test-results/phpunit/junit.xml"
     - store_test_results:
         path: /tmp/test-results
-    - store_artifacts:
-        path: /tmp/coverage-report
 
 version: 2
 jobs:

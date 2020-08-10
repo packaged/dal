@@ -2,8 +2,9 @@
 namespace Packaged\Dal\Tests\DataTypes;
 
 use Packaged\Dal\DataTypes\UniqueList;
+use PHPUnit\Framework\TestCase;
 
-class UniqueListTest extends \PHPUnit_Framework_TestCase
+class UniqueListTest extends TestCase
 {
   public function testUniqueList()
   {

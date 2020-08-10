@@ -1,5 +1,5 @@
 <?php
-namespace Packaged\Dal\Tests\Ql;
+namespace Packaged\Dal\Tests\Ql\Cql;
 
 use cassandra\InvalidRequestException;
 use Packaged\Config\Provider\ConfigSection;
@@ -10,6 +10,7 @@ use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\Ql\Cql\CqlConnection;
 use Packaged\Dal\Ql\Cql\CqlDao;
 use Packaged\Dal\Ql\Cql\CqlDaoCollection;
+use Packaged\Dal\Tests\Ql\Mocks;
 use Packaged\Dal\Tests\Ql\Mocks\Cql\MockCqlDao;
 use Packaged\Dal\Tests\Ql\Mocks\MockAbstractQlDataConnection;
 use Packaged\QueryBuilder\Builder\QueryBuilder;
@@ -19,55 +20,6 @@ use PHPUnit_Framework_TestCase;
 
 class CqlTest extends PHPUnit_Framework_TestCase
 {
-  /**
-   * @var CqlConnection
-   */
-  private static $_connection;
-
-  public static function setUpBeforeClass()
-  {
-    self::$_connection = new CqlConnection();
-    self::$_connection->setConfig('connect_timeout', 10000);
-    self::$_connection->setConfig('receive_timeout', 10000);
-    self::$_connection->setConfig('send_timeout', 10000);
-
-    self::$_connection->setResolver(new DalResolver());
-    self::$_connection->connect();
-    self::$_connection->runQuery(
-      "CREATE KEYSPACE IF NOT EXISTS packaged_dal WITH REPLICATION = "
-      . "{'class' : 'SimpleStrategy','replication_factor' : 1};"
-    );
-    self::$_connection->runQuery(
-      'DROP TABLE IF EXISTS packaged_dal.mock_ql_daos'
-    );
-    self::$_connection->runQuery(
-      'CREATE TABLE packaged_dal.mock_ql_daos ('
-      . '"id" varchar,'
-      . '"id2" int,'
-      . '"username" varchar,'
-      . '"display" varchar,'
-      . '"intVal" int,'
-      . '"bigintVal" bigint,'
-      . '"doubleVal" double,'
-      . '"floatVal" float,'
-      . '"decimalVal" decimal,'
-      . '"negDecimalVal" decimal,'
-      . '"timestampVal" timestamp,'
-      . '"boolVal" boolean,'
-      . ' PRIMARY KEY ((id), id2));'
-    );
-    self::$_connection->runQuery(
-      'DROP TABLE IF EXISTS packaged_dal.mock_counter_daos'
-    );
-    self::$_connection->runQuery(
-      'CREATE TABLE packaged_dal.mock_counter_daos ('
-      . '"id" varchar PRIMARY KEY,'
-      . '"c1" counter,'
-      . '"c2" counter,'
-      . ');'
-    );
-  }
-
   public function testNoKeyspace()
   {
     $datastore = new Mocks\Cql\MockCqlDataStore();
@@ -486,18 +438,19 @@ class CqlTest extends PHPUnit_Framework_TestCase
 
   public function testSwitchingKeyspace()
   {
-    self::$_connection->runQuery(
-      "CREATE KEYSPACE IF NOT EXISTS dal_keyspace1 WITH REPLICATION = "
-      . "{'class' : 'SimpleStrategy','replication_factor' : 1};"
+    $conn = new CqlConnection();
+    $conn->setResolver(new DalResolver());
+    $conn->setConfig('persist', true);
+    $conn->setConfig('keyspace', 'dal_keyspace1');
+    $conn->connect();
+    $conn->runQuery(
+      'CREATE TABLE IF NOT EXISTS "test1" ("test_field" text, PRIMARY KEY ("test_field"))'
     );
-    self::$_connection->runQuery(
-      "CREATE KEYSPACE IF NOT EXISTS dal_keyspace2 WITH REPLICATION = "
-      . "{'class' : 'SimpleStrategy','replication_factor' : 1};"
-    );
+
     $conn1 = new CqlConnection();
     $conn1->setResolver(new DalResolver());
     $conn1->setConfig('persist', true);
-    $conn1->setConfig('keyspace', 'dal_keyspace1');
+    $conn1->setConfig('keyspace', 'packaged_dal');
     $conn1->connect();
     $conn1->runQuery(
       'CREATE TABLE IF NOT EXISTS "test1" ("test_field" text, PRIMARY KEY ("test_field"))'
@@ -506,7 +459,7 @@ class CqlTest extends PHPUnit_Framework_TestCase
     $conn2 = new CqlConnection();
     $conn2->setResolver(new DalResolver());
     $conn2->setConfig('persist', true);
-    $conn2->setConfig('keyspace', 'dal_keyspace2');
+    $conn2->setConfig('keyspace', 'packaged_dal_switch');
     $conn2->connect();
     $conn2->runQuery(
       'CREATE TABLE IF NOT EXISTS "test2" ("test_field" text, PRIMARY KEY ("test_field"))'

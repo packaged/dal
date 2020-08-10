@@ -33,6 +33,7 @@ defaults: &defaults
 
     # post-checkout steps
     - run: php .circleci/.mysql.php
+    - run: php .circleci/.cassandra.php
 
     # run tests
     - run: composer install -n --prefer-dist

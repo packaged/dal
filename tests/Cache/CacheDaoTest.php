@@ -2,8 +2,9 @@
 namespace Packaged\Dal\Tests\Cache;
 
 use Packaged\Dal\Cache\CacheDao;
+use PHPUnit\Framework\TestCase;
 
-class CacheDaoTest extends \PHPUnit_Framework_TestCase
+class CacheDaoTest extends TestCase
 {
   public function testTtl()
   {

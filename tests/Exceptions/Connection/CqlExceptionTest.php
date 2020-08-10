@@ -9,10 +9,11 @@ use cassandra\SchemaDisagreementException;
 use cassandra\TimedOutException;
 use cassandra\UnavailableException;
 use Packaged\Dal\Exceptions\Connection\CqlException;
+use PHPUnit\Framework\TestCase;
 use Thrift\Exception\TApplicationException;
 use Thrift\Exception\TException;
 
-class CqlExceptionTest extends \PHPUnit_Framework_TestCase
+class CqlExceptionTest extends TestCase
 {
   /**
    * @dataProvider exceptionProvider
@@ -24,10 +25,7 @@ class CqlExceptionTest extends \PHPUnit_Framework_TestCase
   public function testExceptions($exception, $code, $contains)
   {
     $formed = CqlException::from($exception);
-    $this->assertInstanceOf(
-      '\Packaged\Dal\Exceptions\Connection\CqlException',
-      $formed
-    );
+    $this->assertInstanceOf(CqlException::class, $formed);
     $this->assertEquals($code, $formed->getCode());
     if(is_array($contains))
     {

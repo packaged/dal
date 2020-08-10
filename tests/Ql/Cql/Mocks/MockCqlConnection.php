@@ -1,12 +1,13 @@
 <?php
-namespace Packaged\Dal\Tests\Ql\Mocks\Cql;
+namespace Packaged\Dal\Tests\Ql\Cql\Mocks;
 
 use cassandra\Compression;
 use cassandra\ConsistencyLevel;
 use Packaged\Dal\Ql\Cql\CqlConnection;
 use Packaged\Dal\Ql\Cql\CqlStatement;
+use Packaged\Dal\Tests\Ql\Mocks\MockConnectionInterface;
 
-class MockCqlConnection extends CqlConnection
+class MockCqlConnection extends CqlConnection implements MockConnectionInterface
 {
   protected $_executeCount = 0;
   protected $_prepareCount = 0;
@@ -64,5 +65,22 @@ class MockCqlConnection extends CqlConnection
   {
     $this->_prepareCount = 0;
     $this->_executeCount = 0;
+  }
+
+  public function getMockDao()
+  {
+    return new MockCqlDao();
+  }
+
+  public function getMockCounterDao()
+  {
+    return new MockCounterCqlDao();
+  }
+
+  public function truncate()
+  {
+    $this->runQuery('TRUNCATE TABLE packaged_dal.mock_ql_daos');
+    $this->runQuery('TRUNCATE TABLE packaged_dal.mock_counter_daos');
+    $this->runQuery('TRUNCATE TABLE packaged_dal.mock_set_daos');
   }
 }

@@ -32,11 +32,12 @@ defaults: &defaults
     - checkout
 
     # post-checkout steps
-    - run: php .circleci/.mysql.php
 
     # run tests
     - run: composer install -n --prefer-dist
-    - run: php vendor/phpunit/phpunit/phpunit -c phpunit.xml --log-junit /tmp/test-results/phpunit/junit.xml
+    - run: php .circleci/.mysql.php
+    - run: php .circleci/.cassandra.php
+    - run: php vendor/phpunit/phpunit/phpunit -c phpunit.xml --log-junit "/tmp/test-results/phpunit/junit.xml"
     - store_test_results:
         path: /tmp/test-results
 

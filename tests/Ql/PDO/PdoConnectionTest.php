@@ -1,14 +1,15 @@
 <?php
-namespace Packaged\Dal\Tests\Ql;
+namespace Packaged\Dal\Tests\Ql\PDO;
 
 use Packaged\Config\Provider\ConfigSection;
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
 use Packaged\Dal\Ql\PdoConnection;
-use Packaged\Dal\Tests\Ql\Mocks\PDO\DelayedPreparesPdoConnection;
-use Packaged\Dal\Tests\Ql\Mocks\PDO\MockPdoConnection;
-use Packaged\Dal\Tests\Ql\Mocks\PDO\PrepareErrorPdoConnection;
-use Packaged\Dal\Tests\Ql\Mocks\PDO\StmtCachePdoConnection;
+use Packaged\Dal\Tests\Ql\AbstractQlConnectionTest;
+use Packaged\Dal\Tests\Ql\PDO\Mocks\DelayedPreparesPdoConnection;
+use Packaged\Dal\Tests\Ql\PDO\Mocks\MockPdoConnection;
+use Packaged\Dal\Tests\Ql\PDO\Mocks\PrepareErrorPdoConnection;
+use Packaged\Dal\Tests\Ql\PDO\Mocks\StmtCachePdoConnection;
 
 class PdoConnectionTest extends AbstractQlConnectionTest
 {
@@ -36,11 +37,9 @@ class PdoConnectionTest extends AbstractQlConnectionTest
     $connection = $this->_getConnection();
     $connection->setConnection($pdo);
     $connection->setResolver(new DalResolver());
-    $this->setExpectedException(
-      ConnectionException::class,
-      'My Exception Message',
-      1234
-    );
+    $this->expectException(ConnectionException::class);
+    $this->expectExceptionMessage('My Exception Message');
+    $this->expectExceptionCode(1234);
     $connection->runQuery("SELECT * FROM `made_up_table_r45i`", []);
   }
 
@@ -50,11 +49,9 @@ class PdoConnectionTest extends AbstractQlConnectionTest
     $connection = $this->_getConnection();
     $connection->setResolver(new DalResolver());
     $connection->setConnection($pdo);
-    $this->setExpectedException(
-      ConnectionException::class,
-      'My Exception Message',
-      1234
-    );
+    $this->expectException(ConnectionException::class);
+    $this->expectExceptionMessage('My Exception Message');
+    $this->expectExceptionCode(1234);
     $connection->fetchQueryResults("SELECT * FROM `made_up_table_r46i`", []);
   }
 

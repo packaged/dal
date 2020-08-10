@@ -1,34 +1,66 @@
 <?php
 namespace Packaged\Dal\Tests\Ql;
 
+use Exception;
 use Packaged\Dal\DalResolver;
-use Packaged\Dal\Foundation\Dao;
-use Packaged\Dal\Ql\PdoConnection;
-use Packaged\QueryBuilder\Assembler\QueryAssembler;
+use Packaged\Dal\Exceptions\Connection\ConnectionException;
+use Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException;
+use Packaged\Dal\Exceptions\DalResolver\DataStoreNotFoundException;
+use Packaged\Dal\Exceptions\Dao\MultipleDaoException;
+use Packaged\Dal\Exceptions\DataStore\DaoNotFoundException;
+use Packaged\Dal\Exceptions\DataStore\DataStoreException;
+use Packaged\Dal\Exceptions\DataStore\TooManyResultsException;
+use Packaged\Dal\Ql\QlDataStore;
+use Packaged\Dal\Tests\Ql\Mocks\MockConnectionInterface;
+use Packaged\Dal\Tests\Ql\Mocks\MockCounterDao;
 use Packaged\Dal\Tests\Ql\Mocks\MockNonUniqueKeyDao;
 use Packaged\Dal\Tests\Ql\Mocks\MockQlDao;
 use Packaged\Dal\Tests\Ql\Mocks\MockQlDataStore;
-use Packaged\Dal\Tests\Ql\Mocks\PDO\MockPdoConnection;
+use Packaged\Dal\Tests\Ql\Mocks\MySQLi\MockMySQLiConnection;
+use Packaged\Dal\Tests\Ql\PDO\Mocks\MockPdoConnection;
+use Packaged\QueryBuilder\Assembler\QueryAssembler;
+use PHPUnit\Framework\TestCase;
 
-class QlDaoTest extends \PHPUnit_Framework_TestCase
+class QlDaoTest extends TestCase
 {
-  protected function setUp()
+  protected function _getResolver($name, $store, $connection)
   {
-    $resolver = new DalResolver();
-    $resolver->boot();
-
-    $connection = new MockPdoConnection();
-    $connection->config();
-    $connection->setResolver($resolver);
-    $connection->runQuery('TRUNCATE TABLE `mock_ql_daos`');
+    $resolver = (new DalResolver())->addDataStore($name, $store);
+    $store->setConnection($connection);
+    return $resolver;
   }
 
-  public function testStatics()
+  public function connectionProvider()
   {
-    $datastore = new MockQlDataStore();
-    $connection = new MockPdoConnection();
-    $connection->config();
-    $datastore->setConnection($connection);
+    $pdo = new MockPdoConnection();
+    $store = new MockQlDataStore();
+    $pdo->config();
+    $resolver = $this->_getResolver('mockql', $store, $pdo);
+    $pdo->setResolver($resolver);
+    yield 'pdo' => [$pdo, $store, $resolver];
+
+    $store = new MockQlDataStore();
+    $mysqli = new MockMySQLiConnection();
+    $mysqli->config();
+    $resolver = $this->_getResolver('mockql', $store, $mysqli);
+    $mysqli->setResolver($resolver);
+    yield 'mysqli' => [$mysqli, $store->setConnection($mysqli), $resolver];
+  }
+
+  /**
+   * @dataProvider connectionProvider
+   *
+   * @param MockConnectionInterface $connection
+   *
+   * @param QlDataStore             $dataStore
+   * @param DalResolver             $resolver
+   *
+   * @throws MultipleDaoException
+   */
+  public function testStatics(MockConnectionInterface $connection, QlDataStore $dataStore, DalResolver $resolver)
+  {
+    $connection->truncate();
+    $resolver->boot();
 
     $collection = MockQlDao::collection();
     $this->assertInstanceOf(MockQlDao::class, $collection->createNewDao());
@@ -39,12 +71,6 @@ class QlDaoTest extends \PHPUnit_Framework_TestCase
       'SELECT mock_ql_daos.* FROM mock_ql_daos WHERE name = "Test"',
       QueryAssembler::stringify($collection->getQuery())
     );
-
-    $resolver = new DalResolver();
-    $resolver->boot();
-    $resolver->addDataStore('mockql', $datastore);
-
-    $connection->setResolver($resolver);
 
     $username = uniqid('TEST');
     $u = new MockQlDao();
@@ -75,7 +101,7 @@ class QlDaoTest extends \PHPUnit_Framework_TestCase
       $msg = null;
       MockQlDao::loadOneWhere(['display' => 'Test One']);
     }
-    catch(\Exception $e)
+    catch(Exception $e)
     {
       $msg = $e->getMessage();
     }
@@ -96,23 +122,25 @@ class QlDaoTest extends \PHPUnit_Framework_TestCase
   }
 
   /**
-   * @expectedException \Packaged\Dal\Exceptions\DataStore\TooManyResultsException
-   * @expectedExceptionMessage Too many results located
+   * @dataProvider connectionProvider
+   *
+   * @param MockConnectionInterface $connection
+   *
+   * @param QlDataStore             $datastore
+   * @param DalResolver             $resolver
+   *
+   * @throws DaoNotFoundException
    */
-  public function testMultipleExistsFailure()
+  public function testMultipleExistsFailure(
+    MockConnectionInterface $connection, QlDataStore $datastore, DalResolver $resolver
+  )
   {
-    $datastore = new MockQlDataStore();
-    $connection = new MockPdoConnection();
-    $connection->config();
-    $datastore->setConnection($connection);
-
-    $resolver = new DalResolver();
+    $connection->truncate();
     $resolver->boot();
-    $resolver->addDataStore('mockql', $datastore);
+    $this->expectExceptionMessage("Too many results located");
+    $this->expectException(TooManyResultsException::class);
 
-    $connection->setResolver($resolver);
-
-    $u1 = new MockQlDao();
+    $u1 = $connection->getMockDao();
     $u1->username = 'TestMultiple';
     $u1->display = 'Test One';
     $u1->save();
@@ -127,17 +155,29 @@ class QlDaoTest extends \PHPUnit_Framework_TestCase
     $test->exists();
 
     MockNonUniqueKeyDao::loadById('TestMultiple');
+    $resolver->shutdown();
   }
 
-  public function testDatastoreAutoConstruct()
+  /**
+   * @dataProvider connectionProvider
+   *
+   * @param MockConnectionInterface $connection
+   * @param QlDataStore             $datastore
+   *
+   * @param DalResolver             $resolver
+   *
+   * @throws ConnectionNotFoundException
+   * @throws DataStoreNotFoundException
+   */
+  public function testDatastoreAutoConstruct(
+    MockConnectionInterface $connection, QlDataStore $datastore, DalResolver $resolver
+  )
   {
-    $connection = new PdoConnection();
-
-    $resolver = new DalResolver();
+    $connection->truncate();
     $resolver->boot();
     $resolver->addConnection('mockql', $connection);
 
-    $mock = new MockQlDao();
+    $mock = $connection->getMockDao();
     $this->assertSame($connection, $mock->getDataStore()->getConnection());
 
     $resolver->shutdown();
@@ -145,30 +185,30 @@ class QlDaoTest extends \PHPUnit_Framework_TestCase
 
   public function testNoDataStore()
   {
+    $this->expectException(DataStoreNotFoundException::class);
     $resolver = new DalResolver();
     $resolver->boot();
 
     $mock = new MockQlDao();
-    $this->setExpectedException(
-      '\Packaged\Dal\Exceptions\DalResolver\DataStoreNotFoundException'
-    );
     $mock->getDataStore();
   }
 
-  public function testChangeKey()
+  /**
+   * @dataProvider connectionProvider
+   *
+   * @param MockConnectionInterface $connection
+   * @param QlDataStore             $datastore
+   *
+   * @param DalResolver             $resolver
+   *
+   * @throws MultipleDaoException
+   */
+  public function testChangeKey(MockConnectionInterface $connection, QlDataStore $datastore, DalResolver $resolver)
   {
-    $datastore = new MockQlDataStore();
-    $connection = new MockPdoConnection();
-    $connection->config();
-    $datastore->setConnection($connection);
-
-    $resolver = new DalResolver();
+    $connection->truncate();
     $resolver->boot();
-    $resolver->addDataStore('mockql', $datastore);
 
-    $connection->setResolver($resolver);
-
-    $dao = new MockQlDao();
+    $dao = $connection->getMockDao();
     $dao->username = 'Test One';
     $dao->display = 'Test One';
     $dao->save();
@@ -187,5 +227,150 @@ class QlDaoTest extends \PHPUnit_Framework_TestCase
     // check old id gone
     $missingDao = MockQlDao::loadOneWhere(['id' => $oldId]);
     $this->assertNull($missingDao);
+    $resolver->shutdown();
+  }
+
+  /**
+   * @dataProvider connectionProvider
+   *
+   * @param MockConnectionInterface $connection
+   * @param QlDataStore             $datastore
+   * @param DalResolver             $resolver
+   *
+   * @throws ConnectionNotFoundException
+   * @throws DaoNotFoundException
+   * @throws ConnectionException
+   * @throws DataStoreException
+   */
+  public function testCounters(MockConnectionInterface $connection, QlDataStore $datastore, DalResolver $resolver)
+  {
+    $resolver->boot();
+    $connection->truncate();
+
+    $dao = MockCounterDao::loadOrNew('test1');
+    $dao->c1->increment(10);
+    $dao->c1->decrement(5);
+    $datastore->save($dao);
+    $dao->c2->increment(1);
+    $dao->c2->decrement(3);
+    $datastore->save($dao);
+
+    $dao = new MockCounterDao();
+    $dao->id = 'test1';
+    $dao->c2->increment(1);
+    $dao->c2->decrement(3);
+    $datastore->save($dao);
+
+    $dao = MockCounterDao::loadById('test1');
+    $this->assertEquals(5, $dao->c1->calculated());
+    $this->assertEquals(-4, $dao->c2->calculated());
+
+    $dao = MockCounterDao::loadById('test1');
+    $dao->c1->increment(0);
+    $datastore->save($dao);
+    $dao->c1->increment(10);
+    $datastore->save($dao);
+    $dao->c1->increment(15);
+    $datastore->save($dao);
+    $dao->c3->increment(8);
+    $datastore->save($dao);
+    $dao->c3->increment(9.7);
+    $datastore->save($dao);
+    $dao->c3->increment(99);
+    $datastore->save($dao);
+    $dao->c3->increment(1.3);
+    $datastore->save($dao);
+    $dao->c3->increment(0.0);
+    $datastore->save($dao);
+    $dao->c3->increment(null);
+    $datastore->save($dao);
+    $dao->c3->increment('goat');
+    $datastore->save($dao);
+    $dao->c3->increment(
+      '99
+ a'
+    );
+    $datastore->save($dao);
+    $dao->c2->increment(0);
+    $datastore->save($dao);
+
+    $dao1 = MockCounterDao::loadById('test1');
+    $dao1->c1->increment(7);
+    $dao2 = MockCounterDao::loadById('test1');
+    $dao2->c1->increment(3);
+    $dao1->save();
+    $dao2->save();
+
+    $dao = MockCounterDao::loadById('test1');
+    $this->assertEquals(40, $dao->c1->calculated());
+
+    $this->assertEquals(217, $dao->c3->calculated());
+    $dao = new MockCounterDao();
+    $dao->id = 'test1';
+    $dao->markDaoAsLoaded();
+    $dao->markDaoDatasetAsSaved();
+    $dao->c3->increment('0.00');
+    $datastore->save($dao);
+
+    $dao = MockCounterDao::loadById('test1');
+    $this->assertEquals(217, $dao->c3->calculated());
+
+    $dao = MockCounterDao::loadById('test1');
+    $this->assertEquals(40, $dao->c1->calculated());
+    $this->assertEquals(-4, $dao->c2->calculated());
+    $this->assertEquals(217, $dao->c3->calculated());
+
+    $dao = MockCounterDao::loadById('test1');
+    $this->assertEquals(40, $dao->c1->calculated());
+
+    $dao->c1 = 100;
+    $dao->save();
+
+    $dao = MockCounterDao::loadById('test1');
+    $this->assertEquals(100, $dao->c1->calculated());
+
+    $dao->c1->setValue(500);
+    $dao->save();
+
+    $dao = MockCounterDao::loadById('test1');
+    $this->assertEquals(500, $dao->c1->calculated());
+
+    $json = json_encode($dao);
+    $this->assertEquals(
+      '{"id":"test1","c1":"500","c2":"-4","c3":"217.00"}',
+      $json
+    );
+
+    $dao = new MockCounterDao();
+    $dao->id = 'test1';
+    $dao->c1->setValue(6);
+    $dao->c2->setValue(-8);
+    $datastore->save($dao);
+
+    $json = json_encode($dao);
+    $this->assertEquals('{"id":"test1","c1":"6","c2":"-8","c3":"0"}', $json);
+
+    $resolver->shutdown();
+  }
+
+  /**
+   * @dataProvider connectionProvider
+   *
+   * @param MockConnectionInterface $connection
+   * @param QlDataStore             $datastore
+   * @param DalResolver             $resolver
+   */
+  public function testUnusedCounter(MockConnectionInterface $connection, QlDataStore $datastore, DalResolver $resolver)
+  {
+    $resolver->boot();
+    $connection->truncate();
+
+    $dao = new MockCounterDao();
+    $dao->id = "novalue";
+    $this->assertArrayNotHasKey('c1', $dao->save());
+    $dao->c1->increment(1)->decrement(1);
+    $this->assertArrayHasKey('c1', $dao->save());
+
+    $resolver->shutdown();
   }
 }

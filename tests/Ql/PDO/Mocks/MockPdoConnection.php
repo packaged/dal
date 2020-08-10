@@ -1,12 +1,12 @@
 <?php
-namespace Packaged\Dal\Tests\Ql\Mocks\MySQLi;
+namespace Packaged\Dal\Tests\Ql\PDO\Mocks;
 
-use Packaged\Dal\Ql\MySQLiConnection;
+use Packaged\Dal\Ql\PdoConnection;
 use Packaged\Dal\Tests\Ql\Mocks\MockConnectionInterface;
 use Packaged\Dal\Tests\Ql\Mocks\MockCounterDao;
 use Packaged\Dal\Tests\Ql\Mocks\MockQlDao;
 
-class MockMySQLiConnection extends MySQLiConnection implements MockConnectionInterface
+class MockPdoConnection extends PdoConnection implements MockConnectionInterface
 {
   public function setConnection($connection)
   {

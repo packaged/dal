@@ -4,8 +4,9 @@ namespace Packaged\Dal\Tests\Cache\Apc;
 use Packaged\Dal\Cache\Apc\ApcConnection;
 use Packaged\Dal\Cache\CacheItem;
 use Packaged\Dal\Cache\ICacheItem;
+use PHPUnit\Framework\TestCase;
 
-class ApcConnectionTest extends \PHPUnit_Framework_TestCase
+class ApcConnectionTest extends TestCase
 {
   protected function setUp()
   {

@@ -3,16 +3,16 @@ namespace Packaged\Dal\Tests\Ql;
 
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Foundation\Dao;
+use Packaged\Dal\Tests\Ql\Mocks\MockQlDao;
+use Packaged\Dal\Tests\Ql\Mocks\MockQlDataStore;
+use Packaged\Dal\Tests\Ql\PDO\Mocks\MockPdoConnection;
 use Packaged\QueryBuilder\Assembler\QueryAssembler;
 use Packaged\QueryBuilder\Clause\GroupByClause;
 use Packaged\QueryBuilder\Clause\LimitClause;
 use PDO;
-use PHPUnit_Framework_TestCase;
-use Packaged\Dal\Tests\Ql\Mocks\MockQlDao;
-use Packaged\Dal\Tests\Ql\Mocks\MockQlDataStore;
-use Packaged\Dal\Tests\Ql\Mocks\PDO\MockPdoConnection;
+use PHPUnit\Framework\TestCase;
 
-class QlDaoCollectionTest extends PHPUnit_Framework_TestCase
+class QlDaoCollectionTest extends TestCase
 {
   public function testHydrated()
   {
@@ -32,7 +32,7 @@ class QlDaoCollectionTest extends PHPUnit_Framework_TestCase
   public function testEmulatedPrepare()
   {
     $resolver = new DalResolver();
-    Dao::setDalResolver($resolver);
+    $resolver->boot();
     $datastore = new MockQlDataStore();
     $connection = new MockPdoConnection();
     $connection->addConfig('options', [PDO::ATTR_EMULATE_PREPARES => true]);
@@ -41,8 +41,9 @@ class QlDaoCollectionTest extends PHPUnit_Framework_TestCase
     $connection->setResolver($resolver);
     $datastore->setConnection($connection);
     MockQlDao::getDalResolver()->addDataStore('mockql', $datastore);
-    MockQlDao::loadOneWhere(['id' => 'y']);
-    Dao::unsetDalResolver();
+    $item = MockQlDao::loadOneWhere(['id' => 'y']);
+    $this->assertEmpty($item);
+    $resolver->shutdown();
   }
 
   public function testQueried()

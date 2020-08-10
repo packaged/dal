@@ -2,8 +2,9 @@
 namespace Packaged\Dal\Tests\Cache\Blackhole;
 
 use Packaged\Dal\Cache\Blackhole\BlackholeConnection;
+use PHPUnit\Framework\TestCase;
 
-class BlackholeConnectionTest extends \PHPUnit_Framework_TestCase
+class BlackholeConnectionTest extends TestCase
 {
   public function testDoesNothing()
   {

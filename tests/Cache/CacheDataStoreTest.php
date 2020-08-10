@@ -8,20 +8,20 @@ use Packaged\Dal\Cache\CacheDataStore;
 use Packaged\Dal\Cache\CacheItem;
 use Packaged\Dal\Cache\Ephemeral\EphemeralConnection;
 use Packaged\Dal\DalResolver;
+use Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException;
+use Packaged\Dal\Exceptions\DataStore\DaoNotFoundException;
+use Packaged\Dal\Exceptions\DataStore\DataStoreException;
+use Packaged\Dal\Foundation\AbstractDao;
 use Packaged\Dal\Foundation\Dao;
-use PHPUnit_Framework_TestCase;
 use Packaged\Dal\Tests\Cache\Mocks\MockCacheDataStore;
+use PHPUnit\Framework\TestCase;
 
-class CacheDataStoreTest extends PHPUnit_Framework_TestCase
+class CacheDataStoreTest extends TestCase
 {
   public function testInvalidDao()
   {
-    $this->setExpectedException(
-      '\Packaged\Dal\Exceptions\DataStore\DataStoreException'
-    );
-    $dao = $this->getMockForAbstractClass(
-      '\Packaged\Dal\Foundation\AbstractDao'
-    );
+    $this->expectException(DataStoreException::class);
+    $dao = $this->getMockForAbstractClass(AbstractDao::class);
     $fs = new CacheDataStore();
     $fs->load($dao);
   }
@@ -29,9 +29,7 @@ class CacheDataStoreTest extends PHPUnit_Framework_TestCase
   public function testUnconfiguredGetConnection()
   {
     $datastore = new CacheDataStore();
-    $this->setExpectedException(
-      '\Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException'
-    );
+    $this->expectException(ConnectionNotFoundException::class);
     $datastore->getConnection();
   }
 
@@ -97,10 +95,8 @@ class CacheDataStoreTest extends PHPUnit_Framework_TestCase
     $dao->key = 'xyz';
     $this->assertFalse($datastore->exists($dao));
 
-    $this->setExpectedException(
-      'Packaged\Dal\Exceptions\DataStore\DaoNotFoundException',
-      'Cache Item Not Found'
-    );
+    $this->expectException(DaoNotFoundException::class);
+    $this->expectExceptionMessage('Cache Item Not Found');
     $datastore->load($dao);
   }
 

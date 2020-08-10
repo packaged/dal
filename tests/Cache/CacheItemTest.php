@@ -3,8 +3,9 @@ namespace Packaged\Dal\Tests\Cache;
 
 use Packaged\Dal\Cache\CacheDao;
 use Packaged\Dal\Cache\CacheItem;
+use PHPUnit\Framework\TestCase;
 
-class CacheItemTest extends \PHPUnit_Framework_TestCase
+class CacheItemTest extends TestCase
 {
   public function testFromDao()
   {

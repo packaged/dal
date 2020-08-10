@@ -2,8 +2,9 @@
 namespace Packaged\Dal\Tests\Helpers;
 
 use Packaged\Dal\Helpers\Base36TimeKey;
+use PHPUnit\Framework\TestCase;
 
-class Base36TimeKeyTest extends \PHPUnit_Framework_TestCase
+class Base36TimeKeyTest extends TestCase
 {
   public function testGenerate()
   {

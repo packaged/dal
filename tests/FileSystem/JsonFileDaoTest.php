@@ -2,12 +2,12 @@
 namespace Packaged\Dal\Tests\FileSystem;
 
 use Packaged\Dal\DalResolver;
-use Packaged\Dal\FileSystem\FileSystemDao;
 use Packaged\Dal\FileSystem\JsonFileDao;
 use Packaged\Dal\Foundation\Dao;
 use Packaged\Helpers\Path;
+use PHPUnit\Framework\TestCase;
 
-class JsonFileDaoTest extends \PHPUnit_Framework_TestCase
+class JsonFileDaoTest extends TestCase
 {
   protected function _getResourceLocation($filename)
   {

@@ -10,8 +10,9 @@ use Packaged\Dal\Ql\AbstractQlConnection;
 use Packaged\Dal\Tests\Ql\Mocks\FailingPrepareRawConnection;
 use Packaged\Dal\Tests\Ql\Mocks\MockQlDao;
 use Packaged\Dal\Tests\Ql\Mocks\MockQlDataStore;
+use PHPUnit\Framework\TestCase;
 
-abstract class AbstractQlConnectionTest extends \PHPUnit_Framework_TestCase
+abstract class AbstractQlConnectionTest extends TestCase
 {
   /**
    * @return AbstractQlConnection
@@ -36,9 +37,7 @@ abstract class AbstractQlConnectionTest extends \PHPUnit_Framework_TestCase
     $config->addItem('hostname', '255.255.255.255');
     $connection->configure($config);
 
-    $this->setExpectedException(
-      '\Packaged\Dal\Exceptions\Connection\ConnectionException'
-    );
+    $this->expectException(ConnectionException::class);
     $connection->connect();
   }
 
@@ -80,7 +79,7 @@ abstract class AbstractQlConnectionTest extends \PHPUnit_Framework_TestCase
     $connection->config();
     $connection->connect();
     $connection->setResolver(new DalResolver());
-    $this->setExpectedException(ConnectionException::class);
+    $this->expectException(ConnectionException::class);
     $connection->runQuery("SELECT * FROM `made_up_table_r43i`", []);
   }
 
@@ -134,7 +133,7 @@ abstract class AbstractQlConnectionTest extends \PHPUnit_Framework_TestCase
     $connection->config();
     $connection->connect();
     $connection->setResolver(new DalResolver());
-    $this->setExpectedException(ConnectionException::class);
+    $this->expectException(ConnectionException::class);
     $connection->fetchQueryResults("SELECT * FROM `made_up_table_r44i`", []);
   }
 
@@ -183,10 +182,8 @@ abstract class AbstractQlConnectionTest extends \PHPUnit_Framework_TestCase
 
   public function testNoResolver()
   {
-    $this->setExpectedException(
-      DalException::class,
-      "Connection running without the resolver being defined"
-    );
+    $this->expectException(DalException::class);
+    $this->expectExceptionMessage("Connection running without the resolver being defined");
     $connection = $this->_getConnection();
     $connection->fetchQueryResults("SELECT", []);
   }
@@ -299,10 +296,8 @@ abstract class AbstractQlConnectionTest extends \PHPUnit_Framework_TestCase
     $connection->setResolver(new DalResolver());
     $connection->connect();
 
-    $this->setExpectedException(
-      ConnectionException::class,
-      'Not currently in a transaction'
-    );
+    $this->expectException(ConnectionException::class);
+    $this->expectExceptionMessage('Not currently in a transaction');
     $connection->commit();
   }
 
@@ -312,10 +307,8 @@ abstract class AbstractQlConnectionTest extends \PHPUnit_Framework_TestCase
     $connection->setResolver(new DalResolver());
     $connection->connect();
 
-    $this->setExpectedException(
-      ConnectionException::class,
-      'Not currently in a transaction'
-    );
+    $this->expectException(ConnectionException::class);
+    $this->expectExceptionMessage('Not currently in a transaction');
     $connection->rollback();
   }
 
@@ -337,7 +330,8 @@ abstract class AbstractQlConnectionTest extends \PHPUnit_Framework_TestCase
     $connection->runQuery($query);
 
     // Run it again, should cause a DuplicateKeyException
-    $this->setExpectedException(DuplicateKeyException::class, "Duplicate entry '1' for key 'PRIMARY'");
+    $this->expectException(DuplicateKeyException::class);
+    $this->expectExceptionMessage("Duplicate entry '1' for key 'PRIMARY'");
     try
     {
       $connection->runQuery($query);

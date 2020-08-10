@@ -5,7 +5,7 @@ use Packaged\Dal\DalResolver;
 use Packaged\Dal\Exceptions\Connection\ConnectionException;
 use Packaged\Dal\Tests\Ql\AbstractQlConnectionTest;
 use Packaged\Dal\Tests\Ql\Mocks\FailingPrepareRawConnection;
-use Packaged\Dal\Tests\Ql\Mocks\MySQLi\MockMySQLiConnection;
+use Packaged\Dal\Tests\Ql\MySQLi\Mocks\MockMySQLiConnection;
 
 class MySQLiConnectionTest extends AbstractQlConnectionTest
 {

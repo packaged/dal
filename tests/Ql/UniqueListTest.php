@@ -5,12 +5,12 @@ use Packaged\Dal\DalResolver;
 use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\Tests\Ql\Mocks\MockQlDataStore;
 use Packaged\Dal\Tests\Ql\Mocks\MockSetDao;
-use Packaged\Dal\Tests\Ql\Mocks\PDO\MockPdoConnection;
-use PHPUnit_Framework_TestCase;
+use Packaged\Dal\Tests\Ql\PDO\Mocks\MockPdoConnection;
+use PHPUnit\Framework\TestCase;
 
-class UniqueListTest extends PHPUnit_Framework_TestCase
+class UniqueListTest extends TestCase
 {
-  public function testCounters()
+  public function testUniqueList()
   {
     $datastore = new MockQlDataStore();
     $connection = new MockPdoConnection();

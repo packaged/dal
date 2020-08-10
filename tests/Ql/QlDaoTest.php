@@ -16,7 +16,7 @@ use Packaged\Dal\Tests\Ql\Mocks\MockCounterDao;
 use Packaged\Dal\Tests\Ql\Mocks\MockNonUniqueKeyDao;
 use Packaged\Dal\Tests\Ql\Mocks\MockQlDao;
 use Packaged\Dal\Tests\Ql\Mocks\MockQlDataStore;
-use Packaged\Dal\Tests\Ql\Mocks\MySQLi\MockMySQLiConnection;
+use Packaged\Dal\Tests\Ql\MySQLi\Mocks\MockMySQLiConnection;
 use Packaged\Dal\Tests\Ql\PDO\Mocks\MockPdoConnection;
 use Packaged\QueryBuilder\Assembler\QueryAssembler;
 use PHPUnit\Framework\TestCase;

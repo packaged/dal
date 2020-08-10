@@ -1,5 +1,5 @@
 <?php
-namespace Packaged\Dal\Tests\Ql\Mocks\MySQLi;
+namespace Packaged\Dal\Tests\Ql\MySQLi\Mocks;
 
 use Packaged\Dal\Ql\MySQLiConnection;
 use Packaged\Dal\Tests\Ql\Mocks\MockConnectionInterface;

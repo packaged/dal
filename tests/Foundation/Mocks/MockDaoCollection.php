@@ -2,9 +2,9 @@
 namespace Packaged\Dal\Tests\Foundation\Mocks;
 
 use Packaged\Dal\Foundation\DaoCollection;
-use Packaged\Helpers\ValueAs;
 use Packaged\Dal\Tests\Foundation\Mocks;
-use Packaged\Dal\Tests\Ql\Mocks\Cql\MockCqlDao;
+use Packaged\Dal\Tests\Ql\Cql\Mocks\MockCqlDao;
+use Packaged\Helpers\ValueAs;
 
 class MockDaoCollection extends DaoCollection
 {

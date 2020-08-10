@@ -4,32 +4,41 @@ namespace Packaged\Dal\Tests\Ql\Cql;
 use cassandra\InvalidRequestException;
 use Packaged\Config\Provider\ConfigSection;
 use Packaged\Dal\DalResolver;
+use Packaged\Dal\Exceptions\Connection\ConnectionException;
 use Packaged\Dal\Exceptions\Connection\CqlException;
 use Packaged\Dal\Exceptions\DalException;
 use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\Ql\Cql\CqlConnection;
 use Packaged\Dal\Ql\Cql\CqlDao;
 use Packaged\Dal\Ql\Cql\CqlDaoCollection;
-use Packaged\Dal\Tests\Ql\Mocks;
-use Packaged\Dal\Tests\Ql\Mocks\Cql\MockCqlDao;
+use Packaged\Dal\Tests\Ql\Cql\Mocks\FailExecuteClient;
+use Packaged\Dal\Tests\Ql\Cql\Mocks\FailPrepareClient;
+use Packaged\Dal\Tests\Ql\Cql\Mocks\MockCounterCqlDao;
+use Packaged\Dal\Tests\Ql\Cql\Mocks\MockCqlCollection;
+use Packaged\Dal\Tests\Ql\Cql\Mocks\MockCqlConnection;
+use Packaged\Dal\Tests\Ql\Cql\Mocks\MockCqlDao;
+use Packaged\Dal\Tests\Ql\Cql\Mocks\MockCqlDataStore;
+use Packaged\Dal\Tests\Ql\Cql\Mocks\UnpreparedExecuteClient;
+use Packaged\Dal\Tests\Ql\Cql\Mocks\UnpreparedPrepareClient;
+use Packaged\Dal\Tests\Ql\Cql\Mocks\WriteTimeoutClient;
 use Packaged\Dal\Tests\Ql\Mocks\MockAbstractQlDataConnection;
 use Packaged\QueryBuilder\Builder\QueryBuilder;
 use Packaged\QueryBuilder\Expression\ValueExpression;
 use Packaged\QueryBuilder\Predicate\EqualPredicate;
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 
-class CqlTest extends PHPUnit_Framework_TestCase
+class CqlTest extends TestCase
 {
   public function testNoKeyspace()
   {
-    $datastore = new Mocks\Cql\MockCqlDataStore();
-    $connection = new Mocks\Cql\MockCqlConnection();
+    $datastore = new MockCqlDataStore();
+    $connection = new MockCqlConnection();
     $connection->connect();
     $connection->setConfig('keyspace', 'packaged_dal');
     $datastore->setConnection($connection);
     $connection->setResolver(new DalResolver());
 
-    $dao = new Mocks\Cql\MockCqlDao();
+    $dao = new MockCqlDao();
     $dao->id = 'test2';
     $dao->id2 = 9876;
     $dao->username = 'daotest';
@@ -37,13 +46,11 @@ class CqlTest extends PHPUnit_Framework_TestCase
     $this->assertTrue($datastore->exists($dao));
   }
 
-  /**
-   * @expectedException \Packaged\Dal\Exceptions\Connection\CqlException
-   * @expectedExceptionMessage Keyspace 'broken_keyspace' does not exist
-   */
   public function testBrokenKeyspace()
   {
-    $connection = new Mocks\Cql\MockCqlConnection();
+    $this->expectException(CqlException::class);
+    $this->expectExceptionMessage("Keyspace 'broken_keyspace' does not exist");
+    $connection = new MockCqlConnection();
     $connection->connect();
     $connection->setConfig('keyspace', 'broken_keyspace');
     $connection->prepare('select * from bad_table');
@@ -51,7 +58,7 @@ class CqlTest extends PHPUnit_Framework_TestCase
 
   public function testInvalidRequestException()
   {
-    $connection = new Mocks\Cql\MockCqlConnection();
+    $connection = new MockCqlConnection();
     $connection->connect();
     $connection->setConfig('keyspace', 'packaged_dal');
     try
@@ -69,11 +76,11 @@ class CqlTest extends PHPUnit_Framework_TestCase
 
   public function testDeletes()
   {
-    $connection = new Mocks\Cql\MockCqlConnection();
+    $connection = new MockCqlConnection();
     $connection->connect();
     $connection->setConfig('keyspace', 'packaged_dal');
 
-    $datastore = new Mocks\Cql\MockCqlDataStore();
+    $datastore = new MockCqlDataStore();
     $datastore->setConnection($connection);
 
     $resolver = new DalResolver();
@@ -81,16 +88,17 @@ class CqlTest extends PHPUnit_Framework_TestCase
     Dao::setDalResolver($resolver);
     $connection->setResolver($resolver);
 
-    $coll = Mocks\Cql\MockCqlDao::collection();
+    $coll = MockCqlDao::collection();
     $count = $coll->count();
     $first = $coll->first();
     /**
      * @var $first MockCqlDao
      */
-    Mocks\Cql\MockCqlDao::collection(['id' => $first->id])->delete();
+    MockCqlDao::collection(['id' => $first->id])->delete();
     $this->assertNotEquals($count, $coll->count());
 
-    $this->setExpectedException(DalException::class, 'Truncate is not supported');
+    $this->expectException(DalException::class);
+    $this->expectExceptionMessage('Truncate is not supported');
     $coll->delete();
   }
 
@@ -121,22 +129,20 @@ class CqlTest extends PHPUnit_Framework_TestCase
     $config->addItem('hosts', '255.255.255.255');
     $connection->configure($config);
 
-    $this->setExpectedException(
-      '\Packaged\Dal\Exceptions\Connection\ConnectionException'
-    );
+    $this->expectException(ConnectionException::class);
     $connection->connect();
   }
 
   public function testLsd()
   {
-    $datastore = new Mocks\Cql\MockCqlDataStore();
+    $datastore = new MockCqlDataStore();
     $connection = new CqlConnection();
     $this->_configureConnection($connection);
     $datastore->setConnection($connection);
     $connection->connect();
     $connection->setResolver(new DalResolver());
 
-    $dao = new Mocks\Cql\MockCqlDao();
+    $dao = new MockCqlDao();
     $dao->id = uniqid('daotest');
     $dao->id2 = 12345;
     $dao->username = time();
@@ -176,7 +182,7 @@ class CqlTest extends PHPUnit_Framework_TestCase
 
   public function testConnectionConfig()
   {
-    $connection = new Mocks\Cql\MockCqlConnection();
+    $connection = new MockCqlConnection();
     $this->_configureConnection($connection);
     $connection->connect();
     $connection->setReceiveTimeout(123);
@@ -190,24 +196,22 @@ class CqlTest extends PHPUnit_Framework_TestCase
 
   public function testPrepareException()
   {
-    $connection = new Mocks\Cql\MockCqlConnection();
+    $connection = new MockCqlConnection();
     $this->_configureConnection($connection);
     $connection->connect();
-    $this->setExpectedException(
-      '\Packaged\Dal\Exceptions\Connection\CqlException'
-    );
+    $this->expectException(CqlException::class);
     $connection->prepare("INVALID");
   }
 
   public function testGetData()
   {
-    $datastore = new Mocks\Cql\MockCqlDataStore();
-    $connection = new Mocks\Cql\MockCqlConnection();
+    $datastore = new MockCqlDataStore();
+    $connection = new MockCqlConnection();
     $connection->setConfig('keyspace', 'packaged_dal');
     $datastore->setConnection($connection);
     $connection->setResolver(new DalResolver());
 
-    $dao = new Mocks\Cql\MockCqlDao();
+    $dao = new MockCqlDao();
     $dao->id = 'test1';
     $dao->id2 = 5555;
     $dao->username = 'testuser';
@@ -220,7 +224,7 @@ class CqlTest extends PHPUnit_Framework_TestCase
       QueryBuilder::select()->from($dao->getTableName())->where($eq)
     );
 
-    $testDao = new Mocks\Cql\MockCqlDao();
+    $testDao = new MockCqlDao();
     $testDao->hydrateDao($d[0], true);
     $testDao->markDaoAsLoaded();
     $testDao->markDaoDatasetAsSaved();
@@ -231,9 +235,9 @@ class CqlTest extends PHPUnit_Framework_TestCase
   public function testTtl()
   {
     $connection = new MockAbstractQlDataConnection();
-    $datastore = new Mocks\Cql\MockCqlDataStore();
+    $datastore = new MockCqlDataStore();
     $datastore->setConnection($connection);
-    $dao = new Mocks\Cql\MockCqlDao();
+    $dao = new MockCqlDao();
     $dao->id = 3;
     $dao->id2 = 1234;
     $dao->username = 'testuser';
@@ -263,7 +267,7 @@ class CqlTest extends PHPUnit_Framework_TestCase
       $connection->getExecutedQueryValues()
     );
 
-    $dao = new Mocks\Cql\MockCqlDao();
+    $dao = new MockCqlDao();
     $dao->id = 'test4';
     $dao->id2 = 4321;
     $dao->username = 'testuser';
@@ -315,29 +319,29 @@ class CqlTest extends PHPUnit_Framework_TestCase
 
   public function testCollection()
   {
-    $this->assertInstanceOf(CqlDaoCollection::class, Mocks\Cql\MockCqlDao::collection());
+    $this->assertInstanceOf(CqlDaoCollection::class, MockCqlDao::collection());
 
-    $dataStore = new Mocks\Cql\MockCqlDataStore();
+    $dataStore = new MockCqlDataStore();
     $connection = new CqlConnection();
     $connection->setConfig('keyspace', 'packaged_dal');
     $dataStore->setConnection($connection);
     $connection->setResolver(new DalResolver());
-    $mockDao = new Mocks\Cql\MockCqlDao();
+    $mockDao = new MockCqlDao();
     $mockDao->setDataStore($dataStore);
-    $collection = Mocks\Cql\MockCqlCollection::createFromDao($mockDao);
+    $collection = MockCqlCollection::createFromDao($mockDao);
     $data = $collection->getRawArray();
 
     $collection->clear();
     $this->assertEquals(count($data), $collection->count());
 
     $this->assertNotEmpty($data);
-    $this->assertInstanceOf(Mocks\Cql\MockCqlDao::class, $data[0]);
+    $this->assertInstanceOf(MockCqlDao::class, $data[0]);
   }
 
   public function testCounters()
   {
-    $datastore = new Mocks\Cql\MockCqlDataStore();
-    $connection = new CqlConnection();
+    $datastore = new MockCqlDataStore();
+    $connection = new MockCqlConnection();
     $this->_configureConnection($connection);
     $datastore->setConnection($connection);
     $connection->connect();
@@ -346,7 +350,9 @@ class CqlTest extends PHPUnit_Framework_TestCase
     $connection->setResolver($resolver);
     Dao::getDalResolver()->addDataStore('mockcql', $datastore);
 
-    $dao = new Mocks\Cql\MockCounterCqlDao();
+    $connection->truncate();
+
+    $dao = new MockCounterCqlDao();
     $dao->id = 'test1';
     $dao->c1->increment(10);
     $dao->c1->decrement(5);
@@ -355,11 +361,11 @@ class CqlTest extends PHPUnit_Framework_TestCase
     $dao->c2->decrement(3);
     $datastore->save($dao);
 
-    $loaded = Mocks\Cql\MockCounterCqlDao::loadById('test1');
+    $loaded = MockCounterCqlDao::loadById('test1');
     $this->assertEquals(5, $loaded->c1->calculated());
     $this->assertEquals(-2, $loaded->c2->calculated());
 
-    $dao = new Mocks\Cql\MockCounterCqlDao();
+    $dao = new MockCounterCqlDao();
     $dao->id = 'test1';
     $dao->c1->increment(5);
     $dao->c1->decrement(5);
@@ -370,8 +376,8 @@ class CqlTest extends PHPUnit_Framework_TestCase
 
   public function testRetries()
   {
-    $connection = new Mocks\Cql\MockCqlConnection();
-    $connection->setClient(new Mocks\Cql\FailPrepareClient(null));
+    $connection = new MockCqlConnection();
+    $connection->setClient(new FailPrepareClient(null));
 
     try
     {
@@ -384,7 +390,7 @@ class CqlTest extends PHPUnit_Framework_TestCase
       $this->assertEquals(0, $connection->getExecuteCount());
     }
 
-    $connection->setClient(new Mocks\Cql\FailExecuteClient(null));
+    $connection->setClient(new FailExecuteClient(null));
     try
     {
       $connection->resetCounts();
@@ -397,7 +403,7 @@ class CqlTest extends PHPUnit_Framework_TestCase
       $this->assertEquals(3, $connection->getExecuteCount());
     }
 
-    $connection->setClient(new Mocks\Cql\WriteTimeoutClient(null));
+    $connection->setClient(new WriteTimeoutClient(null));
     try
     {
       $connection->resetCounts();
@@ -410,7 +416,7 @@ class CqlTest extends PHPUnit_Framework_TestCase
       $this->assertEquals(3, $connection->getExecuteCount());
     }
 
-    $connection->setClient(new Mocks\Cql\UnpreparedPrepareClient(null));
+    $connection->setClient(new UnpreparedPrepareClient(null));
     try
     {
       $connection->resetCounts();
@@ -422,7 +428,7 @@ class CqlTest extends PHPUnit_Framework_TestCase
       $this->assertEquals(0, $connection->getExecuteCount());
     }
 
-    $connection->setClient(new Mocks\Cql\UnpreparedExecuteClient(null));
+    $connection->setClient(new UnpreparedExecuteClient(null));
     try
     {
       $connection->resetCounts();

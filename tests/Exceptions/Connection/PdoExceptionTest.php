@@ -2,8 +2,9 @@
 namespace Packaged\Dal\Tests\Exceptions\Connection;
 
 use Packaged\Dal\Exceptions\Connection\PdoException;
+use PHPUnit\Framework\TestCase;
 
-class PdoExceptionTest extends \PHPUnit_Framework_TestCase
+class PdoExceptionTest extends TestCase
 {
   /**
    * @dataProvider exceptionProvider

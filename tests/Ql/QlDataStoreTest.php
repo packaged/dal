@@ -12,15 +12,16 @@ use Packaged\Dal\Foundation\AbstractDao;
 use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\Ql\PdoConnection;
 use Packaged\Dal\Ql\QlDataStore;
-use Packaged\QueryBuilder\Builder\QueryBuilder;
-use Packaged\QueryBuilder\Expression\NumericExpression;
-use Packaged\QueryBuilder\Predicate\EqualPredicate;
 use Packaged\Dal\Tests\Ql\Mocks\MockAbstractQlDataConnection;
 use Packaged\Dal\Tests\Ql\Mocks\MockMultiKeyQlDao;
 use Packaged\Dal\Tests\Ql\Mocks\MockQlDao;
 use Packaged\Dal\Tests\Ql\Mocks\MockQlDataStore;
+use Packaged\QueryBuilder\Builder\QueryBuilder;
+use Packaged\QueryBuilder\Expression\NumericExpression;
+use Packaged\QueryBuilder\Predicate\EqualPredicate;
+use PHPUnit\Framework\TestCase;
 
-class QlDataStoreTest extends \PHPUnit_Framework_TestCase
+class QlDataStoreTest extends TestCase
 {
   /**
    * @throws ConnectionException
@@ -31,7 +32,7 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
    */
   public function testInvalidDao()
   {
-    $this->setExpectedException(DataStoreException::class);
+    $this->expectException(DataStoreException::class);
     $dao = $this->getMockForAbstractClass(AbstractDao::class);
     $datastore = new MockQlDataStore();
     $datastore->load($dao);
@@ -56,7 +57,7 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     $datastore->configure(
       new ConfigSection('qldatastore', ['connection' => 'mizzing'])
     );
-    $this->setExpectedException(ConnectionNotFoundException::class);
+    $this->expectException(ConnectionNotFoundException::class);
     $datastore->getConnection();
 
     Dao::unsetDalResolver();
@@ -68,7 +69,7 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
   public function testUnconfiguredGetConnection()
   {
     $datastore = new QlDataStore();
-    $this->setExpectedException(ConnectionNotFoundException::class);
+    $this->expectException(ConnectionNotFoundException::class);
     $datastore->getConnection();
   }
 
@@ -131,10 +132,8 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
 
     $this->assertFalse($datastore->exists($dao));
 
-    $this->setExpectedException(
-      DaoNotFoundException::class,
-      'Unable to locate Dao'
-    );
+    $this->expectException(DaoNotFoundException::class);
+    $this->expectExceptionMessage('Unable to locate Dao');
     $datastore->load($dao);
   }
 
@@ -155,10 +154,8 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     $dao = new MockQlDao();
     $dao->id = 3;
 
-    $this->setExpectedException(
-      DataStoreException::class,
-      'Too many results located'
-    );
+    $this->expectException(DataStoreException::class);
+    $this->expectExceptionMessage('Too many results located');
     $datastore->load($dao);
   }
 
@@ -169,7 +166,8 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
    */
   public function testDeleteUnsavedFailure()
   {
-    $this->setExpectedException(DataStoreException::class, 'Cannot delete object.  ID property has changed.');
+    $this->expectException(DataStoreException::class);
+    $this->expectExceptionMessage('Cannot delete object.  ID property has changed.');
 
     $datastore = new MockQlDataStore();
     $connection = new MockAbstractQlDataConnection();
@@ -201,6 +199,8 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     $delDao = new MockQlDao();
     $delDao->id = $dao->id;
     $datastore->delete($delDao);
+
+    $this->assertTrue(true);
   }
 
   /**
@@ -255,7 +255,8 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     $dao->id = 3;
     $datastore->save($dao);
 
-    $this->setExpectedException(DataStoreException::class, 'The delete query executed affected 0 rows');
+    $this->expectException(DataStoreException::class);
+    $this->expectExceptionMessage('The delete query executed affected 0 rows');
 
     $connection->setRunResult(0);
     $datastore->delete($dao);
@@ -282,7 +283,8 @@ class QlDataStoreTest extends \PHPUnit_Framework_TestCase
     $dao->id = 3;
     $datastore->save($dao);
 
-    $this->setExpectedException(DataStoreException::class, 'Looks like we deleted multiple rows :(');
+    $this->expectException(DataStoreException::class);
+    $this->expectExceptionMessage('Looks like we deleted multiple rows :(');
 
     $connection->setRunResult(2);
     $datastore->delete($dao);

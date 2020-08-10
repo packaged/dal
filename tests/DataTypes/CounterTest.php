@@ -2,8 +2,9 @@
 namespace Packaged\Dal\Tests\DataTypes;
 
 use Packaged\Dal\DataTypes\Counter;
+use PHPUnit\Framework\TestCase;
 
-class CounterTest extends \PHPUnit_Framework_TestCase
+class CounterTest extends TestCase
 {
   public function testCounter()
   {

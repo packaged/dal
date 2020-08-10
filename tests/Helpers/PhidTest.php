@@ -2,11 +2,11 @@
 namespace Packaged\Dal\Tests\Helpers;
 
 use Packaged\Dal\Helpers\Phid;
-use PHPUnit_Framework_TestCase;
 use Packaged\Dal\Tests\Helpers\Mocks\MyTestClass;
 use Packaged\Dal\Tests\Helpers\Mocks\RandomClassOne;
+use PHPUnit\Framework\TestCase;
 
-class PhidTest extends PHPUnit_Framework_TestCase
+class PhidTest extends TestCase
 {
   /**
    * @dataProvider generateProvider

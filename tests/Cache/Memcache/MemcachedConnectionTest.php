@@ -4,11 +4,12 @@ namespace Packaged\Dal\Tests\Cache\Memcache;
 use Packaged\Config\Provider\ConfigSection;
 use Packaged\Dal\Cache\CacheItem;
 use Packaged\Dal\Cache\Memcache\MemcachedConnection;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @requires extension memcached
  */
-class MemcachedConnectionTest extends \PHPUnit_Framework_TestCase
+class MemcachedConnectionTest extends TestCase
 {
   public function testConnection()
   {

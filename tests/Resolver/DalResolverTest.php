@@ -7,18 +7,18 @@ use Packaged\Config\Provider\ConfigSection;
 use Packaged\Config\Provider\Ini\IniConfigProvider;
 use Packaged\Dal\DalResolver;
 use Packaged\Dal\Exceptions\DalException;
+use Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException;
+use Packaged\Dal\Exceptions\DalResolver\DataStoreNotFoundException;
 use Packaged\Dal\Tests\Connection\ConfigurableConnection;
 use Packaged\Dal\Tests\DataStore\ConfigurableDataStore;
 use Packaged\Helpers\Path;
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 
-class ConnectionResolverTest extends PHPUnit_Framework_TestCase
+class DalResolverTest extends TestCase
 {
   public function testGetInvalidConnection()
   {
-    $this->setExpectedException(
-      '\Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException'
-    );
+    $this->expectException(ConnectionNotFoundException::class);
     $resolver = new DalResolver();
     $resolver->getConnection('test');
   }
@@ -33,9 +33,7 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
 
   public function testGetInvalidDataStore()
   {
-    $this->setExpectedException(
-      '\Packaged\Dal\Exceptions\DalResolver\DataStoreNotFoundException'
-    );
+    $this->expectException(DataStoreNotFoundException::class);
     $resolver = new DalResolver();
     $resolver->getDataStore('test');
   }
@@ -87,9 +85,7 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
 
   public function testInvalidConnectionCallback()
   {
-    $this->setExpectedException(
-      '\Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException'
-    );
+    $this->expectException(ConnectionNotFoundException::class);
     $resolver = new DalResolver();
     $resolver->addConnectionCallable(
       'test',
@@ -102,9 +98,7 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
 
   public function testInvalidDataStoreCallback()
   {
-    $this->setExpectedException(
-      '\Packaged\Dal\Exceptions\DalResolver\DataStoreNotFoundException'
-    );
+    $this->expectException(DataStoreNotFoundException::class);
     $resolver = new DalResolver();
     $resolver->addDataStoreCallable(
       'test',
@@ -142,9 +136,7 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
       $connection->getConfig()->getItem('name')
     );
 
-    $this->setExpectedException(
-      '\Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException'
-    );
+    $this->expectException(ConnectionNotFoundException::class);
     $resolver->getConnection('con2');
   }
 
@@ -234,10 +226,8 @@ class ConnectionResolverTest extends PHPUnit_Framework_TestCase
     $this->assertEquals(DalResolver::MODE_READ, $perfData['m']);
     $this->assertGreaterThan(1000, $perfData['t']);
 
-    $this->setExpectedException(
-      DalException::class,
-      "You cannot close performance metrics that are not open"
-    );
+    $this->expectException(DalException::class);
+    $this->expectExceptionMessage('You cannot close performance metrics that are not open');
     $dal->closePerformanceMetric($id);
   }
 

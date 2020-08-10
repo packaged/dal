@@ -1,5 +1,5 @@
 <?php
-namespace Packaged\Dal\Tests\Ql\Mocks\PDO;
+namespace Packaged\Dal\Tests\Ql\PDO\Mocks;
 
 class StmtCachePdoConnection extends MockPdoConnection
 {

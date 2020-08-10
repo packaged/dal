@@ -1,5 +1,5 @@
 <?php
-namespace Packaged\Dal\Tests\Ql\Mocks\Cql;
+namespace Packaged\Dal\Tests\Ql\Cql\Mocks;
 
 use Packaged\Dal\Ql\Cql\CqlDataStore;
 use Packaged\Dal\Ql\IQLDataConnection;

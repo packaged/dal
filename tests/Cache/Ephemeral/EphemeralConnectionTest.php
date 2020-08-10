@@ -5,8 +5,9 @@ use Packaged\Config\Provider\ConfigSection;
 use Packaged\Dal\Cache\CacheItem;
 use Packaged\Dal\Cache\Ephemeral\EphemeralConnection;
 use Packaged\Dal\Cache\ICacheItem;
+use PHPUnit\Framework\TestCase;
 
-class EphemeralConnectionTest extends \PHPUnit_Framework_TestCase
+class EphemeralConnectionTest extends TestCase
 {
   public function testStorage()
   {

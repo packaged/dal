@@ -3,13 +3,14 @@ namespace Packaged\Dal\Tests\Foundation;
 
 use ArrayIterator;
 use Packaged\Dal\Foundation\DaoCollection;
-use Packaged\Helpers\ValueAs;
-use PHPUnit_Framework_TestCase;
-use stdClass;
 use Packaged\Dal\Tests\Foundation\Mocks\MockAbstractDao;
 use Packaged\Dal\Tests\Foundation\Mocks\MockDaoCollection;
+use Packaged\Helpers\ValueAs;
+use PHPUnit\Framework\TestCase;
+use RuntimeException;
+use stdClass;
 
-class DaoCollectionTest extends PHPUnit_Framework_TestCase
+class DaoCollectionTest extends TestCase
 {
   public function testCreateClass()
   {
@@ -20,10 +21,8 @@ class DaoCollectionTest extends PHPUnit_Framework_TestCase
     );
 
     $collection = DaoCollection::create('stdClass');
-    $this->setExpectedException(
-      "RuntimeException",
-      "'stdClass' is not a valid DAO Class"
-    );
+    $this->expectException(RuntimeException::class);
+    $this->expectExceptionMessage("'stdClass' is not a valid DAO Class");
     $collection->createNewDao();
   }
 

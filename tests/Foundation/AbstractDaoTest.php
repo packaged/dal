@@ -6,9 +6,9 @@ use Packaged\Dal\Foundation\Dao;
 use Packaged\Dal\Tests\Foundation\Mocks\MockAbstractBaseDao;
 use Packaged\Dal\Tests\Foundation\Mocks\MockAbstractDao;
 use Packaged\Dal\Tests\Foundation\Mocks\MockMultiIdAbstractDao;
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 
-class AbstractDaoTest extends PHPUnit_Framework_TestCase
+class AbstractDaoTest extends TestCase
 {
   public function testGetProperties()
   {
@@ -18,7 +18,7 @@ class AbstractDaoTest extends PHPUnit_Framework_TestCase
 
   public function testGetId()
   {
-    $dao        = new MockAbstractDao();
+    $dao = new MockAbstractDao();
     $dao->email = 'test@example.com';
     $this->assertEquals($dao->email, $dao->getId());
     $this->assertEquals(['email'], $dao->getDaoIDProperties());

@@ -1,13 +1,18 @@
 <?php
 namespace Packaged\Dal\Tests\FileSystem;
 
+use Exception;
 use Packaged\Dal\DalResolver;
+use Packaged\Dal\Exceptions\DataStore\DaoNotFoundException;
+use Packaged\Dal\Exceptions\DataStore\DataStoreException;
 use Packaged\Dal\FileSystem\FileSystemDao;
 use Packaged\Dal\FileSystem\FileSystemDataStore;
+use Packaged\Dal\Foundation\AbstractDao;
 use Packaged\Dal\Foundation\Dao;
 use Packaged\Helpers\Path;
+use PHPUnit\Framework\TestCase;
 
-class FileSystemDataStoreTest extends \PHPUnit_Framework_TestCase
+class FileSystemDataStoreTest extends TestCase
 {
   protected function _getResourceLocation($filename)
   {
@@ -42,9 +47,7 @@ class FileSystemDataStoreTest extends \PHPUnit_Framework_TestCase
 
   public function testExceptionMissingFile()
   {
-    $this->setExpectedException(
-      '\Packaged\Dal\Exceptions\DataStore\DaoNotFoundException'
-    );
+    $this->expectException(DaoNotFoundException::class);
     $file = new FileSystemDao(
       Path::system(dirname(dirname(__DIR__)), 'missing.file')
     );
@@ -53,12 +56,8 @@ class FileSystemDataStoreTest extends \PHPUnit_Framework_TestCase
 
   public function testInvalidFilesystemDao()
   {
-    $this->setExpectedException(
-      '\Packaged\Dal\Exceptions\DataStore\DataStoreException'
-    );
-    $dao = $this->getMockForAbstractClass(
-      '\Packaged\Dal\Foundation\AbstractDao'
-    );
+    $this->expectException(DataStoreException::class);
+    $dao = $this->getMockForAbstractClass(AbstractDao::class);
     $fs = new FileSystemDataStore();
     $fs->load($dao);
   }
@@ -93,9 +92,7 @@ class FileSystemDataStoreTest extends \PHPUnit_Framework_TestCase
 
   public function testFilesizeWithoutLoadException()
   {
-    $this->setExpectedException(
-      '\Packaged\Dal\Exceptions\DataStore\DaoNotFoundException'
-    );
+    $this->expectException(DaoNotFoundException::class);
     $file = new FileSystemDao($this->_getResourceLocation('filesize.missing'));
     $file->getFileSize();
   }
@@ -109,7 +106,7 @@ class FileSystemDataStoreTest extends \PHPUnit_Framework_TestCase
       $file->load();
       $this->assertFalse(true, "crud.test file exists, and shouldn't");
     }
-    catch(\Exception $e)
+    catch(Exception $e)
     {
       $this->assertEquals(404, $e->getCode());
     }

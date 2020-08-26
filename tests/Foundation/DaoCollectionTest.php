@@ -142,7 +142,7 @@ class DaoCollectionTest extends TestCase
         ['name' => 'Test', 'id' => 1],
         ['name' => 'Test', 'id' => 2],
         ['name' => 'User', 'id' => 5],
-        ['name' => 'Testing', 'id' => 8, 'email' => 'nobody@example.com'],
+        ['name' => 'Testing', 'id' => 8, 'email' => 'nobody@example.com', 'age' => 0],
       ],
       $collection->jsonSerialize()
     );
@@ -157,7 +157,7 @@ class DaoCollectionTest extends TestCase
       '[{"name":"Test","id":1},'
       . '{"name":"Test","id":2},'
       . '{"name":"User","id":5},'
-      . '{"name":"Testing","email":"nobody@example.com","id":8}]',
+      . '{"name":"Testing","email":"nobody@example.com","age":0,"id":8}]',
       (string)$collection
     );
   }

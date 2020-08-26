@@ -7,6 +7,7 @@ class MockAbstractDao extends AbstractDao
 {
   public $name;
   public $email = 'nobody@example.com';
+  public $age = 0;
 
   public function init()
   {

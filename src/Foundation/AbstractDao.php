@@ -285,11 +285,10 @@ abstract class AbstractDao implements IDao
       //$newInstance = $reflect->newInstance();
       foreach($reflect->getProperties(\ReflectionProperty::IS_PUBLIC) as $pub)
       {
-        if(!$pub->isStatic())
+        if(!$pub->isStatic() && $pub->isInitialized($this))
         {
           //Add all non static properties to the cache with their default values
-          static::$_properties[$this->_calledClass][$pub->getName()]
-            = $pub->getValue($this);
+          static::$_properties[$this->_calledClass][$pub->getName()] = $pub->getValue($this);
         }
       }
 

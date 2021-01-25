@@ -14,11 +14,11 @@
   >
   <testsuites>
     <testsuite name="dal">
-      <directory>tests</directory>
+      <directory>./tests/*</directory>
     </testsuite>
   </testsuites>
   <filter>
-    <whitelist>
+    <whitelist addUncoveredFilesFromWhitelist="true" processUncoveredFilesFromWhitelist="true">
       <directory suffix=".php">src</directory>
     </whitelist>
   </filter>

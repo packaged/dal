@@ -26,6 +26,7 @@ class Counter implements IDataType, \JsonSerializable
 
   public function setValue($value)
   {
+    $by = $this->_safeValue($value);
     $this->_value = $value;
     $this->_adjust = 0;
     $this->_adjusted = true;
@@ -36,8 +37,22 @@ class Counter implements IDataType, \JsonSerializable
     return $this->_value + $this->_adjust;
   }
 
+  protected function _safeValue($by)
+  {
+    if(is_int($by) || is_float($by))
+    {
+      return $by;
+    }
+    if(is_numeric($by) && strpos($by, '.') > 0)
+    {
+      return (float)$by;
+    }
+    return (int)$by;
+  }
+
   public function increment($by = 1)
   {
+    $by = $this->_safeValue($by);
     $this->_adjust += abs($by);
     $this->_adjusted = abs($by) > 0;
     return $this;
@@ -45,6 +60,7 @@ class Counter implements IDataType, \JsonSerializable
 
   public function decrement($by = 1)
   {
+    $by = $this->_safeValue($by);
     $this->_adjust -= abs($by);
     $this->_adjusted = abs($by) > 0;
     return $this;

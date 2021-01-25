@@ -11,20 +11,16 @@
          convertWarningsToExceptions="true"
          processIsolation="false"
          stopOnFailure="false"
-         syntaxCheck="false"
   >
   <testsuites>
-    <testsuite>
-      <directory>tests</directory>
+    <testsuite name="tests">
+      <directory>./tests/*</directory>
     </testsuite>
   </testsuites>
+
   <filter>
-    <whitelist>
+    <whitelist addUncoveredFilesFromWhitelist="true" processUncoveredFilesFromWhitelist="true">
       <directory suffix=".php">src</directory>
     </whitelist>
-    <blacklist>
-      <directory suffix=".php">vendor</directory>
-      <directory suffix=".php">tests</directory>
-    </blacklist>
   </filter>
 </phpunit>

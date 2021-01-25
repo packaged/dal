@@ -99,17 +99,21 @@ class ApcConnection extends AbstractCacheConnection
   {
     if($this->_hasExtension())
     {
+      if(function_exists('apcu_enabled') && !apcu_enabled())
+      {
+        throw new ConnectionException("APCu is not available");
+      }
+      if(function_exists('apc_enabled') && !apc_enabled())
+      {
+        throw new ConnectionException("APC is not available");
+      }
       if(ini_get('apc.enabled'))
       {
         return $this;
       }
-      throw new ConnectionException(
-        "APC has not been enabled"
-      );
+      throw new ConnectionException("APC has not been enabled");
     }
-    throw new ConnectionException(
-      "APC extension has not been loaded"
-    );
+    throw new ConnectionException("APC extension has not been loaded");
   }
 
   /**

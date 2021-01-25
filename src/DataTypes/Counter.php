@@ -26,8 +26,7 @@ class Counter implements IDataType, \JsonSerializable
 
   public function setValue($value)
   {
-    $by = $this->_safeValue($value);
-    $this->_value = $value;
+    $this->_value = $this->_safeValue($value);
     $this->_adjust = 0;
     $this->_adjusted = true;
   }

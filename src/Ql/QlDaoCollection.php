@@ -369,4 +369,20 @@ class QlDaoCollection extends DaoCollection
     }
     return parent::distinct($property);
   }
+
+  /**
+   * Raw Data response, without hydrating DAOs
+   *
+   * This can be used for custom select queries, or when there is no need for constructed DAO objects
+   *
+   * @return array[]
+   * @throws \Packaged\Dal\Exceptions\Connection\ConnectionException
+   * @throws \Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException
+   * @throws \Packaged\Dal\Exceptions\DalResolver\DataStoreNotFoundException
+   */
+  public function rawResults(): array
+  {
+    $dao = $this->createNewDao(false);
+    return $dao->getDataStore()->getData($this);
+  }
 }

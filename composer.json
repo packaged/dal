@@ -19,6 +19,9 @@
     "packaged/cassandrathrift": "~22",
     "doctrine/inflector": "~1.0"
   },
+  "suggest": {
+    "ext-apcu": "*"
+  },
   "require-dev": {
     "phpunit/phpunit": "~7"
   },

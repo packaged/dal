@@ -97,23 +97,28 @@ class ApcConnection extends AbstractCacheConnection
    */
   public function connect()
   {
-    if($this->_hasExtension())
+    if(!$this->_hasExtension())
     {
-      if(function_exists('apcu_enabled') && !apcu_enabled())
-      {
-        throw new ConnectionException("APCu is not available");
-      }
-      if(function_exists('apc_enabled') && !apc_enabled())
-      {
-        throw new ConnectionException("APC is not available");
-      }
-      if(ini_get('apc.enabled'))
-      {
-        return $this;
-      }
-      throw new ConnectionException("APC has not been enabled");
+      throw new ConnectionException("APC extension has not been loaded");
     }
-    throw new ConnectionException("APC extension has not been loaded");
+
+    $checkEnabled = $this->_config()->getItem('check_enabled', PHP_SAPI !== 'cli');
+
+    if($checkEnabled && function_exists('apcu_enabled') && !apcu_enabled())
+    {
+      throw new ConnectionException("APCu is not available");
+    }
+    if($checkEnabled && function_exists('apc_enabled') && !apc_enabled())
+    {
+      throw new ConnectionException("APC is not available");
+    }
+
+    if(ini_get('apc.enabled'))
+    {
+      return $this;
+    }
+
+    throw new ConnectionException("APC has not been enabled");
   }
 
   /**
@@ -128,7 +133,7 @@ class ApcConnection extends AbstractCacheConnection
 
   private function _hasExtension()
   {
-    return extension_loaded('apc') || extension_loaded('apcu');
+    return extension_loaded('apcu') || extension_loaded('apc');
   }
 
   /**

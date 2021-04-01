@@ -11,6 +11,7 @@ class MySQLiConnection extends AbstractQlConnection
   protected $_connection;
 
   protected $_lastPing;
+  protected $_pingCacheTime = 5;
 
   public function isConnected()
   {
@@ -21,7 +22,7 @@ class MySQLiConnection extends AbstractQlConnection
     try
     {
       $t = time();
-      if($this->_lastPing === null || $this->_lastPing < $t - 5)
+      if($this->_lastPing === null || $this->_lastPing < $t - $this->_pingCacheTime)
       {
         if(!$this->_connection->ping())
         {
@@ -52,6 +53,7 @@ class MySQLiConnection extends AbstractQlConnection
   public function _connect()
   {
     $options = array_replace($this->_defaultOptions(), ValueAs::arr($this->_config()->getItem('options')));
+    $this->_pingCacheTime = $this->getConfig()->getItem('ping_cache', 5);
 
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
     $this->_connection = null;

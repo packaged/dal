@@ -10,11 +10,29 @@ class MySQLiConnection extends AbstractQlConnection
   /** @var \mysqli */
   protected $_connection;
 
+  protected $_lastPing;
+  protected $_pingCacheTime = 5;
+
   public function isConnected()
   {
+    if(!$this->_connection)
+    {
+      return false;
+    }
     try
     {
-      return $this->_connection && $this->_connection->ping();
+      $t = time();
+      if($this->_lastPing === null || $this->_lastPing < $t - $this->_pingCacheTime)
+      {
+        if(!$this->_connection->ping())
+        {
+          $this->_lastPing = null;
+          return false;
+        }
+        $this->_lastPing = $t;
+      }
+
+      return true;
     }
     catch(\Exception $e)
     {
@@ -29,12 +47,13 @@ class MySQLiConnection extends AbstractQlConnection
     {
       $this->_connection->close();
     }
-    $this->_connection = null;
+    $this->_lastPing = $this->_connection = null;
   }
 
   public function _connect()
   {
     $options = array_replace($this->_defaultOptions(), ValueAs::arr($this->_config()->getItem('options')));
+    $this->_pingCacheTime = $this->getConfig()->getItem('ping_cache', 5);
 
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
     $this->_connection = null;
@@ -74,6 +93,8 @@ class MySQLiConnection extends AbstractQlConnection
     {
       $connection->set_charset($charSet);
     }
+
+    $this->_lastPing = time();
 
     $this->_connection = $connection;
   }

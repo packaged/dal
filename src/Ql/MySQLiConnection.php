@@ -99,7 +99,7 @@ class MySQLiConnection extends AbstractQlConnection
     $this->_connection = $connection;
   }
 
-  public function _switchDatabase($db)
+  protected function _switchDatabase($db)
   {
     if($this->isConnected())
     {

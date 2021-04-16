@@ -13,7 +13,7 @@ class AbstractDaoTest extends TestCase
   public function testGetProperties()
   {
     $dao = new MockAbstractDao();
-    $this->assertEquals(['name', 'email'], $dao->getDaoProperties());
+    $this->assertEquals(['name', 'email', 'age'], $dao->getDaoProperties());
   }
 
   public function testGetId()
@@ -42,13 +42,13 @@ class AbstractDaoTest extends TestCase
 
     $dao->name = 'John Smith';
     $this->assertEquals(
-      ['name' => 'John Smith', 'email' => 'nobody@example.com'],
+      ['name' => 'John Smith', 'email' => 'nobody@example.com', 'age' => 0],
       $dao->getDaoPropertyData()
     );
 
     $dao->email = 'john@example.com';
     $this->assertEquals(
-      ['name' => 'John Smith', 'email' => 'john@example.com'],
+      ['name' => 'John Smith', 'email' => 'john@example.com', 'age' => 0],
       $dao->getDaoPropertyData()
     );
   }
@@ -85,7 +85,7 @@ class AbstractDaoTest extends TestCase
     $dao = new MockAbstractDao();
     $dao->hydrateDao(['name' => 'John Smith']);
     $this->assertEquals(
-      ['name' => 'John Smith', 'email' => 'nobody@example.com'],
+      ['name' => 'John Smith', 'email' => 'nobody@example.com', 'age' => 0],
       $dao->getDaoPropertyData()
     );
   }
@@ -95,7 +95,7 @@ class AbstractDaoTest extends TestCase
     $dao = new MockAbstractDao();
     $dao->hydrateDao(['name' => 'John Smith', 'nondao' => 'miss']);
     $this->assertEquals(
-      ['name' => 'John Smith', 'email' => 'nobody@example.com'],
+      ['name' => 'John Smith', 'email' => 'nobody@example.com', 'age' => 0],
       $dao->getDaoPropertyData()
     );
     $this->assertFalse(isset($dao->nodao));
@@ -119,7 +119,7 @@ class AbstractDaoTest extends TestCase
     $dao       = new MockAbstractDao();
     $dao->name = "Brooke";
     $this->assertEquals(
-      '{"name":"Brooke","email":"nobody@example.com"}',
+      '{"name":"Brooke","email":"nobody@example.com","age":0}',
       json_encode($dao)
     );
   }

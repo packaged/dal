@@ -17,6 +17,7 @@ class Base36TimeKeyTest extends TestCase
     {
       $found = [];
       $limit = 100000;
+      $limit = 100;//Comment for extended testing
       for($i = 0; $i < $limit; $i++)
       {
         $found[] = Base36TimeKey::generate() . "\n";

@@ -281,6 +281,8 @@ abstract class AbstractDao implements IDao
       //no properties are located
       static::$_properties[$this->_calledClass] = [];
 
+      $php74up = ((PHP_MAJOR_VERSION === 7 && PHP_MINOR_VERSION >= 4) || PHP_MAJOR_VERSION > 7);
+
       $reflect = new \ReflectionClass($this->_calledClass);
       //$newInstance = $reflect->newInstance();
       foreach($reflect->getProperties(\ReflectionProperty::IS_PUBLIC) as $pub)
@@ -288,8 +290,8 @@ abstract class AbstractDao implements IDao
         if(!$pub->isStatic())
         {
           //Add all non static properties to the cache with their default values
-          static::$_properties[$this->_calledClass][$pub->getName()]
-            = $pub->getValue($this);
+          static::$_properties[$this->_calledClass][$pub->getName()] = !$php74up || $pub->isInitialized($this)
+            ? $pub->getValue($this) : null;
         }
       }
 

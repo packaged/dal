@@ -1,6 +1,7 @@
 <?php
 namespace Packaged\Dal\Ql\Cql;
 
+use Packaged\Dal\DataTypes\UniqueList;
 use Packaged\Dal\Ql\QlDao;
 
 abstract class CqlDao extends QlDao
@@ -13,6 +14,15 @@ abstract class CqlDao extends QlDao
   public function getTimestamp()
   {
     return null;
+  }
+
+  protected function _serializeUniqueList($value)
+  {
+    if($value instanceof UniqueList)
+    {
+      $value = $value->calculated();
+    }
+    return $value;
   }
 
   /**

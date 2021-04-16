@@ -133,6 +133,10 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
     else
     {
       $data = $dao->getDaoPropertyData();
+      foreach($data as $field => $value)
+      {
+        $data[$field] = $this->_getQlExpression($dao, $field, $value);
+      }
       $statement = $qb::insertInto(
         $dao->getTableName(),
         ...array_keys($data)

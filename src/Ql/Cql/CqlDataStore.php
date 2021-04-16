@@ -3,12 +3,14 @@ namespace Packaged\Dal\Ql\Cql;
 
 use Exception;
 use Packaged\Dal\DataTypes\Counter;
+use Packaged\Dal\DataTypes\UniqueList;
 use Packaged\Dal\Exceptions\DataStore\DataStoreException;
 use Packaged\Dal\IDao;
 use Packaged\Dal\Ql\QlDao;
 use Packaged\Dal\Ql\QlDataStore;
 use Packaged\QueryBuilder\Assembler\CQL\CqlAssembler;
 use Packaged\QueryBuilder\Builder\CQL\CqlQueryBuilder;
+use Packaged\QueryBuilder\Expression\CQL\SetExpression;
 use Packaged\QueryBuilder\Expression\DecrementExpression;
 use Packaged\QueryBuilder\Expression\IncrementExpression;
 use Packaged\QueryBuilder\Statement\CQL\CqlInsertStatement;
@@ -75,6 +77,12 @@ class CqlDataStore extends QlDataStore
         }
       }
     }
+
+    if($newValue instanceof UniqueList)
+    {
+      return SetExpression::create($newValue->calculated());
+    }
+
     return $value;
   }
 

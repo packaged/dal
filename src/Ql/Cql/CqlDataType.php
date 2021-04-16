@@ -2,6 +2,7 @@
 namespace Packaged\Dal\Ql\Cql;
 
 use Packaged\Dal\Ql\Cql\DataType\BooleanType;
+use Packaged\Dal\Ql\Cql\DataType\CompositeType;
 use Packaged\Dal\Ql\Cql\DataType\DecimalType;
 use Packaged\Dal\Ql\Cql\DataType\DoubleType;
 use Packaged\Dal\Ql\Cql\DataType\FloatType;
@@ -27,6 +28,7 @@ class CqlDataType
     'org.apache.cassandra.db.marshal.LongType'          => LongType::class,
     'org.apache.cassandra.db.marshal.CounterColumnType' => LongType::class,
     'org.apache.cassandra.db.marshal.TimestampType'     => LongType::class,
+    'org.apache.cassandra.db.marshal.SetType'           => CompositeType::class,
   ];
 
   /**
@@ -34,31 +36,37 @@ class CqlDataType
    *
    * @return ICassandraType
    */
-  private static function _getType($type)
+  public static function getType($type)
   {
     // Remove ReversedType modifier for cluster keys sorted in descending order
     //  eg: org.apache.cassandra.db.marshal.ReversedType(org.apache.cassandra.db.marshal.Int32Type)
     $type = preg_replace(
-      '/^org.apache.cassandra.db.marshal.ReversedType\((.*)\)$/',
+      '/^org\.apache\.cassandra\.db\.marshal\.ReversedType\((.*)\)$/',
       '\1',
       $type
     );
+    $type = preg_replace('/(^.+)\(.+/', '\1', $type);
     return isset(self::$_types[$type]) ? self::$_types[$type] : false;
   }
 
   public static function pack($type, $value)
   {
-    $type = self::_getType($type);
-    if($type)
+    $priType = self::getType($type);
+    if($priType)
     {
-      return $type::pack($value);
+      if($priType === CompositeType::class)
+      {
+        $subType = preg_replace('/^.+\((.+)\)/', '\1', $type);
+        return $priType::pack($value, $subType);
+      }
+      return $priType::pack($value);
     }
     return $value;
   }
 
   public static function unpack($type, $data)
   {
-    $type = self::_getType($type);
+    $type = self::getType($type);
     if($type)
     {
       return $type::unpack($data);

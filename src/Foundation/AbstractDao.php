@@ -177,10 +177,7 @@ abstract class AbstractDao implements IDao
    */
   public function hydrateDao(array $data)
   {
-    $hydratable = array_intersect_key(
-      $data,
-      array_flip($this->getDaoProperties())
-    );
+    $hydratable = array_intersect_key($data, array_flip($this->getDaoProperties()));
     foreach($hydratable as $key => $value)
     {
       $this->setDaoProperty($key, $value);
@@ -206,6 +203,8 @@ abstract class AbstractDao implements IDao
    */
   public function setDaoProperty($key, $value)
   {
+    //Code duplicated to AbstractSanitizableDao for performance.
+    //Any changes here should be applied there also (not that we would ever expect any here)
     $this->$key = $value;
     return $this;
   }

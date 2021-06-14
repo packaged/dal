@@ -112,7 +112,8 @@ abstract class AbstractSanitizableDao extends AbstractDao
    */
   public function setDaoProperty($key, $value)
   {
-    return parent::setDaoProperty($key, $this->filterDaoProperty($key, $value));
+    $this->$key = $this->filterDaoProperty($key, $value);
+    return $this;
   }
 
   /**

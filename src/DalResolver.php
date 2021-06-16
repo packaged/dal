@@ -4,8 +4,8 @@ namespace Packaged\Dal;
 use Packaged\Config\ConfigProviderInterface;
 use Packaged\Config\ConfigSectionInterface;
 use Packaged\Config\ConfigurableInterface;
+use Packaged\Config\Provider\ConfigProvider;
 use Packaged\Config\Provider\ConfigSection;
-use Packaged\Config\Provider\Test\TestConfigProvider;
 use Packaged\Dal\Exceptions\DalException;
 use Packaged\Dal\Exceptions\DalResolver\ConnectionNotFoundException;
 use Packaged\Dal\Exceptions\DalResolver\DataStoreNotFoundException;
@@ -44,7 +44,7 @@ class DalResolver implements IConnectionResolver
     }
     else
     {
-      $this->_config[self::TYPE_CONNECTION] = new TestConfigProvider();
+      $this->_config[self::TYPE_CONNECTION] = new ConfigProvider();
     }
 
     if($datastoreConfig !== null)
@@ -53,7 +53,7 @@ class DalResolver implements IConnectionResolver
     }
     else
     {
-      $this->_config[self::TYPE_DATASTORE] = new TestConfigProvider();
+      $this->_config[self::TYPE_DATASTORE] = new ConfigProvider();
     }
 
     if($dalConfig !== null)
@@ -62,7 +62,7 @@ class DalResolver implements IConnectionResolver
     }
     else
     {
-      $this->_config[self::CONFIG_KEY] = new TestConfigProvider();
+      $this->_config[self::CONFIG_KEY] = new ConfigProvider();
     }
 
     $this->_confed = [self::TYPE_CONNECTION => [], self::TYPE_DATASTORE => []];

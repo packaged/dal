@@ -125,11 +125,8 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
     }
     else
     {
-      $data = $dao->getDaoPropertyData();
-      $statement = $qb::insertInto(
-        $dao->getTableName(),
-        ...array_keys($data)
-      )->values(...array_values($data));
+      $data = $this->_getInsertData($dao);
+      $statement = $qb::insertInto($dao->getTableName(), ...array_keys($data))->values(...array_values($data));
 
       if($this->_hasIds($dao))
       {
@@ -143,6 +140,11 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
       }
     }
     return $statement;
+  }
+
+  protected function _getInsertData(QlDao $dao)
+  {
+    return $dao->getDaoPropertyData();
   }
 
   protected function _getCounterValue(QlDao $dao, $field, $value)

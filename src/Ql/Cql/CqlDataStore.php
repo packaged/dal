@@ -119,5 +119,4 @@ class CqlDataStore extends QlDataStore
   {
     return $this->_getDaoChanges($dao);
   }
-
 }

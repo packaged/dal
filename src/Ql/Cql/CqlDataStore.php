@@ -114,4 +114,10 @@ class CqlDataStore extends QlDataStore
   {
     return new CqlAssembler($statement);
   }
+
+  protected function _getInsertData(QlDao $dao)
+  {
+    return $this->_getDaoChanges($dao);
+  }
+
 }

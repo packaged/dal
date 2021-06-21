@@ -241,11 +241,11 @@ class CqlTest extends TestCase
     $dao->id = 3;
     $dao->id2 = 1234;
     $dao->username = 'testuser';
+    $dao->display = 'latest';
     $dao->setTtl(100);
     $datastore->save($dao);
     $this->assertEquals(
-      'INSERT INTO "mock_ql_daos" ("id", "id2", "username", "display", "intVal", "bigintVal", "doubleVal", "floatVal", "negDecimalVal", "decimalVal", "timestampVal", "boolVal") '
-      . 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) USING TTL ?',
+      'INSERT INTO "mock_ql_daos" ("id", "id2", "username", "display") VALUES (?, ?, ?, ?) USING TTL ?',
       $connection->getExecutedQuery()
     );
     $this->assertEquals(
@@ -253,15 +253,7 @@ class CqlTest extends TestCase
         '3',
         1234,
         'testuser',
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
+        'latest',
         100,
       ],
       $connection->getExecutedQueryValues()
@@ -274,24 +266,14 @@ class CqlTest extends TestCase
     $dao->setTtl(null);
     $datastore->save($dao);
     $this->assertEquals(
-      'INSERT INTO "mock_ql_daos" ("id", "id2", "username", "display", "intVal", "bigintVal", "doubleVal", "floatVal", "negDecimalVal", "decimalVal", "timestampVal", "boolVal") '
-      . 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO "mock_ql_daos" ("id", "id2", "username") VALUES (?, ?, ?)',
       $connection->getExecutedQuery()
     );
     $this->assertEquals(
       [
         'test4',
         4321,
-        'testuser',
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
+        'testuser'
       ],
       $connection->getExecutedQueryValues()
     );
@@ -479,5 +461,31 @@ class CqlTest extends TestCase
 
     $row2 = $conn2->fetchQueryResults('SELECT * FROM "test2"');
     $this->assertEquals('value2', $row2[0]['test_field']);
+  }
+
+  public function testPartialInsert()
+  {
+    $datastore = new MockCqlDataStore();
+    $connection = new CqlQueryObserverConnection();
+    $this->_configureConnection($connection);
+    $datastore->setConnection($connection);
+    $connection->connect();
+    $connection->setResolver(new DalResolver());
+
+    $dao = new MockCqlDao();
+    $dao->id = uniqid('daotest');
+    $dao->id2 = 12345;
+    $dao->display = 'test 1';
+    $datastore->save($dao);
+    self::assertEquals(
+      [
+        [
+          'runQuery',
+          'INSERT INTO "mock_ql_daos" ("id", "id2", "display") VALUES (?, ?, ?)',
+          [$dao->id, 12345, 'test 1'],
+        ],
+      ],
+      $connection->getQueries()
+    );
   }
 }

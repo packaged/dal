@@ -11,10 +11,9 @@
          convertWarningsToExceptions="true"
          processIsolation="false"
          stopOnFailure="false"
-         syntaxCheck="false"
   >
   <testsuites>
-    <testsuite>
+    <testsuite name="dal">
       <directory>tests</directory>
     </testsuite>
   </testsuites>
@@ -22,9 +21,5 @@
     <whitelist>
       <directory suffix=".php">src</directory>
     </whitelist>
-    <blacklist>
-      <directory suffix=".php">vendor</directory>
-      <directory suffix=".php">tests</directory>
-    </blacklist>
   </filter>
 </phpunit>

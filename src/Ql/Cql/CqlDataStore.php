@@ -117,6 +117,14 @@ class CqlDataStore extends QlDataStore
 
   protected function _getInsertData(QlDao $dao)
   {
-    return $this->_getDaoChanges($dao);
+    $changes = $this->_getDaoChanges($dao);
+    foreach($dao->getDaoIDProperties() as $prop)
+    {
+      if(!isset($changes[$prop]))
+      {
+        $changes[$prop] = $dao->getDaoProperty($prop);
+      }
+    }
+    return $changes;
   }
 }

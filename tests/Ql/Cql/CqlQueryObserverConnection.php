@@ -24,5 +24,4 @@ class CqlQueryObserverConnection extends CqlConnection
     $this->_queryLog[] = ['runRawQuery', $query, $consistency, $retries];
     return parent::runRawQuery($query, $consistency, $retries);
   }
-
 }

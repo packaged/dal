@@ -108,8 +108,9 @@ jobs:
     docker:
       - image: php:8.0-alpine
         environment:
-          ADD_PECL: "apcu memcached"
           ADD_MODULES: "mysqli pdo pdo_mysql"
+          ADD_PECL: "apcu memcached"
+          ADD_PHPIZE_DEPS: "zlib-dev"
       - image: cassandra:2.1
         environment:
           CASSANDRA_START_RPC: yes

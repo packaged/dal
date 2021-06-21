@@ -108,6 +108,7 @@ jobs:
     docker:
       - image: php:8.0-alpine
         environment:
+          ADD_PACKAGES: "libmemcached"
           ADD_MODULES: "mysqli pdo pdo_mysql"
           ADD_PECL: "apcu memcached"
           ADD_PHPIZE_DEPS: "zlib-dev libmemcached-dev"

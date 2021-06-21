@@ -273,7 +273,7 @@ class CqlTest extends TestCase
       [
         'test4',
         4321,
-        'testuser'
+        'testuser',
       ],
       $connection->getExecutedQueryValues()
     );
@@ -483,6 +483,33 @@ class CqlTest extends TestCase
           'runQuery',
           'INSERT INTO "mock_ql_daos" ("id", "id2", "display") VALUES (?, ?, ?)',
           [$dao->id, 12345, 'test 1'],
+        ],
+      ],
+      $connection->getQueries()
+    );
+  }
+
+  public function testAlwaysInsertID()
+  {
+    $datastore = new MockCqlDataStore();
+    $connection = new CqlQueryObserverConnection();
+    $this->_configureConnection($connection);
+    $datastore->setConnection($connection);
+    $connection->connect();
+    $connection->setResolver(new DalResolver());
+
+    $dao = new MockCqlDao();
+    $dao->id = uniqid('daotest');
+    $dao->markDaoDatasetAsSaved();
+    $dao->id2 = 12345;
+    $dao->display = 'test 2';
+    $datastore->save($dao);
+    self::assertEquals(
+      [
+        [
+          'runQuery',
+          'INSERT INTO "mock_ql_daos" ("id2", "display", "id") VALUES (?, ?, ?)',
+          [12345, 'test 2', $dao->id],
         ],
       ],
       $connection->getQueries()

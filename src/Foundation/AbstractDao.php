@@ -169,6 +169,16 @@ abstract class AbstractDao implements IDao
   }
 
   /**
+   * Return the default values from this dao
+   *
+   * @return array
+   */
+  public function getDefaultDaoValues()
+  {
+    return static::$_properties[$this->_calledClass];
+  }
+
+  /**
    * Hydrate the DAO with raw data
    *
    * @param array $data

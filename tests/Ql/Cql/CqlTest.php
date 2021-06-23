@@ -535,8 +535,8 @@ class CqlTest extends TestCase
       [
         [
           'runQuery',
-          'INSERT INTO "mock_ql_daos" ("intVal", "id", "id2", "username") VALUES (?, ?, ?, ?)',
-          [1, $dao->id, 12345, 'abc'],
+          'INSERT INTO "mock_ql_daos" ("intVal", "boolVal", "id", "id2", "username") VALUES (?, ?, ?, ?, ?)',
+          [1, false, $dao->id, 12345, 'abc'],
         ],
       ],
       $connection->getQueries()

@@ -18,6 +18,7 @@ use Packaged\Dal\Tests\Ql\Cql\Mocks\MockCqlCollection;
 use Packaged\Dal\Tests\Ql\Cql\Mocks\MockCqlConnection;
 use Packaged\Dal\Tests\Ql\Cql\Mocks\MockCqlDao;
 use Packaged\Dal\Tests\Ql\Cql\Mocks\MockCqlDataStore;
+use Packaged\Dal\Tests\Ql\Cql\Mocks\MockPrefillCqlDao;
 use Packaged\Dal\Tests\Ql\Cql\Mocks\UnpreparedExecuteClient;
 use Packaged\Dal\Tests\Ql\Cql\Mocks\UnpreparedPrepareClient;
 use Packaged\Dal\Tests\Ql\Cql\Mocks\WriteTimeoutClient;
@@ -510,6 +511,32 @@ class CqlTest extends TestCase
           'runQuery',
           'INSERT INTO "mock_ql_daos" ("id2", "display", "id") VALUES (?, ?, ?)',
           [12345, 'test 2', $dao->id],
+        ],
+      ],
+      $connection->getQueries()
+    );
+  }
+
+  public function testAlwaysInsertIDWithPrefil()
+  {
+    $datastore = new MockCqlDataStore();
+    $connection = new CqlQueryObserverConnection();
+    $this->_configureConnection($connection);
+    $datastore->setConnection($connection);
+    $connection->connect();
+    $connection->setResolver(new DalResolver());
+
+    $dao = new MockPrefillCqlDao();
+    $dao->id = uniqid('daotest');
+    $dao->id2 = 12345;
+    $dao->username = 'abc';
+    $datastore->save($dao);
+    self::assertEquals(
+      [
+        [
+          'runQuery',
+          'INSERT INTO "mock_ql_daos" ("intVal", "id", "id2", "username") VALUES (?, ?, ?, ?)',
+          [1, $dao->id, 12345, 'abc'],
         ],
       ],
       $connection->getQueries()

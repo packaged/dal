@@ -25,12 +25,12 @@ class PdoExceptionTest extends TestCase
     {
       foreach($contains as $contain)
       {
-        $this->assertContains($contain, $formed->getMessage());
+        $this->assertStringContainsString($contain, $formed->getMessage());
       }
     }
     else
     {
-      $this->assertContains($contains, $formed->getMessage());
+      $this->assertStringContainsString($contains, $formed->getMessage());
     }
     $this->assertSame($exception, $formed->getPrevious());
   }

@@ -28,7 +28,10 @@ class DalSocket extends TSocket
   {
     $persist = $this->persist_;
     $this->persist_ = false;
-    parent::close();
+    if($this->handle_ !== null && !is_bool($this->handle_))
+    {
+      parent::close();
+    }
     $this->persist_ = $persist;
   }
 

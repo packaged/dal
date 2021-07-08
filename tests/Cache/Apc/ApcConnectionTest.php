@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 class ApcConnectionTest extends TestCase
 {
-  protected function setUp()
+  protected function setUp(): void
   {
     if(!((extension_loaded('apc') || extension_loaded('apcu'))
       && ini_get('apc.enabled'))

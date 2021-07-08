@@ -96,10 +96,7 @@ class CqlConnection
     {
       $this->_prepareCache = [];
 
-      $remainingAttempts = (int)$this->_config()->getItem(
-        'connect_attempts',
-        1
-      );
+      $remainingAttempts = (int)$this->_config()->getItem('connect_attempts', 1);
 
       while($remainingAttempts > 0)
       {
@@ -109,35 +106,21 @@ class CqlConnection
         {
           if(empty($this->_availableHosts))
           {
-            $this->_availableHosts = ValueAs::arr(
-              $this->_config()->getItem('hosts', 'localhost')
-            );
+            $this->_availableHosts = ValueAs::arr($this->_config()->getItem('hosts', 'localhost'));
             $this->_availableHostCount = count($this->_availableHosts);
             if($this->_availableHostCount < 1)
             {
-              throw new ConnectionException(
-                'Could not find any configured hosts'
-              );
+              throw new ConnectionException('Could not find any configured hosts');
             }
           }
 
           shuffle($this->_availableHosts);
           $host = reset($this->_availableHosts);
 
-          $this->_socket = new DalSocket(
-            $host,
-            (int)$this->_config()->getItem('port', 9160),
-            $this->_isPersistent()
-          );
-          $this->_socket->setConnectTimeout(
-            (int)$this->_config()->getItem('connect_timeout', 1000)
-          );
-          $this->_socket->setRecvTimeout(
-            (int)$this->_config()->getItem('receive_timeout', 1000)
-          );
-          $this->_socket->setSendTimeout(
-            (int)$this->_config()->getItem('send_timeout', 1000)
-          );
+          $this->_socket = new DalSocket($host, (int)$this->_config()->getItem('port', 9160), $this->_isPersistent());
+          $this->_socket->setConnectTimeout((int)$this->_config()->getItem('connect_timeout', 1000));
+          $this->_socket->setRecvTimeout((int)$this->_config()->getItem('receive_timeout', 1000));
+          $this->_socket->setSendTimeout((int)$this->_config()->getItem('send_timeout', 1000));
 
           $this->_transport = new TFramedTransport($this->_socket);
           $this->_protocol = new TBinaryProtocolAccelerated($this->_transport);

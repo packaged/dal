@@ -20,7 +20,8 @@
     "doctrine/inflector": "~1.0"
   },
   "suggest": {
-    "ext-apcu": "*"
+    "ext-apcu": "*",
+    "ext-pgsql": "*"
   },
   "require-dev": {
     "phpunit/phpunit": "~7"

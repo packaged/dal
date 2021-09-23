@@ -250,7 +250,7 @@ class PdoConnection extends AbstractQlConnection
 
     $code = $e->getCode();
     $p = $e->getPrevious();
-    if(($code === 0) || Strings::startsWith($code, 42)
+    if(($code == 0) || Strings::startsWith($code, 42)
       || ($p && Strings::startsWith($p->getCode(), 42)))
     {
       return false;

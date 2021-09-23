@@ -14,13 +14,13 @@ class JsonFileDaoTest extends TestCase
     return Path::system(dirname(__DIR__), 'resources', 'FileSystem', $filename);
   }
 
-  protected function setUp()
+  protected function setUp(): void
   {
     $resolver = new DalResolver();
     $resolver->boot();
   }
 
-  protected function tearDown()
+  protected function tearDown(): void
   {
     Dao::unsetDalResolver();
   }

@@ -59,9 +59,9 @@ class CqlDataStore extends QlDataStore
       {
         $value = DecrementExpression::create($field, $newValue->getDecrement());
       }
-      else if($newValue->isFixedValue() && $newValue->hasChanged())
+      else if($newValue->isFixedValue())
       {
-        if($newValue->current() === null && $newValue->calculated() === 0)
+        if($newValue->current() === null && $newValue->calculated() == 0)
         {
           //Allow counter row initialisation
           $value = [

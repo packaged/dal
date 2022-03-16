@@ -364,7 +364,7 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
   /**
    * Get the connection, and connect if not connected
    *
-   * @return IQlDataConnection
+   * @return IQLDataConnection
    * @throws ConnectionNotFoundException
    * @throws ConnectionException
    */
@@ -380,7 +380,7 @@ class QlDataStore extends AbstractDataStore implements ConfigurableInterface
   /**
    * Retrieve the connection for this data store
    *
-   * @return IQlDataConnection
+   * @return IQLDataConnection
    * @throws ConnectionNotFoundException
    */
   public function getConnection()

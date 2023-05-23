@@ -58,7 +58,6 @@ class MySQLiConnection extends AbstractQlConnection
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
     $this->_connection = null;
     $connection = new \mysqli();
-    $connection->init();
 
     foreach($options as $key => $value)
     {

@@ -1,0 +1,28 @@
+name: PHP Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.0'
+
+      - name: Set up Docker Compose
+        uses: docker/setup-docker-compose@v1
+
+      - name: Run tests with MySQL and Cassandra
+        run: ./.github/actions/php-test/entrypoint.sh

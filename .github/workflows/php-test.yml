@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - master
+      - gh
   pull_request:
-    types:
-      - opened
+    branches:
+      - master
+      - gh
 
 jobs:
   test:

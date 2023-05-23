@@ -3,10 +3,10 @@ name: PHP Test
 on:
   push:
     branches:
-      - main
+      - master
   pull_request:
-    branches:
-      - main
+    types:
+      - opened
 
 jobs:
   test:

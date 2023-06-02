@@ -30,7 +30,7 @@ jobs:
 
       memcached:
         image: memcached:1.4
-        options: --health-cmd "nc -z localhost 11211" --health-interval 10s --health-retries 5
+        options: --health-cmd "nc -z localhost 11211" --health-interval 10s --health-retries 10
 
     steps:
       - name: Checkout repository

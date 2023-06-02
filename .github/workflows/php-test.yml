@@ -28,6 +28,10 @@ jobs:
           - 9160:9042
         options: --health-cmd "cqlsh --debug" --health-interval 10s --health-retries 10
 
+      memcached:
+        image: memcached:1.4
+        options: --health-cmd "nc -z localhost 11211" --health-interval 10s --health-retries 5
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3

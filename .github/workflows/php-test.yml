@@ -41,8 +41,8 @@ jobs:
 
       - name: Setup Cassandra
         run: |
-          sudo pip3 install cryptography==38.0.4
-          sudo pip3 install cqlsh
+          pip3 install pyOpenSSL --upgrade
+          pip3 install cqlsh
           cqlsh 127.0.0.1 9042 -f ./.github/cassandra-setup.cql
 
       - name: Set up PHP

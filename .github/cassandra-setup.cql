@@ -12,7 +12,7 @@ CREATE TABLE packaged_dal.mock_ql_daos (
     "doubleVal"     double,
     "floatVal"      float,
     "decimalVal"    decimal,
-    "newDecimalVal" decimal,
+    "negDecimalVal" decimal,
     "timestampVal"  timestamp,
     "boolVal"       boolean,
     PRIMARY KEY ( ("id"),"id2" )

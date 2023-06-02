@@ -43,7 +43,7 @@ jobs:
         run: |
           pip3 install pyOpenSSL --upgrade
           pip3 install cqlsh
-          cqlsh 127.0.0.1 9042 -f ./.github/cassandra-setup.cql
+          cqlsh 127.0.0.1 9160 -f ./.github/cassandra-setup.cql
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2

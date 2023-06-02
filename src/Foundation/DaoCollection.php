@@ -209,6 +209,7 @@ class DaoCollection implements IDaoCollection
    *                     or
    * <b>Traversable</b>
    */
+  #[\ReturnTypeWillChange]
   public function getIterator()
   {
     $this->_prepareDaos();
@@ -230,6 +231,7 @@ class DaoCollection implements IDaoCollection
    * <p>
    * The return value will be casted to boolean if non-boolean was returned.
    */
+  #[\ReturnTypeWillChange]
   public function offsetExists($offset)
   {
     $this->_prepareDaos();
@@ -248,6 +250,7 @@ class DaoCollection implements IDaoCollection
    *
    * @return mixed Can return all value types.
    */
+  #[\ReturnTypeWillChange]
   public function offsetGet($offset)
   {
     $this->_prepareDaos();
@@ -269,6 +272,7 @@ class DaoCollection implements IDaoCollection
    *
    * @return void
    */
+  #[\ReturnTypeWillChange]
   public function offsetSet($offset, $value)
   {
     $this->_prepareDaos();
@@ -294,6 +298,7 @@ class DaoCollection implements IDaoCollection
    *
    * @return void
    */
+  #[\ReturnTypeWillChange]
   public function offsetUnset($offset)
   {
     $this->_prepareDaos();
@@ -308,6 +313,7 @@ class DaoCollection implements IDaoCollection
    * @return mixed data which can be serialized by <b>json_encode</b>,
    * which is a value of any type other than a resource.
    */
+  #[\ReturnTypeWillChange]
   public function jsonSerialize()
   {
     $this->_prepareDaos();
@@ -351,6 +357,7 @@ class DaoCollection implements IDaoCollection
    * <p>
    * The return value is cast to an integer.
    */
+  #[\ReturnTypeWillChange]
   public function count()
   {
     $this->_prepareDaos();

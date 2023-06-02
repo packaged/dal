@@ -1,0 +1,66 @@
+name: PHP Test
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      memcached:
+        image: memcached:alpine
+        ports:
+          - 11211:11211
+
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_USERNAME: root
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+      cassandra:
+        image: cassandra:3.11
+        ports:
+          - 9160:9160
+          - 9042:9042
+        env:
+          CASSANDRA_START_RPC: true
+        options: --health-cmd "cqlsh --debug" --health-interval 10s --health-retries 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup MySQL
+        run: |
+          sudo apt-get install mysql-client
+          mysql --host 127.0.0.1 --port 3306 -u root -e "CREATE DATABASE IF NOT EXISTS packaged_dal"
+          mysql --host 127.0.0.1 --port 3306 -u root packaged_dal < ./.github/mysql-setup.sql
+
+      - name: Setup Cassandra
+        run: |
+          pip3 install pyOpenSSL --upgrade
+          pip3 install cqlsh
+          cqlsh 127.0.0.1 9042 -f ./.github/cassandra-setup.cql
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.0'
+          extensions: apcu, memcached
+          ini-values: apc.enable_cli=1
+
+      - name: Composer install
+        run: composer install
+
+      - name: PHPUnit
+        run: vendor/bin/phpunit

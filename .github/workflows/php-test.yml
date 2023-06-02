@@ -4,11 +4,9 @@ on:
   push:
     branches:
       - master
-      - gh
   pull_request:
     branches:
       - master
-      - gh
 
 jobs:
   test:
@@ -25,7 +23,7 @@ jobs:
       cassandra:
         image: cassandra
         ports:
-          - 9042:9042
+          - 9160:9042
         options: --health-cmd "cqlsh --debug" --health-interval 5s --health-retries 10
 
     runs-on: ubuntu-latest

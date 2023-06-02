@@ -41,8 +41,7 @@ jobs:
 
       - name: Setup Cassandra
         run: |
-          sudo apt-get install python3-pip
-          sudo pip3 install cqlsh
+          sudo pip3 install cqlsh=4.1.1
           cqlsh 127.0.0.1 9042 -f ./.github/cassandra-setup.cql
 
       - name: Set up PHP

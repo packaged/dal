@@ -23,9 +23,10 @@ jobs:
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
       cassandra:
-        image: cassandra:3.11.10
+        image: cassandra:3.11
         ports:
-          - 9160:9042
+          - 9160:9160
+          - 9042:9042
         options: --health-cmd "cqlsh --debug" --health-interval 10s --health-retries 10
 
       memcached:
@@ -46,7 +47,7 @@ jobs:
         run: |
           pip3 install pyOpenSSL --upgrade
           pip3 install cqlsh
-          cqlsh 127.0.0.1 9160 -f ./.github/cassandra-setup.cql
+          cqlsh 127.0.0.1 9042 -f ./.github/cassandra-setup.cql
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2

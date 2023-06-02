@@ -5,9 +5,10 @@ DROP TABLE if exists packaged_dal.mock_ql_daos;
 CREATE TABLE packaged_dal.mock_ql_daos (
     id            varchar,
     id2           int,
+    intVal        int,
+    "intVal"      int,
     username      varchar,
     display       varchar,
-    intVal        int,
     bigintVal     bigint,
     doubleVal     double,
     floatVal      float,

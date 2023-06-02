@@ -27,6 +27,8 @@ jobs:
         ports:
           - 9160:9160
           - 9042:9042
+        env:
+          CASSANDRA_START_RPC: true
         options: --health-cmd "cqlsh --debug" --health-interval 10s --health-retries 10
 
       memcached:

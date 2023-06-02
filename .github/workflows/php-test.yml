@@ -33,8 +33,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - uses: ./.github/actions/setup-cassandra
-
       - name: setup mysql
         run: |
           sudo apt-get install mysql-client

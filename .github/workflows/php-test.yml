@@ -12,6 +12,22 @@ on:
 
 jobs:
   test:
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+      cassandra:
+        image: cassandra
+        ports:
+          - 9042:9042
+        options: --health-cmd="cqlsh -e 'describe cluster'" --health-interval=10s --health-timeout=5s --health-retries=3
+
     runs-on: ubuntu-latest
 
     steps:
@@ -23,8 +39,8 @@ jobs:
         with:
           php-version: '8.0'
 
-      - name: Set up Docker Compose
-        uses: docker/setup-docker-compose@v1
+      - name: Composer install
+        run: composer install
 
-      - name: Run tests with MySQL and Cassandra
-        run: ./.github/actions/php-test/entrypoint.sh
+      - name: PHPUnit
+        run: vendor/bin/phpunit

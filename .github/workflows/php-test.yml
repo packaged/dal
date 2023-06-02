@@ -23,7 +23,7 @@ jobs:
       cassandra:
         image: cassandra
         ports:
-          - 9042:9042
+          - 9042:9160
         options: --health-cmd "cqlsh --debug" --health-interval 10s --health-retries 10
 
     runs-on: ubuntu-latest
@@ -31,6 +31,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+
+      - name: Add mysql database
+        run: |
+          sudo apt-get update
+          sudo apt-get install mysql-client
+          mysql -u root -e "CREATE DATABASE IF NOT EXISTS packaged_dal;"
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2

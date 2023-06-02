@@ -1,0 +1,5 @@
+name: "Setup Cassandra"
+description: "Setup Cassandra"
+runs:
+  using: "docker"
+  image: "Dockerfile"

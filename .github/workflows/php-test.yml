@@ -36,7 +36,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install mysql-client
-          mysql -u root -e "CREATE DATABASE IF NOT EXISTS packaged_dal;"
+          mysql --host mysql -u root -e "CREATE DATABASE IF NOT EXISTS packaged_dal;"
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2

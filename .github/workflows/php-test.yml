@@ -20,9 +20,6 @@ jobs:
         with:
           php-version: '8.0'
 
-      - name: Composer install
-        run: composer install
-
       - uses: ./.github/actions/setup
 
       - name: PHPUnit

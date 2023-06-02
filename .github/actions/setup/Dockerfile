@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo_mysql pdo_pgsql
 
 # Install Cassandra CQL driver
-RUN apt-get install -y libssl-dev && pecl install cassandra
+RUN apt-get install -y libssl-dev
 
 WORKDIR /app
 COPY . /app

@@ -14,10 +14,10 @@ jobs:
 
     services:
       memcached:
-        image: memcached:1.5
+        image: memcached:alpine
         ports:
           - 11211:11211
-        options: --health-cmd "nc -z 127.0.0.1 11211" --health-interval 10s --health-retries 10
+        options: --health-cmd "/bin/nc -z 127.0.0.1 11211" --health-interval 10s --health-retries 10
 
       mysql:
         image: mysql:5.7

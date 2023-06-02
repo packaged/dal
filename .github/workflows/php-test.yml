@@ -28,7 +28,6 @@ jobs:
           - 9160:9042
         options: --health-cmd "cqlsh --debug" --health-interval 10s --health-retries 10
 
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -49,7 +48,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.0'
-          extensions: none, apcu, memcached, cassandra
+          extensions: apcu, memcached
 
       - name: Composer install
         run: composer install

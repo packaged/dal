@@ -57,9 +57,7 @@ jobs:
         with:
           php-version: '8.0'
           extensions: apcu, memcached
-
-      - name: Add APCU run to php.ini
-        run: echo "apc.enable_cli=1" >> ${{ php_ini }}
+          ini-values: apc.enable_cli=1
 
       - name: Composer install
         run: composer install

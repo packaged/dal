@@ -13,6 +13,10 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
+      memcached:
+        image: memcached:1.5
+        options: --health-cmd "nc -z 127.0.0.1 11211" --health-interval 10s --health-retries 10
+
       mysql:
         image: mysql:5.7
         env:
@@ -30,10 +34,6 @@ jobs:
         env:
           CASSANDRA_START_RPC: true
         options: --health-cmd "cqlsh --debug" --health-interval 10s --health-retries 10
-
-      memcached:
-        image: memcached:1.4
-        options: --health-cmd "nc -z localhost 11211" --health-interval 10s --health-retries 10
 
     steps:
       - name: Checkout repository

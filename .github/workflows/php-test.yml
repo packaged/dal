@@ -40,7 +40,10 @@ jobs:
           mysql --host 127.0.0.1 --port 3306 -u root packaged_dal < ./.github/mysql-setup.sql
 
       - name: Setup Cassandra
-        run: cqlsh 127.0.0.1 9042 -f ./.github/cassandra-setup.cql
+        run: |
+          sudo apt-get install python3-pip
+          sudo pip3 install cqlsh
+          cqlsh 127.0.0.1 9042 -f ./.github/cassandra-setup.cql
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2

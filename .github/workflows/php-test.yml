@@ -23,7 +23,7 @@ jobs:
       cassandra:
         image: cassandra
         ports:
-          - 9042:9160
+          - 9160:9042
         options: --health-cmd "cqlsh --debug" --health-interval 10s --health-retries 10
 
     runs-on: ubuntu-latest
@@ -36,7 +36,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install mysql-client
-          mysql --host mysql -u root -e "CREATE DATABASE IF NOT EXISTS packaged_dal;"
+          mysql --host 127.0.0.1 --port 3306 -u root -e "CREATE DATABASE IF NOT EXISTS packaged_dal;"
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2

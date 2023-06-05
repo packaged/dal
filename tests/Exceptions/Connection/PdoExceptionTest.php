@@ -35,7 +35,7 @@ class PdoExceptionTest extends TestCase
     $this->assertSame($exception, $formed->getPrevious());
   }
 
-  public function exceptionProvider()
+  public static function exceptionProvider()
   {
     $errorInfoTest = new \PDOException();
     $errorInfoTest->errorInfo = ['', 501, 'my message'];

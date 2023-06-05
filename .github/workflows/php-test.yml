@@ -12,6 +12,14 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version:
+          - "8.0"
+          - "8.1"
+          - "8.2"
+
     services:
       memcached:
         image: memcached:alpine
@@ -52,12 +60,15 @@ jobs:
           pip3 install cqlsh
           cqlsh 127.0.0.1 9042 -f ./.github/cassandra-setup.cql
 
-      - name: Set up PHP
+
+      - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.0'
+          php-version: ${{ matrix.php-version }}
           extensions: apcu, memcached
           ini-values: apc.enable_cli=1
+          coverage: none
+
 
       - name: Composer install
         run: composer install

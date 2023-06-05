@@ -121,7 +121,7 @@ class FileSystemDataStoreTest extends TestCase
     $this->assertEquals('Test Content', $file->getContent());
     $this->assertFileExists($crudLoc);
     $file->delete();
-    $this->assertFileNotExists($crudLoc);
+    $this->assertFileDoesNotExist($crudLoc);
   }
 
   public function testStaticOpen()

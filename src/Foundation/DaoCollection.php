@@ -314,7 +314,7 @@ class DaoCollection implements IDaoCollection
    * which is a value of any type other than a resource.
    */
   #[\ReturnTypeWillChange]
-  public function jsonSerialize()
+  public function jsonSerialize(): mixed
   {
     $this->_prepareDaos();
     if($this->isEmpty())

@@ -85,7 +85,7 @@ class PdoConnectionTest extends AbstractQlConnectionTest
     );
   }
 
-  public function delayedPreparesProvider()
+  public static function delayedPreparesProvider()
   {
     return [[0, 0], [1, 1], [2, 2], ['true', 1], ['false', 0]];
   }

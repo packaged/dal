@@ -26,7 +26,7 @@ class PhidTest extends TestCase
     );
   }
 
-  public function generateProvider()
+  public static function generateProvider()
   {
     return [
       ['RCO:PHID', new RandomClassOne()],

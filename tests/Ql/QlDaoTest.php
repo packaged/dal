@@ -23,7 +23,7 @@ use PHPUnit\Framework\TestCase;
 
 class QlDaoTest extends TestCase
 {
-  protected function _getResolver($name, $store, $connection)
+  protected static function _getResolver($name, $store, $connection)
   {
     $resolver = (new DalResolver())->addDataStore($name, $store);
     $store->setConnection($connection);
@@ -35,14 +35,14 @@ class QlDaoTest extends TestCase
     $pdo = new MockPdoConnection();
     $store = new MockQlDataStore();
     $pdo->config();
-    $resolver = $this->_getResolver('mockql', $store, $pdo);
+    $resolver = self::_getResolver('mockql', $store, $pdo);
     $pdo->setResolver($resolver);
     yield 'pdo' => [$pdo, $store, $resolver];
 
     $store = new MockQlDataStore();
     $mysqli = new MockMySQLiConnection();
     $mysqli->config();
-    $resolver = $this->_getResolver('mockql', $store, $mysqli);
+    $resolver = self::_getResolver('mockql', $store, $mysqli);
     $mysqli->setResolver($resolver);
     yield 'mysqli' => [$mysqli, $store->setConnection($mysqli), $resolver];
   }
@@ -51,7 +51,6 @@ class QlDaoTest extends TestCase
    * @dataProvider connectionProvider
    *
    * @param MockConnectionInterface $connection
-   *
    * @param QlDataStore             $dataStore
    * @param DalResolver             $resolver
    *
@@ -125,7 +124,6 @@ class QlDaoTest extends TestCase
    * @dataProvider connectionProvider
    *
    * @param MockConnectionInterface $connection
-   *
    * @param QlDataStore             $datastore
    * @param DalResolver             $resolver
    *
@@ -163,7 +161,6 @@ class QlDaoTest extends TestCase
    *
    * @param MockConnectionInterface $connection
    * @param QlDataStore             $datastore
-   *
    * @param DalResolver             $resolver
    *
    * @throws ConnectionNotFoundException
@@ -198,7 +195,6 @@ class QlDaoTest extends TestCase
    *
    * @param MockConnectionInterface $connection
    * @param QlDataStore             $datastore
-   *
    * @param DalResolver             $resolver
    *
    * @throws MultipleDaoException

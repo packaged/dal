@@ -40,7 +40,7 @@ class DaoCollectionTest extends TestCase
     $collection->setDummyData();
     $collection->each(
       function ($data) {
-        $this->assertObjectHasAttribute('name', $data);
+        $this->assertObjectHasProperty('name', $data);
       }
     );
   }

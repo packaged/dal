@@ -30,7 +30,7 @@ class QlDaoTest extends TestCase
     return $resolver;
   }
 
-  public function connectionProvider()
+  public static function connectionProvider()
   {
     $pdo = new MockPdoConnection();
     $store = new MockQlDataStore();

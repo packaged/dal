@@ -41,7 +41,7 @@ class CqlExceptionTest extends TestCase
     $this->assertSame($exception, $formed->getPrevious());
   }
 
-  public function exceptionProvider()
+  public static function exceptionProvider()
   {
     return [
       [new NotFoundException(), 404, "does not exist"],

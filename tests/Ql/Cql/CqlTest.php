@@ -166,7 +166,7 @@ class CqlTest extends TestCase
     $this->assertEquals(123456, $dao->intVal);
     $this->assertEquals(-123456, $dao->bigintVal);
     $this->assertEquals(123456, $dao->doubleVal);
-    $this->assertEqualsWithDelta(12.3456, $dao->floatVal, '', 0.00001);
+    $this->assertEqualsWithDelta(12.3456, $dao->floatVal, 0.00001);
     $this->assertEquals(1200, $dao->decimalVal);
     $this->assertEquals(-54.321, $dao->negDecimalVal);
     $this->assertEquals(strtotime('2015-04-02'), $dao->timestampVal);

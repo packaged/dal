@@ -152,7 +152,6 @@ class QlDaoCollection extends DaoCollection
    *
    * @return $this
    * @deprecated
-   *
    */
   public function loadWhere(...$params)
   {
@@ -264,6 +263,7 @@ class QlDaoCollection extends DaoCollection
     );
   }
 
+  #[\ReturnTypeWillChange]
   public function count($property = null, $distinct = false)
   {
     return (int)$this->_getAggregate(__FUNCTION__, CountSelectExpression::create($property)->setDistinct($distinct));
@@ -372,7 +372,6 @@ class QlDaoCollection extends DaoCollection
 
   /**
    * Raw Data response, without hydrating DAOs
-   *
    * This can be used for custom select queries, or when there is no need for constructed DAO objects
    *
    * @return array[]

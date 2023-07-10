@@ -264,6 +264,7 @@ class QlDaoCollection extends DaoCollection
     );
   }
 
+  #[\ReturnTypeWillChange]
   public function count($property = null, $distinct = false)
   {
     return (int)$this->_getAggregate(__FUNCTION__, CountSelectExpression::create($property)->setDistinct($distinct));

@@ -203,7 +203,7 @@ class QlDaoCollection extends DaoCollection
    *
    * @param mixed $default
    *
-   * @return QlDao
+   * @return QlDao|null|mixed
    */
   public function first($default = null)
   {

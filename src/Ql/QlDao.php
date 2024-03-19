@@ -114,7 +114,7 @@ abstract class QlDao extends AbstractSanitizableDao
   /**
    * @param $params
    *
-   * @return static
+   * @return static|null
    *
    * @throws MultipleDaoException
    */

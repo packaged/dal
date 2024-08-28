@@ -65,7 +65,7 @@ class MySQLiConnection extends AbstractQlConnection
     }
 
     $caCert = $this->_config()->getItem('ca_certificate');
-    if ($caCert)
+    if($caCert)
     {
       $connection->ssl_set(null, null, $caCert, null, null);
     }

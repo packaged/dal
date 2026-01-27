@@ -100,7 +100,7 @@ class PdoConnection extends AbstractQlConnection
     }
   }
 
-  protected function _fetchQueryResults($query, array $values = null)
+  protected function _fetchQueryResults($query, ?array $values = null)
   {
     $stmt = $this->_executeQuery($query, $values);
     $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -108,7 +108,7 @@ class PdoConnection extends AbstractQlConnection
     return $rows;
   }
 
-  protected function _runQuery($query, array $values = null)
+  protected function _runQuery($query, ?array $values = null)
   {
     $stmt = $this->_executeQuery($query, $values);
     $rows = $stmt->rowCount();
@@ -271,7 +271,7 @@ class PdoConnection extends AbstractQlConnection
       || ($p && in_array((string)$p->getCode(), $codes, true));
   }
 
-  private function _executeQuery($query, array $values = null)
+  private function _executeQuery($query, ?array $values = null)
   {
     $stmt = $this->_getStatement($query);
     if($values)

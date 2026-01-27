@@ -344,7 +344,7 @@ class CqlConnection
    * @throws \Exception
    * @throws \Packaged\Dal\Exceptions\DalException
    */
-  public function runQuery($query, array $values = null)
+  public function runQuery($query, ?array $values = null)
   {
     $this->_prepareAndExecute(
       DalResolver::MODE_WRITE,
@@ -366,7 +366,7 @@ class CqlConnection
    * @throws \Exception
    * @throws \Packaged\Dal\Exceptions\DalException
    */
-  public function fetchQueryResults($query, array $values = null)
+  public function fetchQueryResults($query, ?array $values = null)
   {
     return $this->_prepareAndExecute(
       DalResolver::MODE_READ,
@@ -387,7 +387,7 @@ class CqlConnection
    * @throws \Exception
    * @throws \Packaged\Dal\Exceptions\DalException
    */
-  protected function _prepareAndExecute($mode, $consistency, $query, array $values = null)
+  protected function _prepareAndExecute($mode, $consistency, $query, ?array $values = null)
   {
     $perfId = $this->getResolver()->startPerformanceMetric($this, $mode, $query);
     if($values)

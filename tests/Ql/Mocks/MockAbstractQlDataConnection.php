@@ -33,14 +33,14 @@ class MockAbstractQlDataConnection implements IQLDataConnection
     return $this->_values;
   }
 
-  public function runQuery($query, array $values = null)
+  public function runQuery($query, ?array $values = null)
   {
     $this->_query = $query;
     $this->_values = $values;
     return $this->_runResult;
   }
 
-  public function fetchQueryResults($query, array $values = null)
+  public function fetchQueryResults($query, ?array $values = null)
   {
     $this->runQuery($query, $values);
     return $this->_fetchResult;

@@ -12,7 +12,7 @@ use Thrift\Exception\TApplicationException;
 
 class CqlException extends ConnectionException
 {
-  public function __construct($msg = "", $code = 0, \Exception $previous = null)
+  public function __construct($msg = "", $code = 0, ?\Exception $previous = null)
   {
     if($previous !== null)
     {

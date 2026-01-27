@@ -122,7 +122,7 @@ abstract class AbstractQlConnection
     }
   }
 
-  abstract protected function _runQuery($query, array $values = null);
+  abstract protected function _runQuery($query, ?array $values = null);
 
   /**
    * Execute a query
@@ -134,7 +134,7 @@ abstract class AbstractQlConnection
    *
    * @throws ConnectionException
    */
-  public function runQuery($query, array $values = null)
+  public function runQuery($query, ?array $values = null)
   {
     $perfId = $this->getResolver()->startPerformanceMetric(
       $this,
@@ -155,7 +155,7 @@ abstract class AbstractQlConnection
     return $result;
   }
 
-  abstract protected function _fetchQueryResults($query, array $values = null);
+  abstract protected function _fetchQueryResults($query, ?array $values = null);
 
   /**
    * Fetch the results of the query
@@ -167,7 +167,7 @@ abstract class AbstractQlConnection
    *
    * @throws ConnectionException
    */
-  public function fetchQueryResults($query, array $values = null)
+  public function fetchQueryResults($query, ?array $values = null)
   {
     $perfId = $this->getResolver()->startPerformanceMetric(
       $this,

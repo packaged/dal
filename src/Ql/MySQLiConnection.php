@@ -185,7 +185,7 @@ class MySQLiConnection extends AbstractQlConnection
       || ($p && in_array((string)$p->getCode(), $codes, true));
   }
 
-  protected function _runQuery($query, array $values = null)
+  protected function _runQuery($query, ?array $values = null)
   {
     $stmt = $this->_executeQuery($query, $values);
     $rows = $stmt->affected_rows;
@@ -193,7 +193,7 @@ class MySQLiConnection extends AbstractQlConnection
     return $rows;
   }
 
-  protected function _fetchQueryResults($query, array $values = null)
+  protected function _fetchQueryResults($query, ?array $values = null)
   {
     $stmt = $this->_executeQuery($query, $values);
     $result = $stmt->get_result();
@@ -208,7 +208,7 @@ class MySQLiConnection extends AbstractQlConnection
     return $rows;
   }
 
-  private function _executeQuery($query, array $values = null)
+  private function _executeQuery($query, ?array $values = null)
   {
     $stmt = $this->_getStatement($query);
     if($values)

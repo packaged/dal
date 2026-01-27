@@ -13,7 +13,7 @@ interface IQLDataConnection extends IDataConnection
    *
    * @return int number of affected rows
    */
-  public function runQuery($query, array $values = null);
+  public function runQuery($query, ?array $values = null);
 
   /**
    * Fetch the results of the query
@@ -23,5 +23,5 @@ interface IQLDataConnection extends IDataConnection
    *
    * @return array
    */
-  public function fetchQueryResults($query, array $values = null);
+  public function fetchQueryResults($query, ?array $values = null);
 }

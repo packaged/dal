@@ -13,7 +13,7 @@ class CqlQueryObserverConnection extends CqlConnection
     return $this->_queryLog;
   }
 
-  public function runQuery($query, array $values = null)
+  public function runQuery($query, ?array $values = null)
   {
     $this->_queryLog[] = ['runQuery', $query, $values];
     return parent::runQuery($query, $values);

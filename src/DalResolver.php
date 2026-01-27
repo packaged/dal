@@ -33,9 +33,9 @@ class DalResolver implements IConnectionResolver
   const MODE_WRITE = 'w';
 
   public function __construct(
-    ConfigProviderInterface $connectionConfig = null,
-    ConfigProviderInterface $datastoreConfig = null,
-    ConfigProviderInterface $dalConfig = null
+    ?ConfigProviderInterface $connectionConfig = null,
+    ?ConfigProviderInterface $datastoreConfig = null,
+    ?ConfigProviderInterface $dalConfig = null
   )
   {
     if($connectionConfig !== null)

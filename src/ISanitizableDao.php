@@ -48,7 +48,7 @@ interface ISanitizableDao extends IDao
    * @throws \Exception
    * @throws mixed
    */
-  public function isValid(array $properties = null, $throw = false);
+  public function isValid(?array $properties = null, $throw = false);
 
   /**
    * Serialize a value based on the rules of a property

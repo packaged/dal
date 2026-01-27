@@ -199,7 +199,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
    * @throws \Exception
    * @throws mixed
    */
-  public function isValid(array $properties = null, $throw = false)
+  public function isValid(?array $properties = null, $throw = false)
   {
     $isValid = true;
     if($properties === null)

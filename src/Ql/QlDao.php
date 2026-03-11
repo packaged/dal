@@ -1,7 +1,8 @@
 <?php
 namespace Packaged\Dal\Ql;
 
-use Doctrine\Common\Inflector\Inflector;
+use Doctrine\Inflector\Inflector;
+use Doctrine\Inflector\InflectorFactory;
 use Packaged\Config\Provider\ConfigSection;
 use Packaged\Dal\Exceptions\DalResolver\DataStoreNotFoundException;
 use Packaged\Dal\Exceptions\Dao\MultipleDaoException;
@@ -32,13 +33,16 @@ abstract class QlDao extends AbstractSanitizableDao
       {
         $ns = ltrim(Strings::offset($ns, $dir), '\\');
       }
+
+      $inflector = InflectorFactory::create()->build();
+
       $this->_tableName = trim(
-        Inflector::tableize(
+        $inflector->tableize(
           implode(
             '_',
             [
               Strings::stringToUnderScore($ns),
-              Inflector::pluralize(Objects::classShortname($class)),
+              $inflector->pluralize(Objects::classShortname($class)),
             ]
           )
         ),

@@ -37,7 +37,7 @@ class MockSanitizableDao extends AbstractSanitizableDao
 
   protected function _configure()
   {
-    $this->_sanetizers['validators']['lower'] = [
+    $this->_sanitizers['validators']['lower'] = [
       function ($value) {
         if(strtolower($value) === $value)
         {
@@ -54,7 +54,7 @@ class MockSanitizableDao extends AbstractSanitizableDao
       },
     ];
 
-    $this->_sanetizers['validators']['upper'] = [
+    $this->_sanitizers['validators']['upper'] = [
       function ($value) {
         if(Strings::startsWith($value, 'UPPER'))
         {

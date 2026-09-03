@@ -368,7 +368,7 @@ abstract class AbstractQlConnection
    * @throws ConnectionException
    */
   protected function _performWithRetries(
-    callable $func, callable $onError = null, $retryCount = null
+    callable $func, ?callable $onError = null, $retryCount = null
   )
   {
     $this->_lastRetryCount = 0;

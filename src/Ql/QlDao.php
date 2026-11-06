@@ -58,7 +58,7 @@ abstract class QlDao extends AbstractSanitizableDao
    *
    * @param $params
    *
-   * @return QlDaoCollection
+   * @return QlDaoCollection<static>
    */
   public static function loadWhere(...$params)
   {
@@ -73,7 +73,7 @@ abstract class QlDao extends AbstractSanitizableDao
   /**
    * @param string|object|null $class
    *
-   * @return QlDaoCollection
+   * @return QlDaoCollection<static>
    */
   protected static function _createCollection($class = null)
   {
@@ -88,7 +88,7 @@ abstract class QlDao extends AbstractSanitizableDao
   /**
    * @param $params
    *
-   * @return QlDaoCollection
+   * @return QlDaoCollection<static>
    */
   public static function collection(...$params)
   {
@@ -103,7 +103,7 @@ abstract class QlDao extends AbstractSanitizableDao
   /**
    * @param $params
    *
-   * @return QlDaoCollection
+   * @return QlDaoCollection<static>
    */
   public function getCollection(...$params)
   {

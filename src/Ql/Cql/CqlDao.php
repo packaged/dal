@@ -18,7 +18,7 @@ abstract class CqlDao extends QlDao
   /**
    * @param string|object|null $class
    *
-   * @return CqlDaoCollection
+   * @return CqlDaoCollection<static>
    */
   protected static function _createCollection($class = null)
   {

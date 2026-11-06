@@ -9,23 +9,26 @@ use Packaged\Dal\IDaoCollection;
 use Packaged\Helpers\Arrays;
 use Packaged\Helpers\Objects;
 use RuntimeException;
-use Traversable;
 
+/**
+ * @template T of IDao
+ * @implements IDaoCollection<T>
+ */
 class DaoCollection implements IDaoCollection
 {
   /**
-   * @var IDao[]
+   * @var T[]
    */
   protected $_daos = [];
 
   /**
-   * @var IDao
+   * @var T|null
    */
   protected $_dao;
   /**
    * Class for the DAOs contained
    *
-   * @var string
+   * @var class-string<T>
    */
   protected $_daoClass;
 
@@ -40,7 +43,7 @@ class DaoCollection implements IDaoCollection
   /**
    * @param $fresh bool Create a new instance of the DAO Class
    *
-   * @return IDao
+   * @return T
    */
   public function createNewDao($fresh = true)
   {
@@ -68,9 +71,11 @@ class DaoCollection implements IDaoCollection
   /**
    * Create a new collection based on a DAO class
    *
-   * @param string|object $daoClass
+   * @template D of IDao
    *
-   * @return static
+   * @param class-string<D>|D $daoClass
+   *
+   * @return static<D>
    */
   public static function create($daoClass)
   {
@@ -99,7 +104,7 @@ class DaoCollection implements IDaoCollection
   }
 
   /**
-   * @return IDao[]
+   * @return T[]
    */
   public function getRawArray()
   {
@@ -112,7 +117,7 @@ class DaoCollection implements IDaoCollection
    *
    * @param mixed $default
    *
-   * @return IDao
+   * @return T|null
    */
   public function first($default = null)
   {
@@ -205,9 +210,7 @@ class DaoCollection implements IDaoCollection
    * Retrieve an external iterator
    *
    * @link http://php.net/manual/en/iteratoraggregate.getiterator.php
-   * @return Traversable An instance of an object implementing <b>Iterator</b>
-   *                     or
-   * <b>Traversable</b>
+   * @return ArrayIterator<array-key, T>
    */
   #[\ReturnTypeWillChange]
   public function getIterator()
@@ -248,7 +251,7 @@ class DaoCollection implements IDaoCollection
    *                      The offset to retrieve.
    *                      </p>
    *
-   * @return mixed Can return all value types.
+   * @return T|null
    */
   #[\ReturnTypeWillChange]
   public function offsetGet($offset)

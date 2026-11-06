@@ -28,8 +28,22 @@ use Packaged\QueryBuilder\Statement\IStatementSegment;
 use Packaged\QueryBuilder\Statement\QueryStatement;
 
 /**
- * @method QlDao   createNewDao($fresh = true)
- * @method QlDao[] getRawArray()
+ * @template T of QlDao
+ * @extends DaoCollection<T>
+ * @implements IAggregateDaoCollection<T>
+ *
+ * @method $this where(...$expressions)
+ * @method $this andWhere(...$expressions)
+ * @method $this orWhere(...$expressions)
+ * @method $this having(...$expressions)
+ * @method $this orderBy($fields)
+ * @method $this limit($limit)
+ * @method $this limitWithOffset($offset, $limit)
+ * @method $this join($table, $sourceField, $destField = null, $where = null)
+ * @method $this innerJoin($table, $sourceField, $destField = null, $where = null)
+ * @method $this leftOuterJoin($table, $sourceField, $destField = null, $where = null)
+ * @method $this rightOuterJoin($table, $sourceField, $destField = null, $where = null)
+ * @method $this joinWithPredicates($table, ...$predicates)
  */
 class QlDaoCollection extends DaoCollection
   implements IAggregateDaoCollection, IStatement
@@ -166,6 +180,9 @@ class QlDaoCollection extends DaoCollection
     return $this;
   }
 
+  /**
+   * @return $this
+   */
   public function load()
   {
     $dao = $this->createNewDao(false);
@@ -203,7 +220,7 @@ class QlDaoCollection extends DaoCollection
    *
    * @param mixed $default
    *
-   * @return QlDao|null|mixed
+   * @return T|null
    */
   public function first($default = null)
   {

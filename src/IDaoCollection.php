@@ -1,6 +1,11 @@
 <?php
 namespace Packaged\Dal;
 
+/**
+ * @template T of IDao
+ * @extends \IteratorAggregate<array-key, T>
+ * @extends \ArrayAccess<array-key, T>
+ */
 interface IDaoCollection
   extends \Countable, \JsonSerializable, \IteratorAggregate,
           \ArrayAccess

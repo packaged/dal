@@ -19,7 +19,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
   /**
    * @var callable[][]
    */
-  protected $_sanetizers = [
+  protected $_sanitizers = [
     'filters'     => [],
     'validators'  => [],
     'serializers' => [],
@@ -126,9 +126,9 @@ abstract class AbstractSanitizableDao extends AbstractDao
    */
   public function filterDaoProperty($key, $value)
   {
-    if(isset($this->_sanetizers['filters'][$key]))
+    if(isset($this->_sanitizers['filters'][$key]))
     {
-      foreach($this->_sanetizers['filters'][$key] as $filter)
+      foreach($this->_sanitizers['filters'][$key] as $filter)
       {
         $value = $filter($value);
       }
@@ -153,9 +153,9 @@ abstract class AbstractSanitizableDao extends AbstractDao
   )
   {
     $errors = [];
-    if(isset($this->_sanetizers['validators'][$key]))
+    if(isset($this->_sanitizers['validators'][$key]))
     {
-      foreach($this->_sanetizers['validators'][$key] as $validator)
+      foreach($this->_sanitizers['validators'][$key] as $validator)
       {
         try
         {
@@ -242,9 +242,9 @@ abstract class AbstractSanitizableDao extends AbstractDao
    */
   public function getPropertySerialized($property, $value)
   {
-    if(isset($this->_sanetizers['serializers'][$property]))
+    if(isset($this->_sanitizers['serializers'][$property]))
     {
-      foreach($this->_sanetizers['serializers'][$property] as $type)
+      foreach($this->_sanitizers['serializers'][$property] as $type)
       {
         switch($type)
         {
@@ -285,9 +285,9 @@ abstract class AbstractSanitizableDao extends AbstractDao
    */
   public function getPropertyUnserialized($property, $value)
   {
-    if(isset($this->_sanetizers['serializers'][$property]))
+    if(isset($this->_sanitizers['serializers'][$property]))
     {
-      $reversed = $this->_sanetizers['serializers'][$property];
+      $reversed = $this->_sanitizers['serializers'][$property];
       foreach(array_reverse($reversed) as $type)
       {
         $asArray = false;
@@ -334,13 +334,13 @@ abstract class AbstractSanitizableDao extends AbstractDao
    */
   public function hydrateDao(array $data, $serialized = false)
   {
-    if(empty($this->_sanetizers['serializers']))
+    if(empty($this->_sanitizers['serializers']))
     {
       /** @noinspection PhpIncompatibleReturnTypeInspection */
       return parent::hydrateDao($data);
     }
 
-    $serializedProperties = $serialized ? Arrays::fuse(array_keys($this->_sanetizers['serializers'])) : [];
+    $serializedProperties = $serialized ? Arrays::fuse(array_keys($this->_sanitizers['serializers'])) : [];
     foreach($this->getDaoProperties() as $property)
     {
       if(!isset($serializedProperties[$property]) && array_key_exists($property, $data))
@@ -395,7 +395,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
       $alias = $serializer;
     }
 
-    $this->_sanetizers['serializers'][$property][$alias] = $serializer;
+    $this->_sanitizers['serializers'][$property][$alias] = $serializer;
     return $this;
   }
 
@@ -414,7 +414,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
     $property, $alias, callable $serializer, callable $unserializer
   )
   {
-    $this->_sanetizers['serializers'][$property][$alias] = [
+    $this->_sanitizers['serializers'][$property][$alias] = [
       'serializer'   => $serializer,
       'unserializer' => $unserializer,
     ];
@@ -431,7 +431,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
    */
   protected function _removeSerializer($property, $alias)
   {
-    unset($this->_sanetizers['serializers'][$property][$alias]);
+    unset($this->_sanitizers['serializers'][$property][$alias]);
     return $this;
   }
 
@@ -444,7 +444,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
    */
   protected function _clearSerializers($property)
   {
-    $this->_sanetizers['serializers'][$property] = [];
+    $this->_sanitizers['serializers'][$property] = [];
     return $this;
   }
 
@@ -459,7 +459,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
    */
   protected function _addFilter($property, $alias, callable $filter)
   {
-    $this->_sanetizers['filters'][$property][$alias] = $filter;
+    $this->_sanitizers['filters'][$property][$alias] = $filter;
     return $this;
   }
 
@@ -473,7 +473,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
    */
   protected function _removeFilter($property, $alias)
   {
-    unset($this->_sanetizers['filters'][$property][$alias]);
+    unset($this->_sanitizers['filters'][$property][$alias]);
     return $this;
   }
 
@@ -486,7 +486,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
    */
   protected function _clearFilters($property)
   {
-    $this->_sanetizers['filters'][$property] = [];
+    $this->_sanitizers['filters'][$property] = [];
     return $this;
   }
 
@@ -501,7 +501,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
    */
   protected function _addValidator($property, $alias, callable $filter)
   {
-    $this->_sanetizers['validators'][$property][$alias] = $filter;
+    $this->_sanitizers['validators'][$property][$alias] = $filter;
     return $this;
   }
 
@@ -515,7 +515,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
    */
   protected function _removeValidator($property, $alias)
   {
-    unset($this->_sanetizers['validators'][$property][$alias]);
+    unset($this->_sanitizers['validators'][$property][$alias]);
     return $this;
   }
 
@@ -528,7 +528,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
    */
   protected function _clearValidators($property)
   {
-    $this->_sanetizers['validators'][$property] = [];
+    $this->_sanitizers['validators'][$property] = [];
     return $this;
   }
 
@@ -541,7 +541,7 @@ abstract class AbstractSanitizableDao extends AbstractDao
    */
   public function getDaoPropertyData($serialized = true)
   {
-    if(!$serialized || empty($this->_sanetizers['serializers']))
+    if(!$serialized || empty($this->_sanitizers['serializers']))
     {
       return parent::getDaoPropertyData();
     }
@@ -591,6 +591,6 @@ abstract class AbstractSanitizableDao extends AbstractDao
 
   public function __sleep()
   {
-    return array_diff(parent::__sleep(), ['_sanetizers']);
+    return array_diff(parent::__sleep(), ['_sanitizers']);
   }
 }

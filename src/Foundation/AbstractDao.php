@@ -424,7 +424,7 @@ abstract class AbstractDao implements IDao
    * which is a value of any type other than a resource.
    */
   #[\ReturnTypeWillChange]
-  public function jsonSerialize(): mixed
+  public function jsonSerialize()
   {
     return Objects::propertyValues($this);
   }

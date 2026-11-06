@@ -139,7 +139,7 @@ class CqlConnection
             (int)$this->_config()->getItem('send_timeout', 1000)
           );
 
-          $this->_transport = new TFramedTransport($this->_socket);
+          $this->_transport = new DalFramedTransport($this->_socket);
           $this->_protocol = new TBinaryProtocolAccelerated($this->_transport);
           $this->_client = new CassandraClient($this->_protocol);
 
